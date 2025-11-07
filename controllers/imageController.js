@@ -3,7 +3,11 @@ const axios = require("axios");
 
 async function uploadImage(req, res) {
   try {
-    const { menuItemId, uploaderId, imageUrl } = req.body;
+    const uploaderId = parseInt(req.user.userId, 10);
+    if (isNaN(uploaderId)) {
+      return res.status(400).json({ error: "Invalid userId from token" });
+    }
+    const { menuItemId, imageUrl } = req.body;
 
     //call AI food image verification API (simulate in this example)
     const isFood = await mockImageVerification(imageUrl);
@@ -29,7 +33,11 @@ async function mockImageVerification(imageUrl) {
 
 async function upvoteImage(req, res) {
   try {
-    const { userId, imageId } = req.body;
+    const userId = parseInt(req.user.userId, 10);
+    if (isNaN(userId)) {
+      return res.status(400).json({ error: "Invalid userId from token" });
+    }
+    const { imageId } = req.body;
     await imageModel.voteImage(userId, imageId);
     res.status(201).json({ message: "Image upvoted" });
   } catch (error) {

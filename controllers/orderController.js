@@ -2,7 +2,11 @@ const orderModel = require("../models/orderModel");
 
 async function placeOrder(req, res) {
   try {
-    const { userId, items, totalAmount } = req.body;
+    const userId = parseInt(req.user.userId, 10);
+    if (isNaN(userId)) {
+      return res.status(400).json({ error: "Invalid userId from token" });
+    }
+    const { items, totalAmount } = req.body;
     const newOrder = await orderModel.createOrder(userId, items, totalAmount);
     res.status(201).json({ orderId: newOrder.OrderID });
   } catch (error) {
