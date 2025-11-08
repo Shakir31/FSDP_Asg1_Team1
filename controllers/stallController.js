@@ -28,12 +28,14 @@ async function getAllStalls(req, res) {
 
 async function createMenuItem(req, res) {
   try {
-    const { stallId, name, description, price } = req.body;
+    const { stallId, name, description, price, url, category } = req.body;
     const menuItem = await stallModel.createMenuItem(
       stallId,
       name,
       description,
-      price
+      price,
+      url,
+      category
     );
     res.status(201).json(menuItem);
   } catch (error) {
