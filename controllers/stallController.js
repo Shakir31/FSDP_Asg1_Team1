@@ -2,11 +2,12 @@ const stallModel = require("../models/stallModel");
 
 async function createStall(req, res) {
   try {
-    const { stallName, description, hawker_centre } = req.body;
+    const { stallName, description, hawker_centre, category } = req.body;
     const stall = await stallModel.createStall(
       stallName,
       description,
-      hawker_centre
+      hawker_centre,
+      category
     );
     res.status(201).json(stall);
   } catch (error) {
