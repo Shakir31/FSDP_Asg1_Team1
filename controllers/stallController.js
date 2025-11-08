@@ -2,8 +2,12 @@ const stallModel = require("../models/stallModel");
 
 async function createStall(req, res) {
   try {
-    const { stallName, description } = req.body;
-    const stall = await stallModel.createStall(stallName, description);
+    const { stallName, description, hawker_centre } = req.body;
+    const stall = await stallModel.createStall(
+      stallName,
+      description,
+      hawker_centre
+    );
     res.status(201).json(stall);
   } catch (error) {
     console.error("Create stall error", error);
