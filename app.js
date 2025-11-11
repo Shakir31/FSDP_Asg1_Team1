@@ -11,6 +11,7 @@ const stallController = require("./controllers/stallController");
 const orderController = require("./controllers/orderController");
 const imageController = require("./controllers/imageController");
 const coinController = require("./controllers/coinController");
+const voucherController = require("./controllers/voucherController");
 
 const {
   authenticateToken,
@@ -81,6 +82,22 @@ app.post(
   "/coins/award-photo",
   authenticateToken,
   coinController.awardPhotoUploadCoins
+);
+
+//voucher
+app.get("/vouchers", voucherController.getAllVouchers);
+app.post(
+  "/vouchers/redeem",
+  authenticateToken,
+  authorizeRoles("customer"),
+  voucherController.redeemVoucher
+);
+
+app.get(
+  "/vouchers/user",
+  authenticateToken,
+  authorizeRoles("customer"),
+  voucherController.getUserVouchers
 );
 
 //start server

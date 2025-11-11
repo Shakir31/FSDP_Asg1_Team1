@@ -1,7 +1,7 @@
 const sql = require("mssql");
 const dbConfig = require("../dbConfig");
 
-async function createStall(stallName, description) {
+async function createStall(stallName, description, hawker_centre, category) {
   let connection;
   try {
     connection = await sql.connect(dbConfig);
@@ -9,8 +9,10 @@ async function createStall(stallName, description) {
       .request()
       .input("stallName", sql.VarChar, stallName)
       .input("description", sql.VarChar, description)
+      .input("hawker_centre", sql.VarChar, hawker_centre)
+      .input("category", sql.VarChar, category)
       .query(
-        "INSERT INTO Stalls (StallName, Description) OUTPUT INSERTED.* VALUES (@stallName, @description)"
+        "INSERT INTO Stalls (StallName, Description, Hawker_Centre, Category) OUTPUT INSERTED.* VALUES (@stallName, @description, @hawker_centre, @category)"
       );
     return result.recordset[0];
   } catch (error) {
@@ -33,7 +35,14 @@ async function getAllStalls() {
   }
 }
 
-async function createMenuItem(stallId, name, description, price) {
+async function createMenuItem(
+  stallId,
+  name,
+  description,
+  price,
+  url,
+  category
+) {
   let connection;
   try {
     connection = await sql.connect(dbConfig);
@@ -43,8 +52,10 @@ async function createMenuItem(stallId, name, description, price) {
       .input("name", sql.VarChar, name)
       .input("description", sql.VarChar, description)
       .input("price", sql.Decimal(6, 2), price)
+      .input("url", sql.VarChar, url)
+      .input("category", sql.VarChar, category)
       .query(
-        "INSERT INTO MenuItems (StallID, Name, Description, Price) OUTPUT INSERTED.* VALUES (@stallId, @name, @description, @price)"
+        "INSERT INTO MenuItems (StallID, Name, Description, Price, MainImageURL, Category) OUTPUT INSERTED.* VALUES (@stallId, @name, @description, @price, @url, @category)"
       );
     return result.recordset[0];
   } catch (error) {
