@@ -32,6 +32,8 @@ app.post("/login", authController.loginUser);
 
 //stall endpoints
 app.get("/stalls", stallController.getAllStalls);
+app.get("/stalls/category", stallController.getStallsByCategory);
+app.get("/stalls/hawker-centre", stallController.getStallsByHawkerCentre);
 app.post(
   "/stalls",
   authenticateToken,

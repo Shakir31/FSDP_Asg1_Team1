@@ -66,10 +66,38 @@ async function updateMenuItemPhoto(req, res) {
   }
 }
 
+async function getStallsByCategory(req, res) {
+  try {
+    const { category } = req.query;
+    if (!category)
+      return res.status(400).json({ error: "Category is required" });
+    const stalls = await stallModel.getStallsByCategory(category);
+    res.json(stalls);
+  } catch (error) {
+    console.error("Get stalls by category error", error);
+    res.status(500).json({ error: "Error fetching stalls by category" });
+  }
+}
+
+async function getStallsByHawkerCentre(req, res) {
+  try {
+    const { hawker_centre } = req.query;
+    if (!hawker_centre)
+      return res.status(400).json({ error: "Hawker centre is required" });
+    const stalls = await stallModel.getStallsByHawkerCentre(hawker_centre);
+    res.json(stalls);
+  } catch (error) {
+    console.error("Get stalls by hawker centre error", error);
+    res.status(500).json({ error: "Error fetching stalls by hawker centre" });
+  }
+}
+
 module.exports = {
   createStall,
   getAllStalls,
   createMenuItem,
   getMenuByStall,
   updateMenuItemPhoto,
+  getStallsByCategory,
+  getStallsByHawkerCentre,
 };

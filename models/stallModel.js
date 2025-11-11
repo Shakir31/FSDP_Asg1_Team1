@@ -99,10 +99,44 @@ async function updateMenuItemPhoto(menuItemId, imageUrl) {
   }
 }
 
+async function getStallsByCategory(category) {
+  let connection;
+  try {
+    connection = await sql.connect(dbConfig);
+    const result = await connection
+      .request()
+      .input("category", sql.VarChar, category)
+      .query("SELECT * FROM Stalls WHERE Category = @category");
+    return result.recordset;
+  } catch (error) {
+    throw error;
+  } finally {
+    if (connection) await connection.close();
+  }
+}
+
+async function getStallsByHawkerCentre(hawkerCentre) {
+  let connection;
+  try {
+    connection = await sql.connect(dbConfig);
+    const result = await connection
+      .request()
+      .input("hawker_centre", sql.VarChar, hawkerCentre)
+      .query("SELECT * FROM Stalls WHERE Hawker_Centre = @hawker_centre");
+    return result.recordset;
+  } catch (error) {
+    throw error;
+  } finally {
+    if (connection) await connection.close();
+  }
+}
+
 module.exports = {
   createStall,
   getAllStalls,
   createMenuItem,
   getMenuByStall,
   updateMenuItemPhoto,
+  getStallsByCategory,
+  getStallsByHawkerCentre,
 };
