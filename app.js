@@ -12,6 +12,7 @@ const orderController = require("./controllers/orderController");
 const imageController = require("./controllers/imageController");
 const coinController = require("./controllers/coinController");
 const voucherController = require("./controllers/voucherController");
+const reviewController = require("./controllers/reviewController");
 
 const {
   authenticateToken,
@@ -101,6 +102,16 @@ app.get(
   authorizeRoles("customer"),
   voucherController.getUserVouchers
 );
+
+//review
+app.post(
+  "/reviews",
+  authenticateToken,
+  authorizeRoles("customer"),
+  reviewController.createReview
+);
+app.get("/reviews/menuitem/:menuItemId", reviewController.getReviewsByMenuItem);
+app.get("/reviews/stall/:stallId", reviewController.getReviewsByStall);
 
 //start server
 app.listen(port, () => {
