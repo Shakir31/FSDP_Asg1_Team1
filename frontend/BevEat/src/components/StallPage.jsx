@@ -1,57 +1,62 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Search, ShoppingCart, User } from 'lucide-react';
-import '../StallPage.css'; // We'll create this CSS file next
+import '../StallPage.css';
+import logo from '../assets/logo.png';
 
 function StallPage() {
   return (
     <div className="stall-page-wrapper">
-      
-      {/* --- NAVBAR STARTS HERE --- */}
       <nav className="navbar">
-        <div className="navbar-logo">
+        <div className="navbar-item">
           <Link to="/">
-            <div className="logo-circle"></div>
+            <img src={logo} alt="BevEat Logo" className="logo-image" />
           </Link>
         </div>
-        <div className="navbar-links">
-          <Link to="/">Home</Link>
-          <Link to="/redeem">Redeem</Link>
-          <Link to="/contact">Contact Us</Link>
+
+        <div className="navbar-item">
+          <Link to="/" className="navbar-link">Home</Link>
         </div>
-        <div className="navbar-actions">
+
+        <div className="navbar-item">
+          <Link to="/redeem" className="navbar-link">Redeem</Link>
+        </div>
+
+        <div className="navbar-item">
+          <Link to="/contact" className="navbar-link">Contact Us</Link>
+        </div>
+
+        <div className="navbar-item">
           <div className="search-container">
             <input type="text" placeholder="Search..." />
             <button className="search-button">
               <Search size={20} />
             </button>
           </div>
+        </div>
+        
+        <div className="navbar-item">
           <Link to="/cart" className="icon-link">
             <ShoppingCart size={28} />
           </Link>
+        </div>
+
+        <div className="navbar-item">
           <Link to="/profile" className="icon-link">
             <User size={28} />
           </Link>
         </div>
       </nav>
-      {/* --- NAVBAR ENDS HERE --- */}
 
-      {/* --- PAGE CONTENT STARTS HERE --- */}
       <main className="stall-page-content">
-        
-        {/* 1. Hero Section (from your Figma) */}
         <div className="hero-section">
-          {/* You can add text or other elements inside here if you want */}
         </div>
         
-        {/* 2. Stalls List */}
         <div className="stalls-list-container">
           <h1>Stalls</h1>
           <p>This is where the list of stalls will go.</p>
         </div>
-
       </main>
-      {/* --- PAGE CONTENT ENDS HERE --- */}
     </div>
   );
 }

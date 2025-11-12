@@ -1,11 +1,9 @@
-/* --- General Page --- */
 .stall-page-wrapper {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
-/* --- Navbar Styles --- */
 .navbar {
   height: 188px;
   background-color: #ffffff;
@@ -13,31 +11,25 @@
   padding: 0 2rem;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: space-around;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   border-bottom: 1px solid #e2e8f0;
-  flex-shrink: 0; /* Stops the navbar from shrinking */
+  flex-shrink: 0;
 }
 
-.navbar-logo {
-  flex: 1;
+.navbar-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.logo-circle {
+.logo-image {
   width: 100px;
   height: 98px;
-  background-color: #f0f0f0; /* Placeholder gray */
-  border-radius: 50%;
+  object-fit: cover;
 }
 
-.navbar-links {
-  flex: 2;
-  display: flex;
-  justify-content: center;
-  gap: 2.5rem;
-}
-
-.navbar-links a {
+.navbar-link {
   text-decoration: none;
   color: #121223;
   font-size: 1.1rem;
@@ -45,16 +37,8 @@
   transition: color 0.2s;
 }
 
-.navbar-links a:hover {
+.navbar-link:hover {
   color: #ff7622;
-}
-
-.navbar-actions {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 1.5rem;
 }
 
 .search-container {
@@ -64,7 +48,7 @@
 .search-container input {
   height: 40px;
   width: 250px;
-  padding: 0 1rem 0 2.5rem;
+  padding: 0 1rem 0 3.5rem;
   border: 1px solid #ccc;
   border-radius: 20px;
   font-size: 14px;
@@ -90,27 +74,24 @@
   color: #ff7622;
 }
 
-/* --- Stall Page Content Styles --- */
 .stall-page-content {
-  flex: 1; /* Makes content fill remaining vertical space */
-  background-color: #f4f4f5; /* Light gray background */
+  flex: 1;
+  background-color: #f4f4f5;
   padding: 1.5rem;
 }
 
 .hero-section {
-  height: 331px; /* From your Figma spec */
-  background-color: #d1d5db; /* Placeholder gray */
-  /* You can set your hero background image here */
-  /* background-image: url('/path/to/your/hero-image.jpg'); */
+  height: 331px;
+  background-color: #d1d5db;
   background-size: cover;
   background-position: center;
-  border-radius: 8px; /* Optional: adds rounded corners */
-  margin-bottom: 1.5rem; /* Space below the hero */
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
 }
 
 .stalls-list-container {
-  max-width: 1200px; /* Or whatever max-width you prefer */
-  margin: 0 auto; /* Centers the content */
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .stalls-list-container h1 {
