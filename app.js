@@ -14,6 +14,10 @@ const coinController = require("./controllers/coinController");
 const voucherController = require("./controllers/voucherController");
 const reviewController = require("./controllers/reviewController");
 
+const { validateReview } = require("./middlewares/reviewValidation");
+const { validateMenuItem } = require("./middlewares/menuItemValidation");
+const { validateImageUpload } = require("./middlewares/imageValidation");
+
 const {
   authenticateToken,
   authorizeRoles,
@@ -44,6 +48,7 @@ app.post(
 app.get("/stalls/:stallId/menu", stallController.getMenuByStall);
 app.post(
   "/menuitems",
+  validateMenuItem,
   authenticateToken,
   authorizeRoles("stall_owner"),
   stallController.createMenuItem
@@ -75,7 +80,12 @@ app.put(
 );
 
 //image upload and voting
-app.post("/images/upload", authenticateToken, imageController.uploadImage);
+app.post(
+  "/images/upload",
+  validateImageUpload,
+  authenticateToken,
+  imageController.uploadImage
+);
 app.post("/images/upvote", authenticateToken, imageController.upvoteImage);
 
 //coin gamification endpoints
@@ -106,6 +116,7 @@ app.get(
 //review
 app.post(
   "/reviews",
+  validateReview,
   authenticateToken,
   authorizeRoles("customer"),
   reviewController.createReview
