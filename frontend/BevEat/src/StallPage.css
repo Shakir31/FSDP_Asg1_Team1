@@ -1,43 +1,35 @@
-/* --- General Page --- */
 .stall-page-wrapper {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
-/* --- Navbar Styles --- */
-.navbar {
-  height: 188px;
+/* .navbar {
+  height: 108px;
   background-color: #ffffff;
   color: #121223;
   padding: 0 2rem;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: space-around;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   border-bottom: 1px solid #e2e8f0;
-  flex-shrink: 0; /* Stops the navbar from shrinking */
+  flex-shrink: 0;
 }
 
-.navbar-logo {
-  flex: 1;
+.navbar-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.logo-circle {
+.logo-image {
   width: 100px;
   height: 98px;
-  background-color: #f0f0f0; /* Placeholder gray */
-  border-radius: 50%;
+  object-fit: cover;
 }
 
-.navbar-links {
-  flex: 2;
-  display: flex;
-  justify-content: center;
-  gap: 2.5rem;
-}
-
-.navbar-links a {
+.navbar-link {
   text-decoration: none;
   color: #121223;
   font-size: 1.1rem;
@@ -45,16 +37,8 @@
   transition: color 0.2s;
 }
 
-.navbar-links a:hover {
+.navbar-link:hover {
   color: #ff7622;
-}
-
-.navbar-actions {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 1.5rem;
 }
 
 .search-container {
@@ -64,7 +48,7 @@
 .search-container input {
   height: 40px;
   width: 250px;
-  padding: 0 1rem 0 2.5rem;
+  padding: 0 1rem 0 3.5rem;
   border: 1px solid #ccc;
   border-radius: 20px;
   font-size: 14px;
@@ -88,32 +72,127 @@
 
 .icon-link:hover {
   color: #ff7622;
-}
+} */
 
-/* --- Stall Page Content Styles --- */
 .stall-page-content {
-  flex: 1; /* Makes content fill remaining vertical space */
-  background-color: #f4f4f5; /* Light gray background */
+  flex: 1;
+  background-color: #f4f4f5;
   padding: 1.5rem;
 }
 
 .hero-section {
-  height: 331px; /* From your Figma spec */
-  background-color: #d1d5db; /* Placeholder gray */
-  /* You can set your hero background image here */
-  /* background-image: url('/path/to/your/hero-image.jpg'); */
+  height: 331px;
+  background-color: #d1d5db;
   background-size: cover;
   background-position: center;
-  border-radius: 8px; /* Optional: adds rounded corners */
-  margin-bottom: 1.5rem; /* Space below the hero */
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  position: relative;
 }
 
-.stalls-list-container {
-  max-width: 1200px; /* Or whatever max-width you prefer */
-  margin: 0 auto; /* Centers the content */
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5); /* 50% black overlay */
+  border-radius: 8px; /* Match the parent's rounded corners */
 }
 
-.stalls-list-container h1 {
+.hero-content {
+  position: relative;
+  padding: 1.5rem;
+  z-index: 1;
+  color: #ffffff;
+}
+
+
+.hero-title {
+  font-size: 2.8rem;
+  font-weight: bold;
+  margin: 0 0 0.5rem 0;
+}
+
+.hero-description {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  font-weight: 300;
+}
+
+.hero-info {
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin: 0.25rem 0;
+}
+
+.menu-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.menu-container h1 {
   font-size: 2.5rem;
   color: #121223;
+}
+
+.menu-items-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  justify-content: space-evenly;
+}
+
+.menu-item {
+  width: 324px;
+  height: 314px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
+  overflow: hidden; /* This makes the image have rounded corners */
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.2s;
+}
+
+.menu-item:hover {
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* 2. The Image */
+.menu-item-image {
+  width: 324px;
+  height: 191px;
+  object-fit: cover; /* Prevents the image from stretching */
+}
+
+/* 3. The content area below the image */
+.menu-item-content {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1; /* This makes it fill the remaining space */
+}
+
+.menu-item-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #121223;
+  margin: 0 0 0.25rem 0;
+}
+
+.menu-item-description {
+  font-size: 0.9rem;
+  color: #666;
+  flex-grow: 1; /* This pushes the price to the bottom */
+  margin: 0 0 0.5rem 0;
+}
+
+.menu-item-price {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #ff7622;
+  margin: 0;
+  text-align: right;
 }
