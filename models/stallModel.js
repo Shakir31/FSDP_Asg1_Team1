@@ -131,6 +131,22 @@ async function getStallsByHawkerCentre(hawkerCentre) {
   }
 }
 
+async function getStallById(stallId) {
+  let connection;
+  try {
+    connection = await sql.connect(dbConfig);
+    const result = await connection
+      .request()
+      .input("stallId", sql.Int, stallId)
+      .query("SELECT * FROM Stalls WHERE StallID = @stallId");
+    return result.recordset[0];
+  } catch (error) {
+    throw error;
+  } finally {
+    if (connection) await connection.close();
+  }
+}
+
 module.exports = {
   createStall,
   getAllStalls,
@@ -139,4 +155,5 @@ module.exports = {
   updateMenuItemPhoto,
   getStallsByCategory,
   getStallsByHawkerCentre,
+  getStallById,
 };
