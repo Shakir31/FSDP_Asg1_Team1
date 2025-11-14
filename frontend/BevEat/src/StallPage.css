@@ -4,8 +4,8 @@
   flex-direction: column;
 }
 
-.navbar {
-  height: 188px;
+/* .navbar {
+  height: 108px;
   background-color: #ffffff;
   color: #121223;
   padding: 0 2rem;
@@ -72,7 +72,7 @@
 
 .icon-link:hover {
   color: #ff7622;
-}
+} */
 
 .stall-page-content {
   flex: 1;
