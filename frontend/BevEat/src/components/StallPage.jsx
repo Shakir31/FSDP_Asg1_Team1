@@ -59,6 +59,11 @@ function StallPage() {
         <div className="menu-items-list">
           {menuItems.length > 0 ? (
             menuItems.map(item => (
+              <Link 
+                key={item.MenuItemID} 
+                to={`/menu-item/${item.MenuItemID}`}
+                className="menu-item-link" 
+              >
               <div key={item.MenuItemID} className="menu-item">
                 <img 
                   src={item.MainImageURL || hero} // Use hero as fallback
@@ -74,6 +79,7 @@ function StallPage() {
                   <p className="menu-item-price">${parseFloat(item.Price).toFixed(2)}</p>
                 </div>
               </div>
+              </Link>
             ))
           ) : (
             <p>No menu items available for this stall.</p>

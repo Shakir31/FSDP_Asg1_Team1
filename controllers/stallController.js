@@ -106,6 +106,20 @@ async function getStallById(req, res) {
   }
 }
 
+async function getMenuItemById(req, res) {
+  try {
+    const { itemId } = req.params;
+    const item = await stallModel.getMenuItemById(itemId);
+    if (!item) {
+      return res.status(404).json({ error: "Menu item not found" });
+    }
+    res.json(item);
+  } catch (error) {
+    console.error("Get menu item by ID error", error);
+    res.status(500).json({ error: "Error fetching menu item" });
+  }
+}
+
 module.exports = {
   createStall,
   getAllStalls,
@@ -115,4 +129,5 @@ module.exports = {
   getStallsByCategory,
   getStallsByHawkerCentre,
   getStallById,
+  getMenuItemById,
 };

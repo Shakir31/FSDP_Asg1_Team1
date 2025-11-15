@@ -6,6 +6,7 @@ import Login from "./components/Login";
 import Signup from "./components/Signup";
 import StallPage from "./components/StallPage";
 import MainLayout from "./components/MainLayout";
+import Product from "./components/Product";
 
 function App() {
   const [count, setCount] = useState(0);
@@ -17,6 +18,7 @@ function App() {
       {/* <Route path="/home" element={<Home />} /> */}
       <Route element={<MainLayout />}>
         <Route path="/stalls/:id" element={<StallPage />} />
+        <Route path="/menu-item/:itemId" element={<Product />} />
       </Route>
     </Routes>
   );

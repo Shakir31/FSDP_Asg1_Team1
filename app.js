@@ -36,6 +36,7 @@ app.get("/stalls", stallController.getAllStalls);
 app.get("/stalls/category", stallController.getStallsByCategory);
 app.get("/stalls/hawker-centre", stallController.getStallsByHawkerCentre);
 app.get("/stalls/:id", stallController.getStallById);
+app.get("/menu-item/:itemId", stallController.getMenuItemById);
 app.post(
   "/stalls",
   authenticateToken,
