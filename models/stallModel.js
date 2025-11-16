@@ -163,6 +163,28 @@ async function getMenuItemById(menuItemId) {
   }
 }
 
+async function getImagesByStall(stallId) {
+  let connection;
+  try {
+    connection = await sql.connect(dbConfig);
+    const result = await connection
+      .request()
+      .input("stallId", sql.Int, stallId)
+      .query(`
+        SELECT i.ImageID, i.ImageURL, i.UploadedAt, m.Name as MenuItemName
+        FROM Images i
+        INNER JOIN MenuItems m ON i.MenuItemID = m.MenuItemID
+        WHERE m.StallID = @stallId
+        ORDER BY i.UploadedAt DESC
+      `);
+    return result.recordset;
+  } catch (error) {
+    throw error;
+  } finally {
+    if (connection) await connection.close();
+  }
+}
+
 module.exports = {
   createStall,
   getAllStalls,
@@ -173,4 +195,5 @@ module.exports = {
   getStallsByHawkerCentre,
   getStallById,
   getMenuItemById,
+  getImagesByStall,
 };

@@ -70,9 +70,6 @@ function StallPage() {
                   alt={item.Name} 
                   className="menu-item-image"
                 />
-                {/* <h3>{item.Name}</h3>
-                <p>{item.Description}</p>
-                <p className="menu-item-price">${parseFloat(item.Price).toFixed(2)}</p> */}
                 <div className="menu-item-content">
                   <h3 className="menu-item-name">{item.Name}</h3>
                   <p className="menu-item-description">{item.Description}</p>
@@ -105,6 +102,9 @@ function StallPage() {
               <p className="hero-info">
                 <strong>Category:</strong> {stall.Category}
               </p>
+              <Link to={`/stalls/${id}/photos`} className="hero-photos-button">
+                View Photos
+              </Link>
             </div>
           )}
         </div>

@@ -120,6 +120,17 @@ async function getMenuItemById(req, res) {
   }
 }
 
+async function getStallImages(req, res) {
+  try {
+    const { id } = req.params; // 'id' matches the route parameter
+    const images = await stallModel.getImagesByStall(id);
+    res.json(images);
+  } catch (error) {
+    console.error("Get stall images error", error);
+    res.status(500).json({ error: "Error fetching stall images" });
+  }
+}
+
 module.exports = {
   createStall,
   getAllStalls,
@@ -130,4 +141,5 @@ module.exports = {
   getStallsByHawkerCentre,
   getStallById,
   getMenuItemById,
+  getStallImages,
 };

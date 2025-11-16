@@ -38,4 +38,28 @@ async function getUserByEmail(email) {
   }
 }
 
-module.exports = { createUser, getUserByEmail };
+async function getUserById(userId) {
+  let connection;
+  try {
+    connection = await sql.connect(dbConfig);
+    const result = await connection
+      .request()
+      .input("userId", sql.Int, userId)
+      // Select only the fields we want to send to the client
+      .query("SELECT UserID, Name, Email, Coins, Role FROM Users WHERE UserID = @userId");
+    return result.recordset[0];
+  } catch (error) {
+    console.error("DB getUserById error", error);
+    throw error;
+  } finally {
+    if (connection) await connection.close();
+  }
+}
+
+
+
+module.exports = { 
+  createUser, 
+  getUserByEmail,
+  getUserById
+ };
