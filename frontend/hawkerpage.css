@@ -66,60 +66,85 @@ body {
   cursor: pointer;
 }
 
-/* 🍢 Hero Banner */
-.hero img {
+/* --- banner section --- */
+.hawker-banner {
+  position: relative;
   width: 100%;
-  height: 300px;
+  height: 35vh;
+  overflow: hidden;
+  margin-top: 0;
+  margin-bottom: 0;
+  padding: 0; 
+}
+
+.banner-img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
 }
 
-/* 🍽 Section Styles */
+.banner-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.banner-content {
+  position: absolute;
+  bottom: 20px;
+  left: 50px;
+  color: white;
+  z-index: 2;
+}
+
+.banner-content h1 {
+  font-size: 2rem;
+  margin-bottom: 0.3rem;
+  font-weight: 600;
+}
+
+.banner-content p {
+  font-size: 1rem;
+  margin-bottom: 0.8rem;
+  opacity: 0.9;
+}
+
+.filter-btn {
+  background-color: #ff7b00;
+  border: none;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.filter-btn:hover {
+  background-color: #e66a00;
+}
+
+.arrow {
+  font-size: 0.8rem;
+}
+
+/* section styles */
 section {
   padding: 30px 40px;
 }
 
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
+/* --- hawkers stalls section --- */
+.hawker-grid {
+display: grid;
+grid-template-columns: repeat(4, 1fr);
+justify-content: center;
+gap: 20px;
 }
 
-.section-header h2 {
-  font-size: 1.4rem;
-}
-
-.see-all {
-  color: #ff6600;
-  text-decoration: none;
-  font-weight: 500;
-}
-
-/* Filters */
-.filters {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 25px;
-}
-
-.filters select, .filters button {
-  border: 1px solid #ff6600;
-  background: transparent;
-  border-radius: 20px;
-  padding: 5px 15px;
-  color: #ff6600;
-  cursor: pointer;
-  font-size: 0.9rem;
-}
-
-/* Cards */
-.card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 20px;
-}
-
-.card {
+.hawker-card {
   background: white;
   border-radius: 10px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
@@ -127,28 +152,30 @@ section {
   transition: 0.3s;
 }
 
-.card:hover {
+.hawker-card:hover {
   transform: translateY(-5px);
 }
 
-.card img {
+.hawker-card img {
   width: 100%;
-  height: 140px;
+  height: 220px;
   object-fit: cover;
 }
 
-.card h3 {
+
+.hawker-card h3 {
   font-size: 1rem;
   margin: 10px;
 }
 
-.card p {
+.hawker-card p {
   margin: 0 10px 10px;
   font-size: 0.85rem;
   color: #555;
 }
 
+
 .distance {
-  color: #ff6600;
+  color: #ff7b00;
   font-weight: 500;
 }
