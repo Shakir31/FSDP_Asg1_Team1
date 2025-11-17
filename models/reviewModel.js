@@ -65,4 +65,37 @@ async function getReviewsByStall(stallId) {
   }
 }
 
-module.exports = { createReview, getReviewsByMenuItem, getReviewsByStall };
+async function getReviewsByUser(userId) {
+  let connection;
+  try {
+    connection = await sql.connect(dbConfig);
+    const result = await connection
+      .request()
+      .input("userId", sql.Int, userId).query(`
+        SELECT 
+          r.ReviewID, 
+          r.Rating, 
+          r.ReviewText, 
+          r.CreatedAt,
+          m.Name AS MenuItemName,
+          i.ImageURL
+        FROM Reviews r
+        INNER JOIN MenuItems m ON r.MenuItemID = m.MenuItemID
+        LEFT JOIN Images i ON r.ImageID = i.ImageID
+        WHERE r.UserID = @userId
+        ORDER BY r.CreatedAt DESC
+      `);
+    return result.recordset;
+  } catch (error) {
+    throw error;
+  } finally {
+    if (connection) await connection.close();
+  }
+}
+
+module.exports = { 
+  createReview, 
+  getReviewsByMenuItem, 
+  getReviewsByStall,
+  getReviewsByUser,
+};
