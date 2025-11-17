@@ -83,8 +83,8 @@ app.put(
 //image upload and voting
 app.post(
   "/images/upload",
-  validateImageUpload,
   authenticateToken,
+  validateImageUpload,
   imageController.uploadImage
 );
 app.post("/images/upvote", authenticateToken, imageController.upvoteImage);

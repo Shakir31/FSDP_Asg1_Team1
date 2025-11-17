@@ -1,4 +1,5 @@
-const imageModel = require("../models/imageModel");
+const fs = require("fs");
+const path = require("path");
 const axios = require("axios");
 const FormData = require("form-data");
 const sharp = require("sharp");
@@ -98,5 +99,67 @@ async function upvoteImage(req, res) {
     res.status(400).json({ error: error.message });
   }
 }
+
+// uploadImage: expects validateImageUpload middleware to populate req.files and authenticateToken to populate req.user
+exports.uploadImage = async (req, res) => {
+  try {
+    const userId = req.user?.id || req.user?.userId;
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: "No files uploaded" });
+    }
+
+    if (!process.env.LOGMEAL_API_KEY) {
+      return res.status(500).json({ message: "LogMeal API key not configured on server" });
+    }
+
+    const detections = [];
+
+    // For each uploaded file call LogMeal detection
+    for (const file of req.files) {
+      const filePath = file.path || file.location || file.filename;
+      const fileStream = fs.createReadStream(file.path || filePath);
+
+      try {
+        // LogMeal expects an image upload. Adjust header if your LogMeal plan uses a different auth header.
+        const resp = await axios.post(
+          "https://api.logmeal.es/v2/image/recognition/dish",
+          fileStream,
+          {
+            headers: {
+              "Content-Type": file.mimetype || "image/jpeg",
+              Authorization: `Bearer ${process.env.LOGMEAL_API_KEY}`,
+            },
+            timeout: 20000,
+          }
+        );
+
+        detections.push({
+          filename: file.originalname || file.filename,
+          result: resp.data,
+        });
+      } catch (err) {
+        detections.push({
+          filename: file.originalname || file.filename,
+          error: err?.response?.data || err.message,
+        });
+      }
+    }
+
+    // Optionally: store review / detections to DB here using your imageModel (kept out to minimize changes)
+    // If you want to persist, call your imageModel functions here.
+
+    // Respond with detections and basic meta (frontend will then call /coins/award-photo to credit)
+    return res.json({
+      message: "Files processed",
+      detections,
+      uploadedCount: req.files.length,
+      review: req.body.review || null,
+      stallId: req.body.stallId || null,
+    });
+  } catch (err) {
+    console.error("uploadImage error:", err);
+    return res.status(500).json({ message: "Server error during upload", error: err.message });
+  }
+};
 
 module.exports = { uploadImage, upvoteImage };

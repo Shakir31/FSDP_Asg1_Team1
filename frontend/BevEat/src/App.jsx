@@ -10,8 +10,10 @@ import MainLayout from "./components/MainLayout";
 import NetsQrSamplePage from "./components/NetsQrSamplePage";
 import TxnNetsSuccessStatusPage from "./components/TxnNetsSuccessStatusPage";
 import TxnNetsFailStatusPage from "./components/TxnNetsFailStatusPage";
-
+import UploadPage from "./components/UploadPage";
+import RedeemPage from "./components/RedeemPage";
 import { CartProvider, CartPage, CheckoutPage, CheckoutSuccess } from "./components/Cartcontext";
+
 
 function App() {
   const [count, setCount] = useState(0);
@@ -30,6 +32,8 @@ function App() {
           <Route path="/nets-qr" element={<NetsQrSamplePage />} />
           <Route path="/nets-qr/success" element={<TxnNetsSuccessStatusPage />} />
           <Route path="/nets-qr/fail" element={<TxnNetsFailStatusPage />} />
+          <Route path="/upload" element={<UploadPage />} />
+          <Route path="/redeem" element={<RedeemPage />} />
         </Route>
       </Routes>
     </CartProvider>
