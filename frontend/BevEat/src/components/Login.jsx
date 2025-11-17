@@ -29,6 +29,9 @@ function Login() {
         }
         alert("Login successful! Role: " + data.role);
         //redirect or update UI accordingly
+        if (data.role === "admin" || data.role === "Admin") {
+          window.location.href = "/admin";
+        }
       } else {
         setError(data.error || "Login failed");
       }
