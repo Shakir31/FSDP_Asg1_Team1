@@ -14,6 +14,10 @@ const coinController = require("./controllers/coinController");
 const voucherController = require("./controllers/voucherController");
 const reviewController = require("./controllers/reviewController");
 
+const { validateReview } = require("./middlewares/reviewValidation");
+const { validateMenuItem } = require("./middlewares/menuItemValidation");
+const { validateImageUpload } = require("./middlewares/imageValidation");
+
 const {
   authenticateToken,
   authorizeRoles,
@@ -48,6 +52,7 @@ app.post(
 app.get("/stalls/:stallId/menu", stallController.getMenuByStall);
 app.post(
   "/menuitems",
+  validateMenuItem,
   authenticateToken,
   authorizeRoles("stall_owner"),
   stallController.createMenuItem
@@ -79,12 +84,16 @@ app.put(
 );
 
 //image upload and voting
-app.post("/images/upload", authenticateToken, imageController.uploadImage);
+app.post(
+  "/images/upload",
+  authenticateToken,
+  validateImageUpload,
+  imageController.uploadImage
+);
 app.post("/images/upvote", authenticateToken, imageController.upvoteImage);
 
 //coin gamification endpoints
 app.get("/coins/balance", authenticateToken, coinController.getUserCoins);
-
 app.post(
   "/coins/award-photo",
   authenticateToken,
@@ -99,7 +108,6 @@ app.post(
   authorizeRoles("customer"),
   voucherController.redeemVoucher
 );
-
 app.get(
   "/vouchers/user",
   authenticateToken,
@@ -110,6 +118,7 @@ app.get(
 //review
 app.post(
   "/reviews",
+  validateReview,
   authenticateToken,
   authorizeRoles("customer"),
   reviewController.createReview
@@ -117,6 +126,15 @@ app.post(
 app.get("/reviews/menuitem/:menuItemId", reviewController.getReviewsByMenuItem);
 app.get("/reviews/stall/:stallId", reviewController.getReviewsByStall);
 app.get("/reviews/user", authenticateToken, reviewController.getReviewsByUser);
+
+app.get("/vouchers/available", voucherController.getAvailableVouchers);
+app.post("/vouchers/redeem", authenticateToken, voucherController.redeemVoucher);
+
+app.get("/coins/balance", authenticateToken, coinController.getBalance);
+app.post("/coins/award-photo", authenticateToken, coinController.awardForPhoto);
+
+// image upload route (ensure validateImageUpload matches frontend)
+app.post("/images/upload", authenticateToken, validateImageUpload, imageController.uploadImage);
 
 //start server
 app.listen(port, () => {
