@@ -1,102 +1,80 @@
-const imageModel = require("../models/imageModel");
+const fs = require("fs");
 const axios = require("axios");
-const FormData = require("form-data");
-const sharp = require("sharp");
 
-//api key in env
-const LOGMEAL_API_KEY = process.env.LOGMEAL_API_KEY;
-
-async function uploadImage(req, res) {
+exports.uploadImage = async (req, res) => {
   try {
-    const uploaderId = parseInt(req.user.userId, 10);
-    if (isNaN(uploaderId)) {
-      return res.status(400).json({ error: "Invalid userId from token" });
-    }
-    const { menuItemId, imageUrl } = req.body;
-
-    //call AI food image verification API
-    const isFood = await aiFoodImageVerification(imageUrl);
-    if (!isFood)
-      return res.status(400).json({ error: "Image failed food verification" });
-
-    const newImage = await imageModel.insertImage(
-      menuItemId,
-      uploaderId,
-      imageUrl
-    );
-    res.status(201).json({ message: "Image uploaded", image: newImage });
-  } catch (error) {
-    console.error("Upload image error", error);
-    res.status(500).json({ error: "Error uploading image" });
-  }
-}
-
-const MIN_CONFIDENCE = 0.2; //minimum confidence threshold for food detection
-
-async function aiFoodImageVerification(imageUrl) {
-  try {
-    //download image as arraybuffer
-    const response = await axios.get(imageUrl, { responseType: "arraybuffer" });
-    let imageBuffer = Buffer.from(response.data, "binary");
-
-    //compress image to max 1MB because api cannot take images over 1mb
-    imageBuffer = await sharp(imageBuffer)
-      .resize({ width: 800 })
-      .jpeg({ quality: 80 })
-      .toBuffer();
-
-    if (imageBuffer.length > 1024 * 1024) {
-      throw new Error("Image still too large after resizing");
+    const files = req.files && req.files.length ? req.files : (req.file ? [req.file] : []);
+    if (!files || files.length === 0) {
+      return res.status(400).json({ message: "No files uploaded" });
     }
 
-    //prepare the form data
-    const formData = new FormData();
-    formData.append("image", imageBuffer, { filename: "image.jpg" });
+    if (!process.env.LOGMEAL_API_KEY) {
+      console.error("LOGMEAL_API_KEY missing");
+      return res.status(500).json({ message: "LogMeal API key not configured on server" });
+    }
 
-    //call the LogMeal API
-    const apiResponse = await axios.post(
-      "https://api.logmeal.es/v2/recognition/dish",
-      formData,
-      {
-        headers: {
-          ...formData.getHeaders(),
-          Authorization: `Bearer ${LOGMEAL_API_KEY}`,
-        },
+    const detections = [];
+
+    for (const file of files) {
+      try {
+        let resp;
+        // If multer memoryStorage used, file.buffer exists
+        if (file.buffer) {
+          resp = await axios.post(
+            "https://api.logmeal.es/v2/image/recognition/dish",
+            file.buffer,
+            {
+              headers: {
+                "Content-Type": file.mimetype || "image/jpeg",
+                Authorization: `Bearer ${process.env.LOGMEAL_API_KEY}`,
+              },
+              timeout: 20000,
+            }
+          );
+        } else if (file.path) {
+          // disk storage
+          const stream = fs.createReadStream(file.path);
+          resp = await axios.post(
+            "https://api.logmeal.es/v2/image/recognition/dish",
+            stream,
+            {
+              headers: {
+                "Content-Type": file.mimetype || "image/jpeg",
+                Authorization: `Bearer ${process.env.LOGMEAL_API_KEY}`,
+              },
+              timeout: 20000,
+            }
+          );
+        } else {
+          throw new Error("Uploaded file has neither buffer nor path");
+        }
+
+        detections.push({
+          filename: file.originalname || file.filename || "unknown",
+          result: resp.data,
+        });
+      } catch (innerErr) {
+        console.error("LogMeal call failed for file:", file.originalname || file.filename, innerErr?.response?.data || innerErr.message);
+        detections.push({
+          filename: file.originalname || file.filename || "unknown",
+          error: innerErr?.response?.data || innerErr.message,
+        });
       }
-    );
-
-    const prediction = apiResponse.data;
-    const results = prediction.recognition_results;
-
-    //strict food check
-    //require any result with confidence >= MIN_CONFIDENCE and not tagged as non-food
-    if (!Array.isArray(results) || results.length === 0) return false;
-
-    const isFood = results.some(
-      (r) => typeof r.prob === "number" && r.prob >= MIN_CONFIDENCE
-    );
-
-    console.log("Food verification results:", results);
-    return isFood;
-  } catch (error) {
-    console.error("AI image verification error", error);
-    return false;
-  }
-}
-
-async function upvoteImage(req, res) {
-  try {
-    const userId = parseInt(req.user.userId, 10);
-    if (isNaN(userId)) {
-      return res.status(400).json({ error: "Invalid userId from token" });
     }
-    const { imageId } = req.body;
-    await imageModel.voteImage(userId, imageId);
-    res.status(201).json({ message: "Image upvoted" });
-  } catch (error) {
-    console.error("Upvote image error", error);
-    res.status(400).json({ error: error.message });
-  }
-}
 
-module.exports = { uploadImage, upvoteImage };
+    // Optionally persist images/review here using your imageModel
+    return res.json({
+      message: "Files processed",
+      detections,
+      uploadedCount: files.length,
+      review: req.body.review || null,
+      stallId: req.body.stallId || null,
+    });
+  } catch (err) {
+    console.error("uploadImage error:", err);
+    return res.status(500).json({
+      message: "Server error during upload",
+      error: (err && err.message) || err,
+    });
+  }
+};

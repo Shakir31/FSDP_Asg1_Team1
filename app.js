@@ -34,6 +34,7 @@ app.use(express.urlencoded({ extended: true }));
 //auth endpoints
 app.post("/register", authController.registerUser);
 app.post("/login", authController.loginUser);
+app.get("/users/profile", authenticateToken, authController.getUserProfile);
 
 //admin: users list
 app.get("/admin/users", authenticateToken, authorizeRoles("admin"), authController.listUsers);
@@ -55,7 +56,9 @@ app.get("/admin/stalls/:id", authenticateToken, authorizeRoles("admin"), stallCo
 app.get("/stalls", stallController.getAllStalls);
 app.get("/stalls/category", stallController.getStallsByCategory);
 app.get("/stalls/hawker-centre", stallController.getStallsByHawkerCentre);
+app.get("/stalls/:id/photos", stallController.getStallImages);
 app.get("/stalls/:id", stallController.getStallById);
+app.get("/menu-item/:itemId", stallController.getMenuItemById);
 app.post(
   "/stalls",
   authenticateToken,
@@ -99,15 +102,14 @@ app.put(
 //image upload and voting
 app.post(
   "/images/upload",
-  validateImageUpload,
   authenticateToken,
+  validateImageUpload,
   imageController.uploadImage
 );
 app.post("/images/upvote", authenticateToken, imageController.upvoteImage);
 
 //coin gamification endpoints
 app.get("/coins/balance", authenticateToken, coinController.getUserCoins);
-
 app.post(
   "/coins/award-photo",
   authenticateToken,
@@ -122,7 +124,6 @@ app.post(
   authorizeRoles("customer"),
   voucherController.redeemVoucher
 );
-
 app.get(
   "/vouchers/user",
   authenticateToken,
@@ -140,6 +141,16 @@ app.post(
 );
 app.get("/reviews/menuitem/:menuItemId", reviewController.getReviewsByMenuItem);
 app.get("/reviews/stall/:stallId", reviewController.getReviewsByStall);
+app.get("/reviews/user", authenticateToken, reviewController.getReviewsByUser);
+
+app.get("/vouchers/available", voucherController.getAvailableVouchers);
+app.post("/vouchers/redeem", authenticateToken, voucherController.redeemVoucher);
+
+app.get("/coins/balance", authenticateToken, coinController.getBalance);
+app.post("/coins/award-photo", authenticateToken, coinController.awardForPhoto);
+
+// image upload route (ensure validateImageUpload matches frontend)
+app.post("/images/upload", authenticateToken, validateImageUpload, imageController.uploadImage);
 
 //start server
 app.listen(port, () => {

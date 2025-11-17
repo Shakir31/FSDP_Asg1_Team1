@@ -57,17 +57,18 @@ async function getAllUsers() {
   }
 }
 
-async function getUserById(id) {
+async function getUserById(userId) {
   let connection;
   try {
     connection = await sql.connect(dbConfig);
     const result = await connection
       .request()
-      .input('id', sql.Int, id)
-      .query('SELECT UserID, Name, Email FROM Users WHERE UserID = @id');
+      .input("userId", sql.Int, userId)
+      // Select only the fields we want to send to the client
+      .query("SELECT UserID, Name, Email, Coins, Role FROM Users WHERE UserID = @userId");
     return result.recordset[0];
   } catch (error) {
-    console.error('DB getUserById error', error);
+    console.error("DB getUserById error", error);
     throw error;
   } finally {
     if (connection) await connection.close();
@@ -119,4 +120,10 @@ async function deleteUserById(id) {
   }
 }
 
-module.exports = { createUser, getUserByEmail, getAllUsers, getUserById, updateUserById, deleteUserById };
+
+
+module.exports = { 
+  createUser, 
+  getUserByEmail,
+  getUserById, getAllUsers, updateUserById, deleteUserById
+ };

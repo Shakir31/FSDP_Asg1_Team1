@@ -1,0 +1,283 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+body {
+  background-color: #fff;
+  color: #333;
+  overflow-x: hidden;
+}
+
+/* navbar */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 40px;
+  background: white;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo img {
+  width: 100px;
+}
+
+.nav-links a {
+  margin: 0 20px;
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+}
+
+.nav-links .active {
+  font-weight: 700;
+  border-bottom: 2px solid #ff6600;
+}
+
+.search-cart {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.search-cart input {
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  padding: 6px 12px;
+  outline: none;
+}
+
+.cart {
+  width: 35px;
+  cursor: pointer;
+}
+
+.profile {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+/* --- banner section --- */
+.hawker-banner {
+  position: relative;
+  width: 100%;
+  height: 35vh;
+  overflow: hidden;
+  margin-top: 0;
+  margin-bottom: 0;
+  padding: 0; 
+}
+
+.banner-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.banner-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.banner-content {
+  position: absolute;
+  bottom: 20px;
+  left: 50px;
+  color: white;
+  z-index: 2;
+}
+
+.banner-content h1 {
+  font-size: 2rem;
+  margin-bottom: 0.3rem;
+  font-weight: 600;
+}
+
+.banner-content p {
+  font-size: 1rem;
+  margin-bottom: 0.8rem;
+  opacity: 0.9;
+}
+
+.filter-btn {
+  background-color: #ff7b00;
+  border: none;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.filter-btn:hover {
+  background-color: #e66a00;
+}
+
+.arrow {
+  font-size: 0.8rem;
+}
+
+/* section styles */
+section {
+  padding: 30px 40px;
+}
+
+/* --- hawkers stalls section --- */
+.hawker-grid {
+display: grid;
+grid-template-columns: repeat(4, 1fr);
+justify-content: center;
+gap: 20px;
+}
+
+.hawker-card {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  overflow: hidden;
+  transition: 0.3s;
+}
+
+.hawker-card:hover {
+  transform: translateY(-5px);
+}
+
+.hawker-card img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+}
+
+
+.hawker-card h3 {
+  font-size: 1rem;
+  margin: 10px;
+}
+
+.hawker-card p {
+  margin: 0 10px 10px;
+  font-size: 0.85rem;
+  color: #555;
+}
+
+
+.distance {
+  color: #ff7b00;
+  font-weight: 500;
+}
+
+/* Tablets (1024px and below) */
+@media (max-width: 1024px) {
+  .navbar {
+    padding: 15px 20px;
+  }
+
+  section {
+    padding: 25px 20px;
+  }
+
+  .hawker-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .banner-content h1 {
+    font-size: 1.7rem;
+  }
+
+  .banner-content p {
+    font-size: 0.9rem;
+  }
+}
+
+/* Large Phones (768px and below) */
+@media (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px;
+  }
+
+  .nav-links a {
+    margin: 0 10px;
+  }
+
+  .search-cart input {
+    width: 130px;
+  }
+
+  .hawker-banner {
+    height: 28vh;
+  }
+
+  .banner-content {
+    left: 20px;
+    bottom: 15px;
+  }
+
+  .banner-content h1 {
+    font-size: 1.4rem;
+  }
+
+  .hawker-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .hawker-card img {
+    height: 180px;
+  }
+}
+
+/* Small Phones (480px and below) */
+@media (max-width: 480px) {
+  .navbar {
+    padding: 10px;
+  }
+
+  .logo img {
+    width: 80px;
+  }
+
+  .nav-links a {
+    margin: 0 6px;
+    font-size: 0.85rem;
+  }
+
+  .search-cart input {
+    width: 100px;
+    padding: 4px 10px;
+  }
+
+  section {
+    padding: 20px 15px;
+  }
+
+  .banner-content h1 {
+    font-size: 1.2rem;
+  }
+
+  .banner-content p {
+    font-size: 0.8rem;
+  }
+
+  .hawker-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hawker-card img {
+    height: 160px;
+  }
+}

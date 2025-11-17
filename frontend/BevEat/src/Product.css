@@ -1,0 +1,116 @@
+/* This is the main page wrapper */
+.product-wrapper {
+  background-color: #f4f4f5;
+  min-height: calc(100vh - 108px); /* Full height minus navbar */
+  padding: 2rem;
+  display: flex;
+  justify-content: center; /* Changed to center */
+  align-items: flex-start; /* Aligns content to the top */
+}
+
+/* This is the new side-by-side layout container */
+.product-layout {
+  display: flex;
+  flex-direction: row; /* This puts items side-by-side */
+  flex-wrap: wrap; /* This allows the back button to sit on top */
+  gap: 2rem; /* Adds space between the image and text */
+  max-width: 1200px; /* Widen the container */
+  width: 100%;
+}
+
+/* --- Back Button --- */
+.back-button-container {
+  flex-basis: 100%; /* <--- This makes it take the full width */
+  margin-bottom: -1rem; /* Negative margin to pull it closer to the content */
+}
+
+.back-button {
+  background: none;
+  border: none;
+  color: #ff7622;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  transition: color 0.2s;
+}
+
+.back-button:hover {
+  color: #121223;
+}
+
+/* --- Column 1: The Image --- */
+.product-image-frame {
+  flex: 2; /* Make the image column take up 2/3 of the space */
+  max-width: 822px; /* Still respect the max image width */
+  height: 548px;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #e0e0e0;
+  flex-shrink: 0;
+}
+
+.product-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* --- Column 2: The Info --- */
+.product-info {
+  flex: 1; /* Make the info column take up 1/3 of the space */
+  display: flex;
+  flex-direction: column;
+}
+
+.product-name {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #121223;
+  margin: 0 0 0.5rem 0;
+}
+
+.product-price {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #ff7622;
+  margin: 0 0 1rem 0;
+}
+
+.product-description {
+  font-size: 1.1rem;
+  color: #333;
+  line-height: 1.6;
+}
+
+/* --- Responsive styles for smaller screens --- */
+@media (max-width: 900px) {
+  .product-layout {
+    flex-direction: column; /* Stack vertically on small screens */
+  }
+
+  .product-image-frame {
+    /* Make it responsive: 16:9 aspect ratio */
+    width: 100%;
+    height: 0;
+    padding-bottom: 66.66%; /* ( 548 / 822 ) * 100 = ~66.66% */
+    position: relative;
+  }
+
+  .product-image {
+    /* Fills the aspect-ratio frame */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .product-name {
+    font-size: 2rem;
+  }
+
+  .product-price {
+    font-size: 1.5rem;
+  }
+}

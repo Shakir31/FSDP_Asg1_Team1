@@ -45,4 +45,18 @@ async function getReviewsByStall(req, res) {
   }
 }
 
-module.exports = { createReview, getReviewsByMenuItem, getReviewsByStall };
+async function getReviewsByUser(req, res) {
+  try {
+    const userId = parseInt(req.user.userId, 10);
+    if (isNaN(userId)) {
+      return res.status(400).json({ error: "Invalid user ID from token" });
+    }
+    const reviews = await reviewModel.getReviewsByUser(userId);
+    res.json(reviews);
+  } catch (error) {
+    console.error("Get reviews by user error", error);
+    res.status(500).json({ error: "Error fetching reviews" });
+  }
+}
+
+module.exports = { createReview, getReviewsByMenuItem, getReviewsByStall, getReviewsByUser };

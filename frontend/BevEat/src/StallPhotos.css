@@ -1,0 +1,71 @@
+.photo-page-wrapper {
+  background-color: #f4f4f5;
+  min-height: calc(100vh - 108px); /* Full height minus navbar */
+  padding: 2rem;
+}
+
+.photo-page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.photo-header {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.photo-title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #121223;
+  margin: 0;
+}
+
+/* Re-using the back button style from Product.css */
+.back-button {
+  background: none;
+  border: none;
+  color: #ff7622;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  transition: color 0.2s;
+}
+
+.back-button:hover {
+  color: #121223;
+}
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.photo-card {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.photo-img {
+  width: 100%;
+  height: 240px;
+  object-fit: cover;
+}
+
+.photo-caption {
+  padding: 1rem;
+  margin: 0;
+  font-size: 0.9rem;
+  color: #333;
+  background-color: #fff;
+  border-top: 1px solid #f4f4f5;
+}
