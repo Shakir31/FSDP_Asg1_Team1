@@ -4,31 +4,44 @@ import "../RedeemPage.css";
 import { useNavigate } from "react-router-dom";
 
 export default function RedeemPage() {
-  const { availableVouchers, userCoins, redeemVoucher, refreshCoins, applyVoucher } = useContext(CartContext);
+  // guard if context is not provided
+  const ctx = useContext(CartContext) || {};
+  const {
+    availableVouchers = [],
+    userCoins = 0,
+    redeemVoucher = async () => ({ ok: false }),
+    refreshCoins,
+    applyVoucher,
+  } = ctx;
+
   const [loadingId, setLoadingId] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // refresh coins when page mounts
-    refreshCoins && refreshCoins();
-  }, []);
+    // refresh coins when page mounts (if function available)
+    if (typeof refreshCoins === "function") refreshCoins();
+  }, [refreshCoins]);
 
   async function handleRedeem(v) {
-    if (!confirm(`Redeem "${v.title}" for ${v.cost} coins?`)) return;
+    if (!window.confirm(`Redeem "${v.title}" for ${v.cost} coins?`)) return;
     setLoadingId(v.id);
-    const res = await redeemVoucher(v.id);
-    setLoadingId(null);
-    if (res.ok) {
-      // backend should return voucher object; apply it locally
-      if (res.data?.voucher) {
-        applyVoucher(res.data.voucher);
-        alert("Redeemed and applied!");
-        navigate("/cart");
+    try {
+      const res = await redeemVoucher(v.id);
+      setLoadingId(null);
+      if (res?.ok) {
+        if (res.data?.voucher && typeof applyVoucher === "function") {
+          applyVoucher(res.data.voucher);
+          alert("Redeemed and applied!");
+          navigate("/cart");
+        } else {
+          alert("Redeemed. Check your vouchers in profile.");
+        }
       } else {
-        alert("Redeemed. Check your vouchers in profile.");
+        alert("Redeem failed: " + (res?.error || "unknown"));
       }
-    } else {
-      alert("Redeem failed: " + (res.error || "unknown"));
+    } catch (err) {
+      setLoadingId(null);
+      alert("Redeem error: " + (err?.message || err));
     }
   }
 
@@ -38,7 +51,7 @@ export default function RedeemPage() {
       <div className="coins">Your coins: <strong>{userCoins ?? "-"}</strong></div>
 
       <div className="voucher-list">
-        {availableVouchers.length === 0 ? (
+        {(!availableVouchers || availableVouchers.length === 0) ? (
           <div className="no-vouchers">No vouchers available right now.</div>
         ) : (
           availableVouchers.map((v) => (
@@ -49,7 +62,11 @@ export default function RedeemPage() {
               </div>
               <div className="voucher-meta">
                 <div className="voucher-cost">{v.cost} coins</div>
-                <button className="btn btn-orange" disabled={loadingId === v.id || (userCoins != null && userCoins < v.cost)} onClick={() => handleRedeem(v)}>
+                <button
+                  className="btn btn-orange"
+                  disabled={loadingId === v.id || (userCoins != null && userCoins < v.cost)}
+                  onClick={() => handleRedeem(v)}
+                >
                   {loadingId === v.id ? "Redeeming…" : "Redeem"}
                 </button>
               </div>
