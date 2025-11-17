@@ -9,6 +9,10 @@ import MainLayout from "./components/MainLayout";
 import AdminHome from "./components/Admin";
 import UserAccount from "./components/UserAccount";
 import UserUpdate from "./components/UserUpdate";
+import Stall from "./components/Stall";
+import StallUpdate from "./components/StallUpdate";
+import StallCreate from "./components/StallCreate";
+
 
 function App() {
   const [count, setCount] = useState(0);
@@ -23,6 +27,9 @@ function App() {
         <Route path="/admin" element={<AdminHome />} />
         <Route path="/admin/users" element={<UserAccount />} />
         <Route path="/admin/users/:id" element={<UserUpdate />} />
+        <Route path="/admin/stalls" element={<Stall />} />
+        <Route path="/admin/stalls/:id" element={<StallUpdate />} />
+        <Route path="/admin/stalls/create-stall" element={<StallCreate />} />
       </Route>
     </Routes>
   );

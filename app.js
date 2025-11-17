@@ -35,11 +35,21 @@ app.use(express.urlencoded({ extended: true }));
 app.post("/register", authController.registerUser);
 app.post("/login", authController.loginUser);
 
-//admin: list users
+//admin: users list
 app.get("/admin/users", authenticateToken, authorizeRoles("admin"), authController.listUsers);
 app.get("/admin/users/:id", authenticateToken, authorizeRoles("admin"), authController.getUser);
 app.put("/admin/users/:id", authenticateToken, authorizeRoles("admin"), authController.updateUser);
 app.delete("/admin/users/:id", authenticateToken, authorizeRoles("admin"), authController.deleteUser);
+
+//admin: stalls list
+app.get("/admin/stalls", authenticateToken, authorizeRoles("admin"), stallController.getAllStalls);
+app.get("/admin/stalls/:id", authenticateToken, authorizeRoles("admin"), stallController.getStallById);
+// app.put("/admin/stalls/:id", authenticateToken, authorizeRoles("admin"), (req, res) => {
+//   res.status(501).json({ error: 'Not implemented' });
+// });
+// app.delete("/admin/stalls/:id", authenticateToken, authorizeRoles("admin"), (req, res) => {
+//   res.status(501).json({ error: 'Not implemented' });
+// });
 
 //stall endpoints
 app.get("/stalls", stallController.getAllStalls);

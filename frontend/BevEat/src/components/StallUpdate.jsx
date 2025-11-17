@@ -2,24 +2,23 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import '../admin.css';
 
-function UserUpdate() {
+function StallUpdate() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
-  const [password, setPassword] = useState('');
+  const [StallName, setStallName] = useState('');
+  const [HawkerCenter, setHawkerCenter] = useState('');
+  const [Category, setCategory] = useState('');
+  const [Description, setDescription] = useState('');
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    async function fetchProfile() {
+    async function fetchStallProfile() {
       try {
         setLoading(true);
         const token = localStorage.getItem('token');
-        const res = await fetch(`http://localhost:3000/admin/users/${id}`, {
+        const res = await fetch(`http://localhost:3000/admin/stalls/${id}`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {}
         });
         if (!res.ok) {
@@ -27,10 +26,10 @@ function UserUpdate() {
           throw new Error(`Failed to load profile: ${res.status} ${txt}`);
         }
         const data = await res.json();
-        setName(data.Name || '');
-        setEmail(data.Email || '');
-        setPhone(data.Phone || '');
-        setAddress(data.Address || '');
+        setStallName(data.StallName || '');
+        setHawkerCenter(data.HawkerCenter || '');
+        setCategory(data.Category || '');
+        setDescription(data.Description || '');
       } catch (err) {
         setError(err.message);
       } finally {
@@ -38,18 +37,18 @@ function UserUpdate() {
       }
     }
 
-    fetchProfile();
+    fetchStallProfile();
   }, [id]);
 
-  async function handleUpdate(e) {
+  async function handleStallUpdate(e) {
     e.preventDefault();
     setMessage(null);
     setError(null);
     try {
-      const body = { Name: name, Email: email, Phone: phone, Address: address };
+      const body = { StallName: StallName, HawkerCenter: HawkerCenter, Category: Category, Description: Description };
       if (password) body.Password = password;
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:3000/admin/users/${id}`, {
+      const res = await fetch(`http://localhost:3000/admin/stalls/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify(body)
@@ -58,18 +57,18 @@ function UserUpdate() {
       if (!res.ok) throw new Error(`Update failed: ${res.status} ${txt}`);
       setMessage('Profile updated successfully');
       setPassword('');
-      if (id) navigate('/admin/users');
+      if (id) navigate('/admin/stalls');
     } catch (err) {
       setError(err.message);
     }
   }
 
-  async function deleteUser() {
-    const confirmed = window.confirm('Delete this user? This action cannot be undone.');
+  async function deleteStall() {
+    const confirmed = window.confirm('Delete this stall? This action cannot be undone.');
     if (!confirmed) return;
     try {
         const token = localStorage.getItem('token');
-        const res = await fetch(`http://localhost:3000/admin/users/${id}`, { 
+        const res = await fetch(`http://localhost:3000/admin/stalls/${id}`, { 
           method: 'DELETE',
           headers: token ? { Authorization: `Bearer ${token}` } : {}
         });
@@ -78,7 +77,7 @@ function UserUpdate() {
         throw new Error(`Delete failed: ${res.status} ${txt}`);
         }
 
-        if (id) navigate('/admin/users');
+        if (id) navigate('/admin/stalls');
         else navigate('/');
     } catch (err) {
         setError(err.message);
@@ -91,31 +90,27 @@ function UserUpdate() {
       <div className="update-container">
         <div className="update-inner">
           <a className="back-link" onClick={() => navigate(-1)}>&larr;</a>
-          <form onSubmit={handleUpdate} className="update-form">
+          <form onSubmit={handleStallUpdate} className="update-form">
             <div className="form-row">
-              <label>NAME</label>
-              <input value={name} onChange={e => setName(e.target.value)} />
+              <label>STALL NAME</label>
+              <input value={StallName} onChange={e => setStallName(e.target.value)} />
             </div>
             <div className="form-row">
-              <label>EMAIL</label>
-              <input value={email} onChange={e => setEmail(e.target.value)} />
+              <label>HAWKER CENTER</label>
+              <input value={HawkerCenter} onChange={e => setHawkerCenter(e.target.value)} />
             </div>
             <div className="form-row">
-              <label>PASSWORD</label>
-              <input value={password} onChange={e => setPassword(e.target.value)} type="password" />
-            </div>
-            {/* <div className="form-row">
-              <label>PHONE</label>
-              <input value={phone} onChange={e => setPhone(e.target.value)} />
+              <label>CATEGORY</label>
+              <input value={Category} onChange={e => setCategory(e.target.value)} />
             </div>
             <div className="form-row">
-              <label>ADDRESS</label>
-              <input value={address} onChange={e => setAddress(e.target.value)} />
-            </div> */}
+              <label>DESCRIPTION</label>
+              <input value={Description} onChange={e => setDescription(e.target.value)} />
+            </div>
             <div className="form-actions">
               <div className="actions-row">
                 <button type="submit" className="btn-primary">Update</button>
-                <button type="button" className="btn-danger" onClick={deleteUser}>Delete</button>
+                <button type="button" className="btn-danger" onClick={deleteStall}>Delete</button>
               </div>
             </div>
 
@@ -128,4 +123,4 @@ function UserUpdate() {
   );
 }
 
-export default UserUpdate;
+export default StallUpdate;
