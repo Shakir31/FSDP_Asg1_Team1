@@ -9,7 +9,8 @@ import MainLayout from "./components/MainLayout";
 import Product from "./components/Product";
 import StallPhotos from "./components/StallPhotos";
 import ProfilePage from "./components/ProfilePage";
-
+import Home from "./components/Home";
+import HawkerPage from "./components/HawkerPage";
 import NetsQrSamplePage from "./components/NetsQrSamplePage";
 import TxnNetsSuccessStatusPage from "./components/TxnNetsSuccessStatusPage";
 import TxnNetsFailStatusPage from "./components/TxnNetsFailStatusPage";
@@ -17,17 +18,32 @@ import UploadPage from "./components/UploadPage";
 import RedeemPage from "./components/RedeemPage";
 import { CartProvider, CartPage, CheckoutPage, CheckoutSuccess } from "./components/Cartcontext";
 
-
 function App() {
   const [count, setCount] = useState(0);
 
   return (
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Signup />} />
+      {/* <Route path="/home" element={<Home />} /> */}
+      <Route element={<MainLayout />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/hawkers" element={<HawkerPage />} />
+        <Route path="/stalls/:id" element={<StallPage />} />
+        <Route path="/stalls/:id/photos" element={<StallPhotos />} />
+        <Route path="/menu-item/:itemId" element={<Product />} />
+        <Route path="/profile" element={<ProfilePage />} />
+      </Route>
+    </Routes>
+=======
     <CartProvider>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Signup />} />
         {/* <Route path="/home" element={<Home />} /> */}
         <Route element={<MainLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/hawkers" element={<HawkerPage />} />
           <Route path="/stalls/:id" element={<StallPage />} />
           <Route path="/stalls/:id/photos" element={<StallPhotos />} />
           <Route path="/menu-item/:itemId" element={<Product />} />
