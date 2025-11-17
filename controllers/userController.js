@@ -48,4 +48,27 @@ async function loginUser(req, res) {
   }
 }
 
-module.exports = { registerUser, loginUser };
+async function getUserProfile(req, res) {
+  try {
+    // req.user.userId is attached by the authenticateToken middleware
+    const userId = parseInt(req.user.userId, 10);
+    if (isNaN(userId)) {
+      return res.status(400).json({ error: "Invalid user ID from token" });
+    }
+
+    const user = await userModel.getUserById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.json(user);
+  } catch (error) {
+    console.error("Get user profile error", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+module.exports = { 
+  registerUser, 
+  loginUser,
+  getUserProfile
+};

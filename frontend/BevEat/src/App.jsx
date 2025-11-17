@@ -6,6 +6,9 @@ import Login from "./components/Login";
 import Signup from "./components/Signup";
 import StallPage from "./components/StallPage";
 import MainLayout from "./components/MainLayout";
+import Product from "./components/Product";
+import StallPhotos from "./components/StallPhotos";
+import ProfilePage from "./components/ProfilePage";
 
 import NetsQrSamplePage from "./components/NetsQrSamplePage";
 import TxnNetsSuccessStatusPage from "./components/TxnNetsSuccessStatusPage";
@@ -26,6 +29,9 @@ function App() {
         {/* <Route path="/home" element={<Home />} /> */}
         <Route element={<MainLayout />}>
           <Route path="/stalls/:id" element={<StallPage />} />
+          <Route path="/stalls/:id/photos" element={<StallPhotos />} />
+          <Route path="/menu-item/:itemId" element={<Product />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/checkout/success" element={<CheckoutSuccess />} />

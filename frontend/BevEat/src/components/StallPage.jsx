@@ -59,21 +59,24 @@ function StallPage() {
         <div className="menu-items-list">
           {menuItems.length > 0 ? (
             menuItems.map(item => (
+              <Link 
+                key={item.MenuItemID} 
+                to={`/menu-item/${item.MenuItemID}`}
+                className="menu-item-link" 
+              >
               <div key={item.MenuItemID} className="menu-item">
                 <img 
                   src={item.MainImageURL || hero} // Use hero as fallback
                   alt={item.Name} 
                   className="menu-item-image"
                 />
-                {/* <h3>{item.Name}</h3>
-                <p>{item.Description}</p>
-                <p className="menu-item-price">${parseFloat(item.Price).toFixed(2)}</p> */}
                 <div className="menu-item-content">
                   <h3 className="menu-item-name">{item.Name}</h3>
                   <p className="menu-item-description">{item.Description}</p>
                   <p className="menu-item-price">${parseFloat(item.Price).toFixed(2)}</p>
                 </div>
               </div>
+              </Link>
             ))
           ) : (
             <p>No menu items available for this stall.</p>
@@ -99,6 +102,9 @@ function StallPage() {
               <p className="hero-info">
                 <strong>Category:</strong> {stall.Category}
               </p>
+              <Link to={`/stalls/${id}/photos`} className="hero-photos-button">
+                View Photos
+              </Link>
             </div>
           )}
         </div>

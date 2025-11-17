@@ -147,6 +147,44 @@ async function getStallById(stallId) {
   }
 }
 
+async function getMenuItemById(menuItemId) {
+  let connection;
+  try {
+    connection = await sql.connect(dbConfig);
+    const result = await connection
+      .request()
+      .input("menuItemId", sql.Int, menuItemId)
+      .query("SELECT * FROM MenuItems WHERE MenuItemID = @menuItemId");
+    return result.recordset[0]; // Return the first (and only) item found
+  } catch (error) {
+    throw error;
+  } finally {
+    if (connection) await connection.close();
+  }
+}
+
+async function getImagesByStall(stallId) {
+  let connection;
+  try {
+    connection = await sql.connect(dbConfig);
+    const result = await connection
+      .request()
+      .input("stallId", sql.Int, stallId)
+      .query(`
+        SELECT i.ImageID, i.ImageURL, i.UploadedAt, m.Name as MenuItemName
+        FROM Images i
+        INNER JOIN MenuItems m ON i.MenuItemID = m.MenuItemID
+        WHERE m.StallID = @stallId
+        ORDER BY i.UploadedAt DESC
+      `);
+    return result.recordset;
+  } catch (error) {
+    throw error;
+  } finally {
+    if (connection) await connection.close();
+  }
+}
+
 module.exports = {
   createStall,
   getAllStalls,
@@ -156,4 +194,6 @@ module.exports = {
   getStallsByCategory,
   getStallsByHawkerCentre,
   getStallById,
+  getMenuItemById,
+  getImagesByStall,
 };
