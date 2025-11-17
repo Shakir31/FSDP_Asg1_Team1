@@ -1,174 +1,45 @@
-import React, { createContext, useEffect, useState, useContext } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import React, { createContext, useContext, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../Cart.css";
 
 export const CartContext = createContext(null);
 
 export function CartProvider({ children }) {
-  const [cart, setCart] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem("cart") || "[]");
-    } catch {
-      return [];
+  const [items, setItems] = useState([
+    { id: "1", name: "Item A", qty: 1, price: 3.5, desc: "Small cup" },
+    { id: "2", name: "Item B", qty: 2, price: 2.0, desc: "With syrup" },
+  ]);
+
+  const [vouchers, setVouchers] = useState([
+    { id: "v1", code: "DISC1", description: "Save $1.00", amountOff: 1.0 },
+  ]);
+
+  const [appliedVoucherId, setAppliedVoucherId] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState("cash"); // can be 'cash'|'nets'|null
+
+  const updateQty = (id, qty) => {
+    if (qty <= 0) {
+      // remove item when qty goes to zero
+      setItems((prev) => prev.filter((it) => it.id !== id));
+      return;
     }
-  });
-
-  // voucher & coins state
-  const [appliedVoucher, setAppliedVoucher] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem("appliedVoucher") || "null");
-    } catch {
-      return null;
-    }
-  });
-  const [userCoins, setUserCoins] = useState(null);
-  const [availableVouchers, setAvailableVouchers] = useState([]);
-
-  useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cart));
-  }, [cart]);
-
-  useEffect(() => {
-    localStorage.setItem("appliedVoucher", JSON.stringify(appliedVoucher));
-  }, [appliedVoucher]);
-
-  // load coins & vouchers on mount
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    async function load() {
-      try {
-        // coins balance
-        const bRes = await fetch("http://localhost:3000/coins/balance", {
-          headers: { Authorization: token ? `Bearer ${token}` : "" },
-        });
-        if (bRes.ok) {
-          const bData = await bRes.json();
-          setUserCoins(bData.balance ?? bData.coins ?? null);
-        }
-
-        // available vouchers
-        const vRes = await fetch("http://localhost:3000/vouchers/available");
-        if (vRes.ok) {
-          const vData = await vRes.json();
-          setAvailableVouchers(Array.isArray(vData) ? vData : vData.vouchers || []);
-        }
-      } catch (err) {
-        console.warn("load coins/vouchers failed:", err);
-      }
-    }
-    load();
-  }, []);
-
-  const addItem = (item) => {
-    setCart((prev) => {
-      const existing = prev.find((i) => i.id === item.id);
-      if (existing) {
-        return prev.map((i) =>
-          i.id === item.id ? { ...i, qty: i.qty + (item.qty || 1) } : i
-        );
-      }
-      return [...prev, { ...item, qty: item.qty || 1 }];
-    });
+    setItems((prev) => prev.map((it) => (it.id === id ? { ...it, qty } : it)));
   };
 
-  const updateQty = (id, qty) =>
-    setCart((prev) =>
-      prev
-        .map((i) => (i.id === id ? { ...i, qty: Math.max(1, qty) } : i))
-        .filter((i) => i.qty > 0)
-    );
-
-  const removeItem = (id) => setCart((prev) => prev.filter((i) => i.id !== id));
-
-  const clear = () => {
-    setCart([]);
-    setAppliedVoucher(null);
-  };
-
-  const subtotal = cart.reduce((s, i) => s + (i.price || 0) * i.qty, 0);
-
-  // compute discount based on voucher shape: supports {type: 'percent', value: 10} or {type:'amount', value:5}
-  const discount = (() => {
-    if (!appliedVoucher) return 0;
-    if (appliedVoucher.type === "percent") {
-      return Math.round((subtotal * (appliedVoucher.value || 0)) / 100 * 100) / 100;
-    }
-    return Math.min(subtotal, appliedVoucher.value || 0);
-  })();
-
-  const total = Math.max(0, subtotal - discount);
-
-  // apply voucher locally (doesn't verify/fetch)
-  const applyVoucher = (voucher) => {
-    setAppliedVoucher(voucher);
-  };
-
-  const removeVoucher = () => setAppliedVoucher(null);
-
-  // redeem voucher: call backend to spend coins and generate voucher object
-  const redeemVoucher = async (voucherId) => {
-    const token = localStorage.getItem("token");
-    try {
-      const res = await fetch("http://localhost:3000/vouchers/redeem", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
-        },
-        body: JSON.stringify({ voucherId }),
-      });
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || `Redeem failed ${res.status}`);
-      }
-      const data = await res.json();
-      // backend should return the voucher object and updated coin balance
-      if (data.voucher) {
-        setAppliedVoucher(data.voucher);
-        localStorage.setItem("appliedVoucher", JSON.stringify(data.voucher));
-      }
-      if (data.coins != null) setUserCoins(data.coins);
-      return { ok: true, data };
-    } catch (err) {
-      console.error("redeemVoucher error:", err);
-      return { ok: false, error: err.message || err };
-    }
-  };
-
-  // refresh coin balance (call backend)
-  const refreshCoins = async () => {
-    const token = localStorage.getItem("token");
-    try {
-      const bRes = await fetch("http://localhost:3000/coins/balance", {
-        headers: { Authorization: token ? `Bearer ${token}` : "" },
-      });
-      if (bRes.ok) {
-        const bData = await bRes.json();
-        setUserCoins(bData.balance ?? bData.coins ?? null);
-      }
-    } catch (err) {
-      console.warn("refreshCoins failed:", err);
-    }
-  };
+  const removeItem = (id) => setItems((prev) => prev.filter((it) => it.id !== id));
 
   return (
     <CartContext.Provider
       value={{
-        cart,
-        addItem,
+        items,
+        setItems,
         updateQty,
         removeItem,
-        clear,
-        subtotal,
-        discount,
-        total,
-        appliedVoucher,
-        applyVoucher,
-        removeVoucher,
-        redeemVoucher,
-        availableVouchers,
-        userCoins,
-        refreshCoins,
+        vouchers,
+        appliedVoucherId,
+        setAppliedVoucherId,
+        paymentMethod,
+        setPaymentMethod,
       }}
     >
       {children}
@@ -176,143 +47,193 @@ export function CartProvider({ children }) {
   );
 }
 
-/* --- Small UI components bundled here to avoid extra files --- */
+export function useCart() {
+  return useContext(CartContext);
+}
 
-export function CartItem({ item }) {
-  const { updateQty, removeItem } = useContext(CartContext);
-
-  return (
-    <div className="cart-item">
-      <div className="cart-item-left">
-        <div className="cart-item-title">{item.name}</div>
-        <div className="cart-item-desc">{item.description || ""}</div>
-      </div>
-
-      <div className="cart-item-price">S${(item.price || 0).toFixed(2)}</div>
-
-      <div className="qty-controls">
-        <button className="qty-btn" onClick={() => updateQty(item.id, item.qty - 1)}>-</button>
-        <div className="qty-count">{item.qty}</div>
-        <button className="qty-btn" onClick={() => updateQty(item.id, item.qty + 1)}>+</button>
-      </div>
-
-      <div>
-        <button className="btn-remove" onClick={() => removeItem(item.id)}>Remove</button>
-      </div>
-    </div>
-  );
+function calcSubtotal(items) {
+  return items.reduce((s, it) => s + (it.price || 0) * (it.qty || 0), 0);
 }
 
 export function CartPage() {
-  const { cart, total, subtotal, discount, appliedVoucher, removeVoucher } = useContext(CartContext);
   const navigate = useNavigate();
+  const {
+    items,
+    updateQty,
+    vouchers,
+    appliedVoucherId,
+    setAppliedVoucherId,
+    paymentMethod,
+    setPaymentMethod,
+  } = useCart();
+
+  const subtotal = calcSubtotal(items);
+  const appliedVoucher = vouchers.find((v) => v.id === appliedVoucherId) || null;
+  const discount = appliedVoucher ? appliedVoucher.amountOff || 0 : 0;
+  const total = Math.max(0, subtotal - discount);
+
+  const handleCheckout = () => {
+    if (items.length === 0) return;
+    if (paymentMethod === "nets") navigate("/nets-qr");
+    else navigate("/checkout");
+  };
 
   return (
     <div className="cart-container">
       <h2 className="cart-title">Your Cart</h2>
-      {cart.length === 0 ? (
-        <div className="cart-empty">Your cart is empty.</div>
-      ) : (
-        <>
-          <div className="cart-list">
-            {cart.map((item) => (
-              <CartItem key={item.id} item={item} />
-            ))}
-          </div>
 
-          <div className="cart-summary" style={{ marginTop: 12 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-              <div>Subtotal</div>
-              <div>S${subtotal.toFixed(2)}</div>
+      <div className="cart-grid">
+        {/* LEFT: Items */}
+        <div className="cart-left">
+          <div className="card">
+            <h3 style={{ marginTop: 0 }}>Items</h3>
+            <div className="cart-list" style={{ marginTop: 8 }}>
+              {items.length === 0 ? (
+                <div className="cart-empty">Your cart is empty.</div>
+              ) : (
+                items.map((it) => (
+                  <div key={it.id} className="cart-item">
+                    <div className="cart-item-left">
+                      <div className="cart-item-title">{it.name}</div>
+                      {it.desc && <div className="cart-item-desc">{it.desc}</div>}
+                    </div>
+
+                    <div className="qty-controls" role="group" aria-label="quantity">
+                      <button
+                        className="qty-btn"
+                        onClick={() => updateQty(it.id, it.qty - 1)}
+                        aria-label="decrease"
+                        type="button"
+                      >
+                        −
+                      </button>
+                      <div className="qty-count">{it.qty}</div>
+                      <button
+                        className="qty-btn"
+                        onClick={() => updateQty(it.id, it.qty + 1)}
+                        aria-label="increase"
+                        type="button"
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    <div className="cart-item-price">SGD {(it.price * it.qty).toFixed(2)}</div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT: Payment and vouchers */}
+        <aside className="cart-right">
+          <div className="card payment-card">
+            <h3 style={{ marginTop: 0, color: "var(--orange)" }}>Payment Method</h3>
+
+            <div style={{ marginTop: 8 }}>
+              {/* Use checkboxes-like toggle so selection can be cleared */}
+              <label className="pay-row">
+                <input
+                  type="checkbox"
+                  checked={paymentMethod === "cash"}
+                  onChange={() => setPaymentMethod(paymentMethod === "cash" ? null : "cash")}
+                />
+                <span style={{ fontWeight: 700 }}>Cash</span>
+              </label>
+
+              <label className="pay-row">
+                <input
+                  type="checkbox"
+                  checked={paymentMethod === "nets"}
+                  onChange={() => setPaymentMethod(paymentMethod === "nets" ? null : "nets")}
+                />
+                <span style={{ fontWeight: 700 }}>NETS</span>
+              </label>
             </div>
 
-            {appliedVoucher ? (
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#fff7ef", padding: 10, borderRadius: 8, border: "1px dashed #ffd8b4" }}>
-                <div>
-                  <div style={{ fontWeight: 700 }}>{appliedVoucher.title || "Voucher applied"}</div>
-                  <div style={{ fontSize: 13, color: "#6b6b6b" }}>{appliedVoucher.description || ""}</div>
-                </div>
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ fontWeight: 700 }}>- S${discount.toFixed(2)}</div>
-                  <button className="btn-ghost" onClick={() => removeVoucher()}>Remove</button>
-                </div>
+            <div className="payment-divider" />
+
+            <div className="cart-footer" style={{ marginTop: 12, flexDirection: "column", alignItems: "stretch", gap: 12 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ fontSize: 16 }}>Subtotal</div>
+                <div style={{ fontWeight: 700 }}>SGD {subtotal.toFixed(2)}</div>
               </div>
+
+              {appliedVoucher && (
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", color: "var(--muted)" }}>
+                  <div>Voucher ({appliedVoucher.code})</div>
+                  <div>-SGD {discount.toFixed(2)}</div>
+                </div>
+              )}
+
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 18 }}>
+                <div style={{ fontWeight: 700 }}>Total</div>
+                <div style={{ fontWeight: 900 }}>SGD {total.toFixed(2)}</div>
+              </div>
+
+              <button className="btn btn-orange" onClick={handleCheckout} style={{ width: "100%" }}>
+                Checkout
+              </button>
+            </div>
+          </div>
+
+          <div className="card voucher-card" style={{ marginTop: 12 }}>
+            <h3 style={{ marginTop: 0, color: "var(--orange)" }}>Vouchers</h3>
+
+            {vouchers.length === 0 ? (
+              <div className="cart-empty">You have no vouchers.</div>
             ) : (
-              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
-                <div />
-                <div>
-                  <button className="btn btn-orange" onClick={() => navigate("/redeem")}>Redeem vouchers</button>
+              <div style={{ marginTop: 8 }}>
+                {vouchers.map((v) => (
+                  <label key={v.id} className="voucher-row">
+                    <input
+                      type="checkbox"
+                      checked={appliedVoucherId === v.id}
+                      onChange={() => setAppliedVoucherId(appliedVoucherId === v.id ? null : v.id)}
+                    />
+                    <div>
+                      <div style={{ fontWeight: 700 }}>{v.code}</div>
+                      <div style={{ fontSize: 13, color: "var(--muted)" }}>{v.description}</div>
+                    </div>
+                  </label>
+                ))}
+
+                <div style={{ marginTop: 10 }}>
+                  <button
+                    className="btn btn-orange"
+                    onClick={() => {
+                      if (!appliedVoucherId) return;
+                      alert("Voucher applied");
+                    }}
+                    style={{ width: "100%" }}
+                  >
+                    Redeem Selected
+                  </button>
                 </div>
               </div>
             )}
-
-            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12, alignItems: "center" }}>
-              <div className="cart-total">Total: <span>S${total.toFixed(2)}</span></div>
-              <div>
-                <button className="btn btn-orange" onClick={() => navigate("/checkout")}>Checkout</button>
-              </div>
-            </div>
           </div>
-        </>
-      )}
+        </aside>
+      </div>
     </div>
   );
 }
 
 export function CheckoutPage() {
-  const { cart, total, clear } = useContext(CartContext);
-  const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", address: "" });
-  const navigate = useNavigate();
-
-  const submit = async (e) => {
-    e.preventDefault();
-    if (cart.length === 0) return alert("Cart empty");
-    setLoading(true);
-    // Simulate request
-    await new Promise((r) => setTimeout(r, 700));
-    const order = { id: Date.now(), items: cart, total, customer: form };
-    clear();
-    setLoading(false);
-    navigate("/checkout/success", { state: { order } });
-  };
-
   return (
-    <div style={{ padding: 20 }}>
-      <h2>Checkout</h2>
-      <form onSubmit={submit} style={{ maxWidth: 600, display: "grid", gap: 8 }}>
-        <input placeholder="Full name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
-        <input placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
-        <textarea placeholder="Delivery address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} required />
-        <div style={{ fontWeight: 600 }}>Total: S${total.toFixed(2)}</div>
-        <div>
-          <button type="submit" disabled={loading}>{loading ? "Placing order..." : "Place order"}</button>
-        </div>
-      </form>
+    <div style={{ padding: 24 }}>
+      <h2 style={{ color: "var(--orange)" }}>Checkout</h2>
+      <p>Proceed with cash checkout flow (placeholder).</p>
     </div>
   );
 }
 
 export function CheckoutSuccess() {
-  const { state } = useLocation();
-  const navigate = useNavigate();
-  const order = state?.order;
-
   return (
-    <div style={{ padding: 20 }}>
-      <h2>Order Confirmed</h2>
-      {!order ? (
-        <div>No order data. <button onClick={() => navigate("/")}>Go home</button></div>
-      ) : (
-        <>
-          <div>Order ID: {order.id}</div>
-          <div>Customer: {order.customer?.name}</div>
-          <div>Total: S${order.total.toFixed(2)}</div>
-          <div style={{ marginTop: 12 }}>
-            <button onClick={() => navigate("/stalls/1")}>Back to stalls</button>
-          </div>
-        </>
-      )}
+    <div style={{ padding: 24 }}>
+      <h2 style={{ color: "var(--orange)" }}>Payment Successful</h2>
+      <p>Thank you for your purchase.</p>
     </div>
   );
 }

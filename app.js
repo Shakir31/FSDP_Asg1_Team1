@@ -91,7 +91,6 @@ app.post("/images/upvote", authenticateToken, imageController.upvoteImage);
 
 //coin gamification endpoints
 app.get("/coins/balance", authenticateToken, coinController.getUserCoins);
-
 app.post(
   "/coins/award-photo",
   authenticateToken,
@@ -106,7 +105,6 @@ app.post(
   authorizeRoles("customer"),
   voucherController.redeemVoucher
 );
-
 app.get(
   "/vouchers/user",
   authenticateToken,
@@ -124,6 +122,15 @@ app.post(
 );
 app.get("/reviews/menuitem/:menuItemId", reviewController.getReviewsByMenuItem);
 app.get("/reviews/stall/:stallId", reviewController.getReviewsByStall);
+
+app.get("/vouchers/available", voucherController.getAvailableVouchers);
+app.post("/vouchers/redeem", authenticateToken, voucherController.redeemVoucher);
+
+app.get("/coins/balance", authenticateToken, coinController.getBalance);
+app.post("/coins/award-photo", authenticateToken, coinController.awardForPhoto);
+
+// image upload route (ensure validateImageUpload matches frontend)
+app.post("/images/upload", authenticateToken, validateImageUpload, imageController.uploadImage);
 
 //start server
 app.listen(port, () => {

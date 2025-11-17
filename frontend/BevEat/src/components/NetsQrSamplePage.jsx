@@ -12,9 +12,9 @@ class NetsQrSampleLayout extends Component {
     this.state = {
       convertTime: {},
       secondsNetsTimeout: 300,
-      amount: '3',
+      amount: "3",
       txnId: "sandbox_nets|m|8ff8e5b6-d43e-4786-8ac5-7accf8c5bd9b",
-      mobile: 0,
+      mobile: "",
       netsQrPayment: txnLoading,
       netsQrRetrievalRef: "",
       netsQrGenerate: false,
@@ -24,8 +24,8 @@ class NetsQrSampleLayout extends Component {
       networkCode: "",
       instruction: "",
       errorMsg: "",
-      netsSecretKey: '',
-      hmacChallengeGenerate: "",
+      logo: null,       // optional main logo
+      infoImage: null,  // optional info image (netsQRInfo)
     };
     this.netsTimer = 0;
     this.queryNets = this.queryNets.bind(this);
@@ -35,60 +35,64 @@ class NetsQrSampleLayout extends Component {
     this.isApiCalled = false;
   }
 
+  componentDidMount() {
+    // try load both info image and logo from assets (silent fail if missing)
+    import("../assets/netsQRInfo.png")
+      .then((mod) => this.setState({ infoImage: mod.default }))
+      .catch(() => { /* ignore if missing */ });
+
+    import("../assets/netsQrLogo.png")
+      .then((mod) => this.setState({ logo: mod.default }))
+      .catch(() => { /* ignore if missing */ });
+  }
+
   async requestNets(amount, txnId, mobile) {
     try {
-      this.setState({ netsQrGenerate: true })
-      var body = {
+      this.setState({ netsQrGenerate: true });
+      const body = {
         txn_id: txnId,
         amt_in_dollars: amount,
-        notify_mobile: mobile
+        notify_mobile: mobile,
+      };
+
+      const res = await axios.post(
+        commonConfigs.apiUrls.requestNetsApi(),
+        body,
+        { headers: commonConfigs.apiHeader }
+      );
+
+      const resData = res.data?.result?.data;
+      if (
+        resData &&
+        resData.response_code === "00" &&
+        resData.txn_status === 1 &&
+        resData.qr_code
+      ) {
+        localStorage.setItem("txnRetrievalRef", resData.txn_retrieval_ref);
+        this.startNetsTimer();
+        this.setState({
+          netsQrResponseCode: resData.response_code,
+          netsQrPayment: "data:image/png;base64," + resData.qr_code,
+          netsQrRetrievalRef: resData.txn_retrieval_ref,
+          networkCode: resData.network_status,
+          openApiPaasTxnStatus: resData.txn_status,
+        });
+        this.webhookNets();
+      } else {
+        this.setState({
+          netsQrResponseCode:
+            resData?.response_code === "" ? "N.A." : resData?.response_code,
+          netsQrPayment: "",
+          instruction: resData?.network_status === 0 ? resData?.instruction : "",
+          errorMsg:
+            resData?.network_status !== 0 ? "Frontend Error Message" : "",
+          networkCode: resData?.network_status,
+          openApiPaasTxnStatus: resData?.txn_status,
+        });
       }
-
-      console.log(body);
-
-      await axios.post(commonConfigs.apiUrls.requestNetsApi(), body, { headers: commonConfigs.apiHeader })
-      .then((res) => {
-          console.log(res);
-          var resData = res.data.result.data;
-
-          if (
-            resData.response_code == "00" &&
-            resData.txn_status == 1 &&
-            resData.qr_code !== "" &&
-            resData.qr_code !== null
-          ) {
-            localStorage.setItem("txnRetrievalRef", resData.txn_retrieval_ref);
-            this.startNetsTimer();
-            this.setState({
-              netsQrResponseCode: resData.response_code,
-              netsQrPayment: "data:image/png;base64," + resData.qr_code,
-              netsQrRetrievalRef: resData.txn_retrieval_ref,
-              networkCode: resData.network_status,
-              openApiPaasTxnStatus: resData.txn_status
-            });
-            this.webhookNets();
-          } else {
-            this.setState({
-              netsQrResponseCode:
-                resData.response_code === "" ? "N.A." : resData.response_code,
-              netsQrPayment: "",
-              instruction:
-                resData.network_status == 0 ? resData.instruction : "",
-              errorMsg:
-                resData.network_status !== 0 ? "Frontend Error Message" : "",
-              networkCode: resData.network_status,
-              openApiPaasTxnStatus: resData.txn_status
-            });
-          }
-      })
-      .catch((err) => {
-          console.log(err);
-          window.location.href = "/nets-qr/fail";
-      });
     } catch (err) {
-      this.setState({
-        errorMsg: "Error in requestNets: " + (err && err.message ? err.message : String(err)),
-      });
+      console.error("requestNets error", err);
+      window.location.href = "/nets-qr/fail";
     } finally {
       this.isApiCalled = false;
     }
@@ -110,87 +114,72 @@ class NetsQrSampleLayout extends Component {
 
       this.s2sNetsTxnStatus.addEventListener("message", (event) => {
         const data = JSON.parse(event.data);
-        console.log(data.message);
-        console.log("Message detected");
         if (data.message === "QR code scanned" && data.response_code === "00") {
-          if (this.s2sNetsTxnStatus) {
-            this.s2sNetsTxnStatus.close();
-          }
-          console.log(data);
+          if (this.s2sNetsTxnStatus) this.s2sNetsTxnStatus.close();
           window.location.href = "/nets-qr/success";
         } else if (data.message === "Timeout") {
-          if (this.s2sNetsTxnStatus) {
-            this.s2sNetsTxnStatus.close();
-          }
+          if (this.s2sNetsTxnStatus) this.s2sNetsTxnStatus.close();
           this.queryNets();
         }
-      })
+      });
     } catch (err) {
       this.setState({
-        errorMsg: "Error in webhookNets: " + (err && err.message ? err.message : String(err)),
+        errorMsg: "Error in webhookNets: " + (err?.message || String(err)),
       });
     }
   }
 
   async queryNets() {
     try {
-      var netsTimeoutStatus = 0;
-      if (this.state.secondsNetsTimeout == 0) {
+      let netsTimeoutStatus = 0;
+      if (this.state.secondsNetsTimeout === 0) {
         netsTimeoutStatus = 1;
       }
 
       if (this.state.netsQrRetrievalRef) {
-        var body = {
+        const body = {
           txn_retrieval_ref: this.state.netsQrRetrievalRef,
           frontend_timeout_status: netsTimeoutStatus,
         };
-        console.log(body);
-        await axios.post(commonConfigs.apiUrls.queryNetsApi(), body, { headers: commonConfigs.apiHeader })
-          .then((res) => {
-            var resData = res.data.result.data;
-            console.log(resData);
 
-            if (resData.response_code == "00" && resData.txn_status == 1) {
-              window.location.href = "/nets-qr/success";
-            } else {
-              window.location.href = "/nets-qr/fail";
-            }
-          })
-          .catch((err) => {
-            console.log(err);
-            window.location.href = "/nets-qr/fail";
-          });
+        const res = await axios.post(
+          commonConfigs.apiUrls.queryNetsApi(),
+          body,
+          { headers: commonConfigs.apiHeader }
+        );
+        const resData = res.data?.result?.data;
+        if (resData?.response_code === "00" && resData?.txn_status === 1) {
+          window.location.href = "/nets-qr/success";
+        } else {
+          window.location.href = "/nets-qr/fail";
+        }
       }
     } catch (err) {
-      this.setState({
-        errorMsg: "Error in queryNets: " + (err && err.message ? err.message : String(err)),
-      });
+      console.error("queryNets error", err);
+      window.location.href = "/nets-qr/fail";
     }
   }
 
   startNetsTimer() {
-    if (this.netsTimer == 0 && this.state.secondsNetsTimeout > 0) {
+    if (this.netsTimer === 0 && this.state.secondsNetsTimeout > 0) {
       this.netsTimer = setInterval(this.decrementNetsTimer, 1000);
     }
   }
-  convertTimeFormat(secs) {
-    let minutes = Math.floor(secs / 60);
-    let seconds = secs % 60;
 
-    return {
-      m: minutes,
-      s: seconds,
-    };
+  convertTimeFormat(secs) {
+    const minutes = Math.floor(secs / 60);
+    const seconds = secs % 60;
+    return { m: minutes, s: seconds };
   }
 
   decrementNetsTimer() {
-    let secondsNetsTimeout = this.state.secondsNetsTimeout - 1;
+    const secondsNetsTimeout = this.state.secondsNetsTimeout - 1;
     this.setState({
       convertTime: this.convertTimeFormat(secondsNetsTimeout),
-      secondsNetsTimeout: secondsNetsTimeout,
+      secondsNetsTimeout,
     });
 
-    if (secondsNetsTimeout == 0) {
+    if (secondsNetsTimeout === 0) {
       clearInterval(this.netsTimer);
     }
   }
@@ -200,32 +189,91 @@ class NetsQrSampleLayout extends Component {
       this.isApiCalled = true;
       this.requestNets(this.state.amount, this.state.txnId, this.state.mobile);
       this.setState({ netsQrDisplayLogo: true });
-      document.getElementById("btnNets").style.display = "none";
+      const btn = document.getElementById("btnNets");
+      if (btn) btn.style.display = "none";
     }
   }
 
   handleNetsCancel() {
-    this.setState({
-      netsQrRetrievalRef: ""
-    }, () => window.location.reload(false))
-    this.setState({ netsQrDisplayLogo: false });
-  }
-
-  handleHmacChallenge() {
-    // example HMAC flow (optional)
-    // document.getElementById('btnNets').style.display = 'none';
-    // const reqBody = { /* NETS sample request body */ };
-    // const payload = JSON.stringify(reqBody)
-    // const { netsSecretKey } = this.state;
-    // const hmac = generateHmac(payload, netsSecretKey);
-    // this.setState({ hmacChallengeGenerate: hmac })
-    // console.log('Generated HMAC:', hmac)
+    this.setState(
+      {
+        netsQrRetrievalRef: "",
+        netsQrPayment: txnLoading,
+        netsQrGenerate: false,
+        netsQrDisplayLogo: false,
+        secondsNetsTimeout: 300,
+        convertTime: {},
+      },
+      () => window.location.reload(false)
+    );
   }
 
   render() {
+    const {
+      infoImage,
+      logo,
+      netsQrPayment,
+      netsQrGenerate,
+      convertTime,
+      secondsNetsTimeout,
+      netsQrResponseCode,
+      networkCode,
+      instruction,
+      errorMsg,
+    } = this.state;
+
+    const timerText =
+      secondsNetsTimeout > 0
+        ? `${convertTime.m || 0}m : ${String(convertTime.s || 0).padStart(2, "0")}s`
+        : "00:00";
+
     return (
-      <div style={{ position: "relative" }}>
-        {/* UI omitted here for brevity; keep from original file when pasting */}
+      <div className="nets-qr-container">
+        {/* optional info image (displayed above main logo) */}
+        {infoImage && (
+          <div style={{ textAlign: "center", marginBottom: 12 }}>
+            <img src={infoImage} alt="NETS Info" style={{ maxWidth: 360, height: "auto" }} />
+          </div>
+        )}
+
+        {/* optional logo (dynamically loaded if present in assets) - made bigger */}
+        {logo && (
+          <div style={{ textAlign: "center", marginBottom: 12 }}>
+            <img src={logo} alt="NETS Logo" style={{ maxWidth: 320, width: "100%", height: "auto" }} />
+          </div>
+        )}
+
+        {/* only show the generate / cancel buttons (no input fields) */}
+        <div className="nets-actions" style={{ textAlign: "center" }}>
+          <Button
+            id="btnNets"
+            variant="contained"
+            onClick={() => this.handleNetsReq()}
+            sx={{ mr: 2 }}
+          >
+            Generate NETS QR
+          </Button>
+
+          <Button variant="outlined" color="error" onClick={() => this.handleNetsCancel()} sx={{ ml: 2 }}>
+            Cancel
+          </Button>
+        </div>
+
+        {/* QR area and metadata */}
+        <div className="nets-qr-area" style={{ marginTop: 20, textAlign: "center" }}>
+          {netsQrGenerate && (
+            <div className="nets-qr-display">
+              <img src={netsQrPayment} alt="NETS QR" className="nets-qr-img" />
+              <div className="nets-qr-meta">
+                <p>Timeout: {timerText}</p>
+                <p>Response code: {netsQrResponseCode || "N.A."}</p>
+                <p>Network: {networkCode || "N.A."}</p>
+                {instruction && <p className="instruction">Instruction: {instruction}</p>}
+                {errorMsg && <p className="error">Error: {errorMsg}</p>}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     );
   }

@@ -45,3 +45,15 @@ html, body, #root {
   display: block;
   margin: 0 auto;
 }
+
+.nets-qr-container { padding: 20px; max-width: 720px; margin: 0 auto; }
+.nets-form-row { margin: 10px 0; display:flex; flex-direction:column; }
+.nets-form-row label { font-weight:600; margin-bottom:6px; }
+.nets-form-row input { padding:8px; font-size:14px; }
+.nets-actions { margin-top:12px; }
+.nets-qr-area { margin-top:20px; text-align:center; }
+.nets-qr-display { display:flex; gap:20px; align-items:center; justify-content:center; flex-wrap:wrap; }
+.nets-qr-img { max-width:260px; width:100%; height:auto; border:1px solid #ddd; padding:8px; background:#fff; }
+.nets-qr-meta { max-width:320px; text-align:left; }
+.instruction { color: #555; }
+.error { color: red; }
