@@ -1,0 +1,47 @@
+:root {
+  --app-bg: #ffffff;
+  --app-color: #111;
+}
+
+/* ensure page visible */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  background: var(--app-bg) !important;
+  color: var(--app-color) !important;
+}
+
+/* top-level app container */
+.netsQrPaymentGatewayWebpage {
+  position: relative !important;
+  background: transparent !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 100vh !important;
+  z-index: 1 !important;
+}
+
+/* QR box */
+.netsQrTxnFailStatus,
+.netsQrTxnSuccessStatus,
+.netsQrMain {
+  background: #fff !important;
+  color: #111 !important;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  max-width: 720px;
+  width: 95%;
+  text-align: center;
+  z-index: 2 !important;
+}
+
+/* ensure images visible */
+.netsQrTxnFailStatus img,
+.netsQrMain img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
