@@ -6,6 +6,9 @@ import Login from "./components/Login";
 import Signup from "./components/Signup";
 import StallPage from "./components/StallPage";
 import MainLayout from "./components/MainLayout";
+import AdminHome from "./components/Admin";
+import UserAccount from "./components/UserAccount";
+import UserUpdate from "./components/UserUpdate";
 
 function App() {
   const [count, setCount] = useState(0);
@@ -17,6 +20,9 @@ function App() {
       {/* <Route path="/home" element={<Home />} /> */}
       <Route element={<MainLayout />}>
         <Route path="/stalls/:id" element={<StallPage />} />
+        <Route path="/admin" element={<AdminHome />} />
+        <Route path="/admin/users" element={<UserAccount />} />
+        <Route path="/admin/users/:id" element={<UserUpdate />} />
       </Route>
     </Routes>
   );

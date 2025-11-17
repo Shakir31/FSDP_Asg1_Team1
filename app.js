@@ -35,6 +35,12 @@ app.use(express.urlencoded({ extended: true }));
 app.post("/register", authController.registerUser);
 app.post("/login", authController.loginUser);
 
+//admin: list users
+app.get("/admin/users", authenticateToken, authorizeRoles("admin"), authController.listUsers);
+app.get("/admin/users/:id", authenticateToken, authorizeRoles("admin"), authController.getUser);
+app.put("/admin/users/:id", authenticateToken, authorizeRoles("admin"), authController.updateUser);
+app.delete("/admin/users/:id", authenticateToken, authorizeRoles("admin"), authController.deleteUser);
+
 //stall endpoints
 app.get("/stalls", stallController.getAllStalls);
 app.get("/stalls/category", stallController.getStallsByCategory);
