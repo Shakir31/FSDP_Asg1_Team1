@@ -24,8 +24,9 @@ class NetsQrSampleLayout extends Component {
       networkCode: "",
       instruction: "",
       errorMsg: "",
-      logo: null,       // optional main logo
-      infoImage: null,  // optional info image (netsQRInfo)
+      logo: null,
+      infoImage: null,
+      lastResponse: null,
     };
     this.netsTimer = 0;
     this.queryNets = this.queryNets.bind(this);
@@ -36,38 +37,33 @@ class NetsQrSampleLayout extends Component {
   }
 
   componentDidMount() {
-    // try load both info image and logo from assets (silent fail if missing)
     import("../assets/netsQRInfo.png")
       .then((mod) => this.setState({ infoImage: mod.default }))
-      .catch(() => { /* ignore if missing */ });
+      .catch(() => { /* ignore */ });
 
     import("../assets/netsQrLogo.png")
       .then((mod) => this.setState({ logo: mod.default }))
-      .catch(() => { /* ignore if missing */ });
+      .catch(() => { /* ignore */ });
   }
 
   async requestNets(amount, txnId, mobile) {
     try {
-      this.setState({ netsQrGenerate: true });
-      const body = {
-        txn_id: txnId,
-        amt_in_dollars: amount,
-        notify_mobile: mobile,
-      };
+      this.setState({ netsQrGenerate: true, netsQrPayment: txnLoading, errorMsg: "", lastResponse: null });
+
+      const body = { txn_id: txnId, amt_in_dollars: amount, notify_mobile: mobile };
+      console.info("NETS request body:", body);
 
       const res = await axios.post(
         commonConfigs.apiUrls.requestNetsApi(),
         body,
-        { headers: commonConfigs.apiHeader }
+        { headers: commonConfigs.apiHeader, timeout: 15000 }
       );
 
-      const resData = res.data?.result?.data;
-      if (
-        resData &&
-        resData.response_code === "00" &&
-        resData.txn_status === 1 &&
-        resData.qr_code
-      ) {
+      console.info("NETS response:", res);
+      const resData = res.data?.result?.data ?? res.data;
+      this.setState({ lastResponse: res.data });
+
+      if (resData && resData.response_code === "00" && resData.txn_status === 1 && resData.qr_code) {
         localStorage.setItem("txnRetrievalRef", resData.txn_retrieval_ref);
         this.startNetsTimer();
         this.setState({
@@ -76,23 +72,30 @@ class NetsQrSampleLayout extends Component {
           netsQrRetrievalRef: resData.txn_retrieval_ref,
           networkCode: resData.network_status,
           openApiPaasTxnStatus: resData.txn_status,
+          errorMsg: "",
         });
         this.webhookNets();
       } else {
         this.setState({
-          netsQrResponseCode:
-            resData?.response_code === "" ? "N.A." : resData?.response_code,
+          netsQrResponseCode: resData?.response_code ?? "N/A",
           netsQrPayment: "",
           instruction: resData?.network_status === 0 ? resData?.instruction : "",
-          errorMsg:
-            resData?.network_status !== 0 ? "Frontend Error Message" : "",
+          errorMsg: resData?.message || resData?.error || "Transaction failed — see details below.",
           networkCode: resData?.network_status,
           openApiPaasTxnStatus: resData?.txn_status,
         });
       }
     } catch (err) {
       console.error("requestNets error", err);
-      window.location.href = "/nets-qr/fail";
+      const status = err?.response?.status;
+      const body = err?.response?.data ?? err?.message ?? "Network or server error";
+      // show HTTP status and server body in UI
+      this.setState({
+        netsQrGenerate: true,
+        netsQrPayment: "",
+        errorMsg: `HTTP ${status || "ERR"} — ${typeof body === "string" ? body : JSON.stringify(body)}`,
+        lastResponse: body,
+      });
     } finally {
       this.isApiCalled = false;
     }
@@ -102,9 +105,12 @@ class NetsQrSampleLayout extends Component {
     if (this.s2sNetsTxnStatus) {
       this.s2sNetsTxnStatus.close();
     }
-    const webhookNetsApiUrl = commonConfigs.apiUrls.webhookNetsApi(
-      localStorage.getItem("txnRetrievalRef")
-    );
+    const txnRef = localStorage.getItem("txnRetrievalRef");
+    if (!txnRef) {
+      this.setState({ errorMsg: "Missing txnRetrievalRef for webhook." });
+      return;
+    }
+    const webhookNetsApiUrl = commonConfigs.apiUrls.webhookNetsApi(txnRef);
 
     try {
       this.s2sNetsTxnStatus = new EventSourcePolyfill(webhookNetsApiUrl, {
@@ -113,14 +119,26 @@ class NetsQrSampleLayout extends Component {
       });
 
       this.s2sNetsTxnStatus.addEventListener("message", (event) => {
-        const data = JSON.parse(event.data);
-        if (data.message === "QR code scanned" && data.response_code === "00") {
-          if (this.s2sNetsTxnStatus) this.s2sNetsTxnStatus.close();
-          window.location.href = "/nets-qr/success";
-        } else if (data.message === "Timeout") {
-          if (this.s2sNetsTxnStatus) this.s2sNetsTxnStatus.close();
-          this.queryNets();
+        try {
+          const data = JSON.parse(event.data);
+          if (data.message === "QR code scanned" && data.response_code === "00") {
+            if (this.s2sNetsTxnStatus) this.s2sNetsTxnStatus.close();
+            window.location.href = "/nets-qr/success";
+          } else if (data.message === "Timeout") {
+            if (this.s2sNetsTxnStatus) this.s2sNetsTxnStatus.close();
+            this.queryNets();
+          } else {
+            // update intermediate status
+            this.setState({ lastResponse: data });
+          }
+        } catch (e) {
+          console.warn("Malformed SSE message", e);
         }
+      });
+
+      this.s2sNetsTxnStatus.addEventListener("error", (err) => {
+        console.error("SSE error", err);
+        this.setState({ errorMsg: "SSE connection error (webhook); server may not support SSE." });
       });
     } catch (err) {
       this.setState({
@@ -195,6 +213,9 @@ class NetsQrSampleLayout extends Component {
   }
 
   handleNetsCancel() {
+    if (this.s2sNetsTxnStatus) {
+      try { this.s2sNetsTxnStatus.close(); } catch(e){/*ignore*/ }
+    }
     this.setState(
       {
         netsQrRetrievalRef: "",
@@ -203,6 +224,8 @@ class NetsQrSampleLayout extends Component {
         netsQrDisplayLogo: false,
         secondsNetsTimeout: 300,
         convertTime: {},
+        lastResponse: null,
+        errorMsg: "",
       },
       () => window.location.reload(false)
     );
@@ -220,6 +243,7 @@ class NetsQrSampleLayout extends Component {
       networkCode,
       instruction,
       errorMsg,
+      lastResponse,
     } = this.state;
 
     const timerText =
@@ -229,21 +253,18 @@ class NetsQrSampleLayout extends Component {
 
     return (
       <div className="nets-qr-container">
-        {/* optional info image (displayed above main logo) */}
         {infoImage && (
           <div style={{ textAlign: "center", marginBottom: 12 }}>
             <img src={infoImage} alt="NETS Info" style={{ maxWidth: 360, height: "auto" }} />
           </div>
         )}
 
-        {/* optional logo (dynamically loaded if present in assets) - made bigger */}
         {logo && (
           <div style={{ textAlign: "center", marginBottom: 12 }}>
-            <img src={logo} alt="NETS Logo" style={{ maxWidth: 320, width: "100%", height: "auto" }} />
+            <img src={logo} alt="NETS Logo" style={{ maxWidth: 380, width: "100%", height: "auto" }} />
           </div>
         )}
 
-        {/* only show the generate / cancel buttons (no input fields) */}
         <div className="nets-actions" style={{ textAlign: "center" }}>
           <Button
             id="btnNets"
@@ -259,21 +280,37 @@ class NetsQrSampleLayout extends Component {
           </Button>
         </div>
 
-        {/* QR area and metadata */}
         <div className="nets-qr-area" style={{ marginTop: 20, textAlign: "center" }}>
           {netsQrGenerate && (
             <div className="nets-qr-display">
-              <img src={netsQrPayment} alt="NETS QR" className="nets-qr-img" />
-              <div className="nets-qr-meta">
+              {/* show QR image only if available; otherwise show placeholder or spinner */}
+              {netsQrPayment ? (
+                <img src={netsQrPayment} alt="NETS QR" className="nets-qr-img" />
+              ) : (
+                <div style={{ width: 260, height: 260, display: "flex", alignItems: "center", justifyContent: "center", border: "1px dashed #f0b88a", background: "#fff" }}>
+                  <div style={{ color: "#d66", padding: 8 }}>
+                    {errorMsg ? "No QR available" : "Generating..."}
+                  </div>
+                </div>
+              )}
+
+              <div className="nets-qr-meta" style={{ marginTop: 8 }}>
                 <p>Timeout: {timerText}</p>
                 <p>Response code: {netsQrResponseCode || "N.A."}</p>
                 <p>Network: {networkCode || "N.A."}</p>
                 {instruction && <p className="instruction">Instruction: {instruction}</p>}
-                {errorMsg && <p className="error">Error: {errorMsg}</p>}
+                {errorMsg && <p className="error">Error: {typeof errorMsg === "string" ? errorMsg : JSON.stringify(errorMsg)}</p>}
               </div>
             </div>
           )}
         </div>
+
+        {/* debug output */}
+        {lastResponse && (
+          <pre style={{ textAlign: "left", maxWidth: 720, margin: "12px auto", padding: 8, background: "#fff6f0", borderRadius: 6, overflowX: "auto" }}>
+            {JSON.stringify(lastResponse, null, 2)}
+          </pre>
+        )}
       </div>
     );
   }
