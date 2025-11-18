@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import "../UploadPage.css";
-import { CartContext } from "./Cartcontext";
 
 export default function UploadPage() {
   const [files, setFiles] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
   const [review, setReview] = useState("");
   const [loading, setLoading] = useState(false);
+  const [uploadedImageId, setUploadedImageId] = useState(null);
   const [result, setResult] = useState(null);
 
   // obtain token from localStorage for authentication
@@ -16,18 +16,20 @@ export default function UploadPage() {
     const f = Array.from(e.target.files || []);
     setFiles(f);
     setPreviewUrls(f.map((file) => URL.createObjectURL(file)));
+    setUploadedImageId(null); // reset previously uploaded image ID when new files selected
   }
 
-  async function handleSubmit(e) {
-    e.preventDefault();
+  // Uploads first image from the selected files (adjust if you want multiple upload)
+  async function handleImageUpload() {
     if (!files.length) return alert("Please choose at least one photo");
     setLoading(true);
+    setResult(null);
 
     try {
       const fd = new FormData();
-      files.forEach((f) => fd.append("images", f));
-      fd.append("review", review);
-      fd.append("stallId", "stall-123"); // replace with actual stall id if available
+      fd.append("imageFile", files[0]); // your backend expects imageFile as field name
+      // Optionally add menuItemId or stallId if needed by your backend
+      // fd.append('stallId', 'stall-123');
 
       const uploadRes = await fetch("http://localhost:3000/images/upload", {
         method: "POST",
@@ -35,67 +37,67 @@ export default function UploadPage() {
         body: fd,
       });
 
-      // attempt to parse JSON safely, fall back to text for diagnostics
-      let uploadData = null;
-      const contentType = uploadRes.headers.get("content-type") || "";
-      if (contentType.includes("application/json")) {
-        try {
-          uploadData = await uploadRes.json();
-        } catch (err) {
-          const txt = await uploadRes.text();
-          throw new Error(`Invalid JSON response (status ${uploadRes.status}): ${txt || "<empty body>"}`);
-        }
-      } else {
-        const txt = await uploadRes.text();
-        if (!uploadRes.ok) throw new Error(`Upload failed (status ${uploadRes.status}): ${txt || "<empty body>"}`);
-        // server returned non-json success body
-        uploadData = { message: txt, uploadedCount: files.length };
-      }
-
       if (!uploadRes.ok) {
-        // uploadData may contain error message from server
-        throw new Error(uploadData?.message || `Upload failed with status ${uploadRes.status}`);
+        const errorText = await uploadRes.text();
+        throw new Error(
+          errorText || `Upload failed with status ${uploadRes.status}`
+        );
       }
 
-      // After successful upload, award coins
-      let coinsResult = null;
-      try {
-        const coinRes = await fetch("/coins/award-photo", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token ? `Bearer ${token}` : "",
-          },
-          body: JSON.stringify({
-            imagesUploaded: uploadData.uploadedCount || files.length,
-            stallId: uploadData.stallId || "stall-123",
-          }),
-        });
+      const uploadData = await uploadRes.json();
+      setUploadedImageId(uploadData.image.ImageID); // save uploaded image ID for linking to review
+      setResult({ upload: uploadData });
+      alert(
+        "Image uploaded and verified successfully. You can now submit the review."
+      );
+    } catch (err) {
+      alert("Upload error: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
-        const coinContentType = coinRes.headers.get("content-type") || "";
-        if (coinContentType.includes("application/json")) {
-          coinsResult = await coinRes.json();
-        } else {
-          const txt = await coinRes.text();
-          coinsResult = { message: txt };
-          if (!coinRes.ok) throw new Error(`Coin endpoint failed (status ${coinRes.status}): ${txt || "<empty body>"}`);
-        }
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!uploadedImageId) {
+      alert("Please upload an image first");
+      return;
+    }
+    if (!review.trim()) {
+      alert("Please write a review");
+      return;
+    }
+    setLoading(true);
 
-        if (!coinRes.ok) throw new Error(coinsResult?.message || `Coin awarding failed with status ${coinRes.status}`);
-      } catch {
-        console.warn("Coin awarding failed");
-      }
-
-      setResult({
-        upload: uploadData,
-        coins: coinsResult,
+    try {
+      const reviewRes = await fetch("http://localhost:3000/reviews", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+        body: JSON.stringify({
+          menuItemId: 9, // replace with actual menu item ID in context
+          rating: 5, // you can add rating input UI accordingly
+          reviewText: review,
+          imageId: uploadedImageId,
+        }),
       });
 
-      alert(`Upload successful. Coins awarded: ${coinsResult?.coinsAwarded ?? "N/A"}`);
+      if (!reviewRes.ok) {
+        const errorText = await reviewRes.text();
+        throw new Error(errorText || "Review submission failed");
+      }
+
+      const reviewData = await reviewRes.json();
+      setResult((prev) => ({ ...prev, review: reviewData }));
+      alert("Review submitted successfully");
+      setFiles([]);
+      setPreviewUrls([]);
+      setReview("");
+      setUploadedImageId(null);
     } catch (err) {
-      console.error("Upload error detail:", err);
-      alert("Upload error: " + (err.message || err));
-      // Suggest opening devtools network tab and server logs
+      alert("Review submission error: " + err.message);
     } finally {
       setLoading(false);
     }
@@ -117,14 +119,46 @@ export default function UploadPage() {
             aria-label="Upload images"
           />
           <div className="file-drop-content">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" className="upload-icon" aria-hidden>
-              <path d="M12 3v12" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M8 7l4-4 4 4" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-              <rect x="3" y="9" width="18" height="11" rx="2" stroke="#fff" strokeWidth="1.2" fill="none"/>
+            <svg
+              width="48"
+              height="48"
+              viewBox="0 0 24 24"
+              fill="none"
+              className="upload-icon"
+              aria-hidden
+            >
+              <path
+                d="M12 3v12"
+                stroke="#fff"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M8 7l4-4 4 4"
+                stroke="#fff"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <rect
+                x="3"
+                y="9"
+                width="18"
+                height="11"
+                rx="2"
+                stroke="#fff"
+                strokeWidth="1.2"
+                fill="none"
+              />
             </svg>
             <div className="file-drop-text">
               Drag & drop images here or click to select
-              <div className="file-hint">{files.length ? `${files.length} file(s) selected` : "PNG, JPG, up to 10MB each"}</div>
+              <div className="file-hint">
+                {files.length
+                  ? `${files.length} file(s) selected`
+                  : "PNG, JPG, up to 10MB each"}
+              </div>
             </div>
           </div>
         </label>
@@ -137,39 +171,67 @@ export default function UploadPage() {
           ))}
         </div>
 
-        <textarea
-          className="review"
-          placeholder="Write a short review (required)"
-          value={review}
-          onChange={(e) => setReview(e.target.value)}
-          required
-        />
-
-        <div className="actions">
-          <button type="submit" className="btn btn-orange" disabled={loading}>
-            {loading ? "Uploading…" : "Submit"}
-          </button>
+        {/* Button to upload first image from selection */}
+        {!uploadedImageId && (
           <button
             type="button"
-            className="btn btn-ghost"
-            onClick={() => {
-              setFiles([]);
-              setPreviewUrls([]);
-              setReview("");
-              setResult(null);
-            }}
+            className="btn btn-orange"
+            onClick={handleImageUpload}
+            disabled={loading}
           >
-            Reset
+            {loading ? "Uploading…" : "Upload Image"}
           </button>
-        </div>
+        )}
+
+        {/* Review text area shown only after image is uploaded */}
+        {uploadedImageId && (
+          <>
+            <textarea
+              className="review"
+              placeholder="Write a short review (required)"
+              value={review}
+              onChange={(e) => setReview(e.target.value)}
+              required
+            />
+
+            <div className="actions">
+              <button
+                type="submit"
+                className="btn btn-orange"
+                disabled={loading}
+              >
+                {loading ? "Submitting…" : "Submit Review"}
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => {
+                  setFiles([]);
+                  setPreviewUrls([]);
+                  setReview("");
+                  setUploadedImageId(null);
+                  setResult(null);
+                }}
+              >
+                Reset
+              </button>
+            </div>
+          </>
+        )}
       </form>
 
       {result && (
         <div className="result">
-          <div><strong>Coins awarded:</strong> {result.coins?.coinsAwarded ?? "N/A"}</div>
-          <div className="detections"><strong>Detections:</strong>
-            <pre>{JSON.stringify(result.upload?.detections, null, 2)}</pre>
+          <div>
+            <strong>Upload response:</strong>{" "}
+            {JSON.stringify(result.upload, null, 2)}
           </div>
+          {result.review && (
+            <div>
+              <strong>Review response:</strong>{" "}
+              {JSON.stringify(result.review, null, 2)}
+            </div>
+          )}
         </div>
       )}
     </div>

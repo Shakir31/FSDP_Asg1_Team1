@@ -50,8 +50,18 @@ app.put("/admin/users/:id", authenticateToken, ensureHandler(authorizeRoles("adm
 app.delete("/admin/users/:id", authenticateToken, ensureHandler(authorizeRoles("admin"), 'authorizeRoles("admin")'), ensureHandler(authController.deleteUser, "authController.deleteUser"));
 
 //admin: stalls list
-app.get("/admin/stalls", authenticateToken, authorizeRoles("admin"), stallController.getAllStalls);
-app.get("/admin/stalls/:id", authenticateToken, authorizeRoles("admin"), stallController.getStallById);
+app.get(
+  "/admin/stalls",
+  authenticateToken,
+  authorizeRoles("admin"),
+  stallController.getAllStalls
+);
+app.get(
+  "/admin/stalls/:id",
+  authenticateToken,
+  authorizeRoles("admin"),
+  stallController.getStallById
+);
 // app.put("/admin/stalls/:id", authenticateToken, authorizeRoles("admin"), (req, res) => {
 //   res.status(501).json({ error: 'Not implemented' });
 // });
