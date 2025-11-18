@@ -123,3 +123,79 @@
   border-radius: 4px;
   margin-top: 0.5rem;
 }
+
+/* ... (Keep your existing CSS above this) ... */
+
+/* New Styles for Orders Section */
+.profile-section {
+  margin-bottom: 2rem;
+  width: 100%; /* Ensure it takes full width of the parent */
+}
+
+.section-header-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Order Rows inside the card body */
+.order-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start; /* Aligns text to top if items wrap */
+  font-size: 0.95rem;
+}
+
+.order-label {
+  font-weight: 600;
+  color: #555;
+  flex-shrink: 0; /* Prevents label from squishing */
+}
+
+/* Status specific colors */
+.status-text {
+  font-weight: 700;
+}
+.status-completed {
+  color: #22c55e; /* Green */
+}
+.status-pending {
+  color: #ff7622; /* Orange */
+}
+.status-default {
+  color: #333;
+}
+
+.order-items-text {
+  text-align: right;
+  max-width: 70%;
+  color: #333;
+  line-height: 1.4;
+}
+
+.order-total-price {
+  font-weight: 700;
+  color: #121223;
+  font-size: 1.05rem;
+}
+
+/* Payment specific styling */
+.payment-row {
+  border-top: 1px solid #eee;
+  padding-top: 0.75rem;
+  margin-top: 0.25rem;
+  align-items: center;
+}
+
+.payment-text {
+  text-transform: capitalize;
+  color: #333;
+}
+
+.empty-message {
+  color: #666;
+  padding: 1rem;
+  text-align: center;
+  background: #f9f9f9;
+  border-radius: 8px;
+}

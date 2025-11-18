@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // 1. Import useNavigate
-import { User, Coins, Star } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { User, Coins, Star, ShoppingBag } from 'lucide-react';
 import '../ProfilePage.css';
 
 // Helper component for star ratings
@@ -23,10 +23,11 @@ function ProfilePage() {
   const [user, setUser] = useState(null);
   const [coins, setCoins] = useState(0);
   const [reviews, setReviews] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  const navigate = useNavigate(); // 2. Initialize the hook
+  const navigate = useNavigate();
 
   useEffect(() => {
     const getToken = () => {
@@ -36,7 +37,6 @@ function ProfilePage() {
     const fetchData = async () => {
       const token = getToken();
 
-      // 1. Check if token exists locally
       if (!token) {
         alert("Please log in to view your profile.");
         navigate("/login");
@@ -46,42 +46,36 @@ function ProfilePage() {
       try {
         setLoading(true);
         
-        const [profileResponse, coinsResponse, reviewsResponse] = await Promise.all([
-          fetch("http://localhost:3000/users/profile", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch("http://localhost:3000/coins/balance", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch("http://localhost:3000/reviews/user", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
+        const [profileResponse, coinsResponse, reviewsResponse, ordersResponse] = await Promise.all([
+          fetch("http://localhost:3000/users/profile", { headers: { Authorization: `Bearer ${token}` } }),
+          fetch("http://localhost:3000/coins/balance", { headers: { Authorization: `Bearer ${token}` } }),
+          fetch("http://localhost:3000/reviews/user", { headers: { Authorization: `Bearer ${token}` } }),
+          fetch("http://localhost:3000/orders/history", { headers: { Authorization: `Bearer ${token}` } }),
         ]);
 
-        // 2. Check if the token was actually valid (API returned 401 or 403)
         if (profileResponse.status === 401 || profileResponse.status === 403) {
-            throw new Error("Session expired"); // Throw specific error
+            throw new Error("Session expired");
         }
 
         if (!profileResponse.ok) throw new Error("Failed to fetch profile");
         if (!coinsResponse.ok) throw new Error("Failed to fetch coins");
         if (!reviewsResponse.ok) throw new Error("Failed to fetch reviews");
+        if (!ordersResponse.ok) throw new Error("Failed to fetch orders");
 
         const profileData = await profileResponse.json();
         const coinsData = await coinsResponse.json();
         const reviewsData = await reviewsResponse.json();
+        const ordersData = await ordersResponse.json();
 
         setUser(profileData);
         setCoins(coinsData.coins);
         setReviews(reviewsData);
+        setOrders(ordersData);
 
       } catch (err) {
         console.error("Profile Error:", err);
-        
-        // 3. Handle Invalid/Expired Token Error
         if (err.message === "Session expired" || err.message === "Failed to fetch profile") {
             alert("Your session has expired. Please log in again.");
-            // Clear invalid tokens so the loop doesn't repeat
             localStorage.removeItem("token");
             sessionStorage.removeItem("token");
             navigate("/login");
@@ -96,17 +90,16 @@ function ProfilePage() {
     fetchData();
   }, [navigate]);
 
-  if (loading) {
-    return <div className="profile-wrapper"><p>Loading profile...</p></div>;
-  }
+  // Helper function to get status class
+  const getStatusClass = (status) => {
+    if (status === 'Completed') return 'status-completed';
+    if (status === 'Pending') return 'status-pending';
+    return 'status-default';
+  };
 
-  if (error) {
-    return <div className="profile-wrapper"><p>Error: {error}</p></div>;
-  }
-
-  if (!user) {
-    return null; // Don't render anything if redirecting
-  }
+  if (loading) return <div className="profile-wrapper"><p>Loading profile...</p></div>;
+  if (error) return <div className="profile-wrapper"><p>Error: {error}</p></div>;
+  if (!user) return null;
 
   return (
     <div className="profile-wrapper">
@@ -120,7 +113,62 @@ function ProfilePage() {
           <span>{coins} Coins</span>
         </div>
       </div>
+      
+      {/* Orders Section */}
+      <div className="profile-reviews-container profile-section">
+        <div className="profile-section-title section-header-content">
+             <ShoppingBag size={20} />
+             <span>My Orders</span>
+        </div>
+        
+        {orders.length > 0 ? (
+            <div className="review-list">
+                {orders.map((order) => (
+                    <div key={order.OrderID} className="review-card">
+                        <div className="review-card-header">
+                            <span className="review-item-name">Order #{order.OrderID}</span>
+                            <span className="review-date">
+                                {new Date(order.OrderDate).toLocaleDateString()}
+                            </span>
+                        </div>
+                        <div className="review-card-body">
+                            {/* 1. Status */}
+                            <div className="order-row">
+                                <span className="order-label">Status:</span>
+                                <span className={`status-text ${getStatusClass(order.OrderStatus)}`}>
+                                    {order.OrderStatus}
+                                </span>
+                            </div>
 
+                            {/* 2. Items */}
+                            {/* <div className="order-row">
+                                <span className="order-label">Items:</span>
+                                <span className="order-items-text">
+                                    {order.OrderItems}
+                                </span>
+                            </div> */}
+
+                            {/* 3. Total */}
+                            <div className="order-row">
+                                <span className="order-label">Total:</span>
+                                <span className="order-total-price">${order.TotalAmount.toFixed(2)}</span>
+                            </div>
+
+                            {/* 4. Payment */}
+                            <div className="order-row payment-row">
+                                <span className="order-label">Payment:</span>
+                                <span className="payment-text">{order.PaymentStatus}</span>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        ) : (
+            <p className="empty-message">No orders yet.</p>
+        )}
+      </div>
+
+      {/* Reviews Section */}
       <div className="profile-reviews-container">
         <h3 className="profile-section-title">My Reviews</h3>
         {reviews.length > 0 ? (
@@ -148,7 +196,7 @@ function ProfilePage() {
             ))}
           </div>
         ) : (
-          <p style={{ color: "black" }}>No reviews made</p>
+          <p className="empty-message">No reviews made</p>
         )}
       </div>
     </div>

@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../Cart.css";
-import { useEffect } from "react";
 
 export const CartContext = createContext(null);
 
@@ -376,9 +375,42 @@ export function CheckoutPage() {
 
   // Fallback placeholder if navigated directly
   return (
-    <div style={{ padding: 24 }}>
-      <h2 style={{ color: "var(--orange)" }}>Checkout</h2>
-      <p>Proceed with cash checkout flow (placeholder).</p>
+    <div style={{ padding: 24, maxWidth: '600px', margin: '0 auto' }}>
+      <h2 style={{ color: "var(--orange)" }}>Checkout Confirmation</h2>
+      
+      <div className="card" style={{ marginBottom: '20px' }}>
+        <h3>Order Summary</h3>
+        {items.map(item => (
+            <div key={item.id} style={{display:'flex', justifyContent:'space-between', marginBottom:'8px'}}>
+                <span>{item.qty}x {item.name}</span>
+                <span>${(item.price * item.qty).toFixed(2)}</span>
+            </div>
+        ))}
+        
+        {discount > 0 && (
+             <div style={{display:'flex', justifyContent:'space-between', marginBottom:'8px', color: '#666'}}>
+                <span>Discount ({appliedVoucher?.code}):</span>
+                <span>-${discount.toFixed(2)}</span>
+            </div>
+        )}
+
+        <hr style={{borderColor: '#eee', margin:'10px 0'}}/>
+        <div style={{display:'flex', justifyContent:'space-between', fontWeight:'bold', fontSize:'1.2em'}}>
+            <span>Total:</span>
+            <span>${totalAmount.toFixed(2)}</span>
+        </div>
+      </div>
+
+      <p>Payment Method: Cash (Pay at counter)</p>
+      
+      <button 
+        className="btn btn-orange" 
+        style={{ width: "100%", fontSize: '1.1em' }}
+        onClick={handleConfirmPayment}
+        disabled={loading || items.length === 0}
+      >
+        {loading ? "Processing..." : "Confirm & Place Order"}
+      </button>
     </div>
   );
 }
