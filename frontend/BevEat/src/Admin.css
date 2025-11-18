@@ -1,3 +1,4 @@
+/* Admin Page*/
 .admin-wrapper{
   max-width:var(--max-width);
   margin:30px auto;
@@ -37,6 +38,69 @@
   cursor:pointer
 }
 
+.accounts-header h3{
+  margin: 5px 0;
+}
+
+.accounts{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.accounts-row{
+  display:flex;
+  gap:28px;
+  align-items:center;
+  padding:12px 0 0 0;
+}
+
+.avatar{
+  width:92px;
+  height:92px;
+  border-radius:50%;
+  background:#f0f0f0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:28px;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.03);
+}
+
+.avatar.emoji{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:30px;
+}
+
+.account-card{ 
+  text-align:center; 
+}
+
+.account-link{ 
+  display:inline-block; 
+  border-radius:999px; 
+  padding:6px; 
+}
+
+.account-card .account-label{ 
+  margin-top:8px; 
+  font-weight:700; 
+  color:#111; 
+  font-size:14px; 
+}
+
+.account-card .account-label{ 
+  opacity:0.95 
+}
+
+.account-link:hover .avatar{ 
+  transform: translateY(-6px); 
+  box-shadow: 0 8px 22px rgba(0,0,0,0.08) 
+}
+
 .reviews-row{
   display:flex;
   gap:18px
@@ -69,7 +133,8 @@ hr{
 
 .stalls-columns{
   display:flex;
-  gap:40px;
+  gap:24px;
+  align-items:flex-start;
 }
 
 .stalls-col{
@@ -77,13 +142,14 @@ hr{
 }
 
 .stalls-col h4{
-  margin:0 0 6px 0;
-  font-size:15px;
+  margin:0 0 8px 0;
+  font-size:18px;
+  color: #111;
 }
 
 .stalls-col ul{
   margin:0;
-  padding-left:14px;
+  padding:0;
   color:var(--muted);
 }
 
@@ -91,35 +157,57 @@ hr{
   margin-bottom:6px;
 }
 
-.accounts{
+.stalls-col > div {
+  background: #fff;
+  border-radius: 10px;
+  padding: 12px 14px;
+  box-shadow: 0 1px 4px rgba(20,20,20,0.04);
+}
+
+.stalls-col ul {
+  list-style: none;
+}
+
+.stalls-col li {
+  padding: 8px 6px;
+  border-radius: 6px;
+  transition: all 120ms ease;
   display: flex;
-  flex-direction: column;
   align-items: center;
 }
 
-.accounts-row{
-  display:flex;
-  gap:40px;
-  align-items:center;
-  padding:0 0;
+.stalls-col li + li { margin-top: 6px; }
+
+.stalls-col a {
+  color: var(--accent, #ff7a00);
+  text-decoration: none;
+  font-weight: 600;
 }
 
-.avatar{
-  width:80px;
-  height:80px;
-  border-radius:50%;
-  background:#ddd;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:20px;
+.stalls-col li:hover {
+  background: #fbfbff;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(30,30,30,0.06);
 }
 
-.avatar.emoji{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:26px;
+.stalls-list {
+  margin-top: 8px;
+}
+
+.section-top .view-more {
+  text-decoration: underline;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+@media (max-width:900px){
+  .stalls-columns{
+    flex-direction:column;
+    align-items: center;
+  }
+  .stalls-col > div { 
+    padding: 10px; 
+  }
 }
 
 
@@ -130,7 +218,74 @@ hr{
 
 .update-inner{
   max-width:900px;
-  margin:0 auto
+  margin:0 auto;
+}
+
+/* New semantic classes for clearer structure */
+.centre-card {
+  margin-bottom: 14px;
+  padding: 14px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(20,20,20,0.03);
+}
+
+.centre-title {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  color: #111;
+}
+
+.category-block {
+  margin-top: 8px;
+  padding-top: 6px;
+}
+
+.category-title {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-weight:700;
+  margin-bottom:8px;
+}
+
+.count-badge{
+  margin-left:6px;
+  background:#ffefef;
+  color:#ff7a00;
+  padding:4px 8px;
+  border-radius:999px;
+  font-weight:700;
+  font-size:12px;
+}
+
+.stall-list{ 
+  padding:0; 
+  margin:0; 
+}
+
+.stall-item{ 
+  list-style:none; 
+  margin:6px 0; 
+}
+
+.stall-link{ 
+  color:var(--accent,#ff7a00); 
+  font-weight:600; 
+  text-decoration:none 
+}
+
+.stall-item:hover .stall-link{ 
+  text-decoration:underline 
+}
+
+.stalls-loading{ 
+  padding:12px 
+}
+
+.stalls-error{ 
+  padding:12px; 
+  color: #b33 
 }
 
 .back-link{
@@ -218,7 +373,15 @@ hr{
 }
 
 @media (max-width:900px){
-  .reviews-row{flex-wrap:wrap}
-  .stores-columns{flex-direction:column}
-  .search-box input{width:120px}
+  .reviews-row{
+    flex-wrap:wrap
+  }
+
+  .stores-columns{
+    flex-direction:column
+  }
+  
+  .search-box input{
+    width:120px
+  }
 }
