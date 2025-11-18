@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "../Login.css";
 
 function Login() {
@@ -7,6 +7,7 @@ function Login() {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -24,6 +25,8 @@ function Login() {
           localStorage.setItem("token", data.token);
           localStorage.setItem("role", data.role);
         } else {
+          localStorage.setItem("token", data.token);
+          localStorage.setItem("role", data.role);
           sessionStorage.setItem("token", data.token);
           sessionStorage.setItem("role", data.role);
         }
@@ -32,6 +35,7 @@ function Login() {
         if (data.role === "admin" || data.role === "Admin") {
           window.location.href = "/admin";
         }
+        navigate("/home");
       } else {
         setError(data.error || "Login failed");
       }

@@ -34,7 +34,7 @@ function Home() {
       {/* Hero Section */}
       <section className="hero">
         <img
-          src="https://res.cloudinary.com/dv9rwydip/image/upload/v1763449794/Screenshot_2025-11-18_151024_mpjjfb.png"
+          src="https://res.cloudinary.com/dv9rwydip/image/upload/v1763507453/Screenshot_2025-11-19_070921_jc19cv.png"
           alt="satay cooking"
           className="hero-image"
         />
@@ -44,19 +44,19 @@ function Home() {
       <section className="stalls">
         <div className="section-header">
           <h2>Popular Stalls Near You</h2>
-          <Link to="/stalls" className="see-all">
+          <Link to="/hawkers" className="see-all">
             See all &gt;
           </Link>
         </div>
 
-        {/* <div className="filters">
+        <div className="filters">
           <button>All</button>
           <button>Rice</button>
           <button>Noodles</button>
           <button>Soup</button>
           <button>Indian</button>
           <button>Halal</button>
-        </div> */}
+        </div>
 
         {loading && <p>Loading stalls...</p>}
         {error && <p style={{ color: "red" }}>Error: {error}</p>}
@@ -91,23 +91,26 @@ function Home() {
       </section>
 
       {/* Hawker Centres Section (Static for now) */}
-      {/* <section className="hawker">
+      <section className="hawker">
         <div className="section-header">
           <h2>Hawker Centres Near You</h2>
-          <Link to="/hawkers" className="see-all">
+          <Link to="/home" className="see-all">
             See all &gt;
           </Link>
         </div>
 
         <div className="card-grid">
           <div className="card">
-            <img src="/images/maxwell.jpg" alt="Maxwell Food Centre" />
+            <img
+              src="https://res.cloudinary.com/dv9rwydip/image/upload/v1763507632/Screenshot_2025-11-19_071248_gejxjk.png"
+              alt="Maxwell Food Centre"
+            />
             <h3>Maxwell Food Centre</h3>
             <p>1 Kadayanallur St, Singapore 069184</p>
           </div>
           <div className="card">
             <img
-              src="/images/sembawang.jpg"
+              src="https://res.cloudinary.com/dv9rwydip/image/upload/v1763507634/Screenshot_2025-11-19_071307_rprijx.png"
               alt="Sembawang Hills Food Centre"
             />
             <h3>Sembawang Hills Food Centre</h3>
@@ -115,7 +118,7 @@ function Home() {
           </div>
           <div className="card">
             <img
-              src="/images/taman jurong.jpg"
+              src="https://res.cloudinary.com/dv9rwydip/image/upload/v1763507635/Screenshot_2025-11-19_071320_z4yujm.png"
               alt="Taman Jurong Market & Food Centre"
             />
             <h3>Taman Jurong Market & Food Centre</h3>
@@ -123,14 +126,14 @@ function Home() {
           </div>
           <div className="card">
             <img
-              src="/images/ABC.jpg"
+              src="https://res.cloudinary.com/dv9rwydip/image/upload/v1763507633/Screenshot_2025-11-19_071328_iwaxwk.png"
               alt="ABC Brickworks Market & Food Centre"
             />
             <h3>ABC Brickworks Market & Food Centre</h3>
             <p>6 Jalan Bukit Merah, Singapore 150006</p>
           </div>
         </div>
-      </section> */}
+      </section>
     </div>
   );
 }

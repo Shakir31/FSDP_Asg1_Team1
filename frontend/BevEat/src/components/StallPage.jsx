@@ -1,22 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom'; 
-import { Search, ShoppingCart, User } from 'lucide-react';
-import '../StallPage.css'; 
-import logo from '../assets/logo.png';
-import hero from '../assets/hero.png';
+import React, { useState, useEffect } from "react";
+import { Link, useParams, useNavigate } from "react-router-dom";
+import { Search, ShoppingCart, User } from "lucide-react";
+import "../StallPage.css";
+import logo from "../assets/logo.png";
+import hero from "../assets/hero.png";
 
 function StallPage() {
   const [stall, setStall] = useState(null);
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { id } = useParams(); 
+  const { id } = useParams();
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function fetchStallData() {
       try {
         setLoading(true);
-        
+
         const stallResponse = await fetch(`http://localhost:3000/stalls/${id}`);
         if (!stallResponse.ok) {
           throw new Error(`Stall not found (ID: ${id})`);
@@ -24,13 +25,14 @@ function StallPage() {
         const stallData = await stallResponse.json();
         setStall(stallData);
 
-        const menuResponse = await fetch(`http://localhost:3000/stalls/${id}/menu`);
+        const menuResponse = await fetch(
+          `http://localhost:3000/stalls/${id}/menu`
+        );
         if (!menuResponse.ok) {
-          throw new Error('Menu items not found');
+          throw new Error("Menu items not found");
         }
         const menuData = await menuResponse.json();
         setMenuItems(menuData);
-
       } catch (err) {
         setError(err.message);
       } finally {
@@ -51,24 +53,26 @@ function StallPage() {
       <>
         <div className="menu-items-list">
           {menuItems.length > 0 ? (
-            menuItems.map(item => (
-              <Link 
-                key={item.MenuItemID} 
+            menuItems.map((item) => (
+              <Link
+                key={item.MenuItemID}
                 to={`/menu-item/${item.MenuItemID}`}
-                className="menu-item-link" 
+                className="menu-item-link"
               >
-              <div key={item.MenuItemID} className="menu-item">
-                <img 
-                  src={item.MainImageURL || hero} 
-                  alt={item.Name} 
-                  className="menu-item-image"
-                />
-                <div className="menu-item-content">
-                  <h3 className="menu-item-name">{item.Name}</h3>
-                  <p className="menu-item-description">{item.Description}</p>
-                  <p className="menu-item-price">${parseFloat(item.Price).toFixed(2)}</p>
+                <div key={item.MenuItemID} className="menu-item">
+                  <img
+                    src={item.MainImageURL || hero}
+                    alt={item.Name}
+                    className="menu-item-image"
+                  />
+                  <div className="menu-item-content">
+                    <h3 className="menu-item-name">{item.Name}</h3>
+                    <p className="menu-item-description">{item.Description}</p>
+                    <p className="menu-item-price">
+                      ${parseFloat(item.Price).toFixed(2)}
+                    </p>
+                  </div>
                 </div>
-              </div>
               </Link>
             ))
           ) : (
@@ -83,15 +87,18 @@ function StallPage() {
     <div className="stall-page-wrapper">
       <main className="stall-page-content">
         {/* UPDATED: Uses stall.Stall_Image if available, otherwise default hero */}
-        <div 
-          className="hero-section" 
-          style={{ 
-            backgroundImage: `url(${stall?.Stall_Image || hero})` 
+        <div
+          className="hero-section"
+          style={{
+            backgroundImage: `url(${stall?.Stall_Image || hero})`,
           }}
         >
           {error && <p className="hero-error">Error: {error}</p>}
           {stall && (
             <div className="hero-content">
+              <button onClick={() => navigate(`/home`)} className="back-button">
+                &larr; Back to Home
+              </button>
               <h1 className="hero-title">{stall.StallName}</h1>
               <p className="hero-description">{stall.Description}</p>
               <p className="hero-info">
@@ -106,12 +113,10 @@ function StallPage() {
             </div>
           )}
         </div>
-        
+
         <div className="menu-container">
           <h2 className="menu-title">Menu</h2>
-          <div className="menu-items-container">
-            {menuContent}
-          </div>
+          <div className="menu-items-container">{menuContent}</div>
         </div>
       </main>
     </div>
