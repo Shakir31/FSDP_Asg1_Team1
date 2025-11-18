@@ -1,7 +1,7 @@
 .admin-wrapper{
   max-width:var(--max-width);
   margin:30px auto;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: Arial;
   color:#111;
   background: #fff;
 }
@@ -67,27 +67,27 @@ hr{
   margin:20px 0;
 }
 
-.stores-columns{
+.stalls-columns{
   display:flex;
   gap:40px;
 }
 
-.stores-col{
+.stalls-col{
   flex:1;
 }
 
-.stores-col h4{
+.stalls-col h4{
   margin:0 0 6px 0;
   font-size:15px;
 }
 
-.stores-col ul{
+.stalls-col ul{
   margin:0;
   padding-left:14px;
   color:var(--muted);
 }
 
-.stores-col li{
+.stalls-col li{
   margin-bottom:6px;
 }
 
@@ -180,6 +180,11 @@ hr{
   border-radius:6px;
   border:none;
   cursor:pointer;
+}
+
+.btn-primary:hover{
+  color: #7e5e41;
+  text-decoration: none;
 }
 
 .message{

@@ -131,6 +131,36 @@ async function getStallImages(req, res) {
   }
 }
 
+async function updateStall(req, res) {
+  try {
+    const { id } = req.params;
+    const { StallName, Description, Hawker_Centre, Category } = req.body;
+    const updated = await stallModel.updateStall(
+      id,
+      StallName,
+      Description,
+      Hawker_Centre,
+      Category
+    );
+    if (!updated) return res.status(404).json({ error: "Stall not found" });
+    res.json(updated);
+  } catch (error) {
+    console.error("Update stall error", error);
+    res.status(500).json({ error: "Error updating stall" });
+  }
+}
+
+async function deleteStall(req, res) {
+  try {
+    const { id } = req.params;
+    await stallModel.deleteStall(id);
+    res.json({ message: "Stall deleted" });
+  } catch (error) {
+    console.error("Delete stall error", error);
+    res.status(500).json({ error: "Error deleting stall" });
+  }
+}
+
 module.exports = {
   createStall,
   getAllStalls,
@@ -142,4 +172,6 @@ module.exports = {
   getStallById,
   getMenuItemById,
   getStallImages,
+  updateStall,
+  deleteStall,
 };

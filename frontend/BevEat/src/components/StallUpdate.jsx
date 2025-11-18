@@ -7,7 +7,7 @@ function StallUpdate() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [StallName, setStallName] = useState('');
-  const [HawkerCenter, setHawkerCenter] = useState('');
+  const [Hawker_Centre, setHawkerCentre] = useState('');
   const [Category, setCategory] = useState('');
   const [Description, setDescription] = useState('');
   const [message, setMessage] = useState(null);
@@ -27,7 +27,7 @@ function StallUpdate() {
         }
         const data = await res.json();
         setStallName(data.StallName || '');
-        setHawkerCenter(data.HawkerCenter || '');
+        setHawkerCentre(data.Hawker_Centre || '');
         setCategory(data.Category || '');
         setDescription(data.Description || '');
       } catch (err) {
@@ -45,8 +45,7 @@ function StallUpdate() {
     setMessage(null);
     setError(null);
     try {
-      const body = { StallName: StallName, HawkerCenter: HawkerCenter, Category: Category, Description: Description };
-      if (password) body.Password = password;
+      const body = {StallName: StallName, Hawker_Centre: Hawker_Centre, Category: Category, Description: Description,};
       const token = localStorage.getItem('token');
       const res = await fetch(`http://localhost:3000/admin/stalls/${id}`, {
         method: 'PUT',
@@ -56,7 +55,6 @@ function StallUpdate() {
       const txt = await res.text();
       if (!res.ok) throw new Error(`Update failed: ${res.status} ${txt}`);
       setMessage('Profile updated successfully');
-      setPassword('');
       if (id) navigate('/admin/stalls');
     } catch (err) {
       setError(err.message);
@@ -84,7 +82,6 @@ function StallUpdate() {
     }
   }  
   
-
   return (
     <div className="admin-wrapper">
       <div className="update-container">
@@ -96,8 +93,8 @@ function StallUpdate() {
               <input value={StallName} onChange={e => setStallName(e.target.value)} />
             </div>
             <div className="form-row">
-              <label>HAWKER CENTER</label>
-              <input value={HawkerCenter} onChange={e => setHawkerCenter(e.target.value)} />
+              <label>HAWKER CENTRE</label>
+              <input value={Hawker_Centre} onChange={e => setHawkerCentre(e.target.value)} />
             </div>
             <div className="form-row">
               <label>CATEGORY</label>

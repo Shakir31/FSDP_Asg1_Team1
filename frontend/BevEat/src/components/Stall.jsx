@@ -43,7 +43,7 @@ function Stall() {
       <div style={{ padding: 20 }}>
         <div style={{ maxWidth: 800, margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h2 style={{ textAlign: 'left', margin: 0 }}>Stall list</h2>
-          <Link to="/admin/stalls/create-stall" className="btn-primary" style={{ textDecoration: 'none' }}>Add New Stall</Link>
+          <Link to="/admin/stalls/create-stall" className="btn-primary">Add New Stall</Link>
         </div>
         <div style={{ maxWidth: 800, margin: '0 auto' }}>
           {stalls.map(s => (
@@ -51,7 +51,7 @@ function Stall() {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#e7e7e7', padding: 20, borderRadius: 8 }}>
                 <div>
                   <div><strong>Stall Name:</strong> {s.StallName}</div>
-                  <div><strong>Hawker Center:</strong> {s.Hawker_Center}</div>
+                  <div><strong>Hawker Centre:</strong> {s.Hawker_Centre}</div>
                   <div><strong>Category:</strong> {s.Category}</div>
                   <div><strong>Description:</strong> {s.Description}</div>
                 </div>

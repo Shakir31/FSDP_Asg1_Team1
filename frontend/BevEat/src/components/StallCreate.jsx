@@ -5,7 +5,7 @@ import '../admin.css';
 function StallCreate() {
   const navigate = useNavigate();
   const [StallName, setStallName] = useState('');
-  const [HawkerCenter, setHawkerCenter] = useState('');
+  const [Hawker_Centre, setHawkerCentre] = useState('');
   const [Category, setCategory] = useState('');
   const [Description, setDescription] = useState('');
   const [message, setMessage] = useState(null);
@@ -16,7 +16,7 @@ function StallCreate() {
     setMessage(null);
     setError(null);
     try {
-      const body = { StallName, HawkerCenter, Category, Description };
+      const body = { stallName: StallName, hawker_centre: Hawker_Centre, category: Category, description: Description };
       const token = localStorage.getItem('token');
       const res = await fetch(`http://localhost:3000/stalls`, {
         method: 'POST',
@@ -43,8 +43,8 @@ function StallCreate() {
               <input value={StallName} onChange={e => setStallName(e.target.value)} />
             </div>
             <div className="form-row">
-              <label>HAWKER CENTER</label>
-              <input value={HawkerCenter} onChange={e => setHawkerCenter(e.target.value)} />
+              <label>HAWKER CENTRE</label>
+              <input value={Hawker_Centre} onChange={e => setHawkerCentre(e.target.value)} />
             </div>
             <div className="form-row">
               <label>CATEGORY</label>

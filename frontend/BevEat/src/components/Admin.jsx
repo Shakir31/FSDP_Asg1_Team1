@@ -30,7 +30,7 @@ function AdminHome() {
 
         <hr />
 
-        <section className="stalls">
+        <section className="stalls-list">
           <div className="section-top">
             <h3>Stall List</h3>
             <a className="view-more" href="/admin/stalls">View more</a>

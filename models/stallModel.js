@@ -185,6 +185,44 @@ async function getImagesByStall(stallId) {
   }
 }
 
+async function updateStall(stallId, stallName, description, hawker_centre, category) {
+  let connection;
+  try {
+    connection = await sql.connect(dbConfig);
+    const result = await connection
+      .request()
+      .input("stallId", sql.Int, stallId)
+      .input("stallName", sql.VarChar, stallName)
+      .input("description", sql.VarChar, description)
+      .input("hawker_centre", sql.VarChar, hawker_centre)
+      .input("category", sql.VarChar, category)
+      .query(
+        "UPDATE Stalls SET StallName = @stallName, Description = @description, Hawker_Centre = @hawker_centre, Category = @category OUTPUT INSERTED.* WHERE StallID = @stallId"
+      );
+    return result.recordset[0];
+  } catch (error) {
+    throw error;
+  } finally {
+    if (connection) await connection.close();
+  }
+}
+
+async function deleteStall(stallId) {
+  let connection;
+  try {
+    connection = await sql.connect(dbConfig);
+    await connection
+      .request()
+      .input("stallId", sql.Int, stallId)
+      .query("DELETE FROM Stalls WHERE StallID = @stallId");
+    return true;
+  } catch (error) {
+    throw error;
+  } finally {
+    if (connection) await connection.close();
+  }
+}
+
 module.exports = {
   createStall,
   getAllStalls,
@@ -196,4 +234,6 @@ module.exports = {
   getStallById,
   getMenuItemById,
   getImagesByStall,
+  updateStall,
+  deleteStall,
 };
