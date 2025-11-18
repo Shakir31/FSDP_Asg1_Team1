@@ -1,52 +1,95 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../UploadPage.css";
 
 export default function UploadPage() {
+  const [stalls, setStalls] = useState([]);
+  const [selectedStallId, setSelectedStallId] = useState("");
+  const [menuItems, setMenuItems] = useState([]);
+  const [selectedMenuItemId, setSelectedMenuItemId] = useState("");
+
   const [files, setFiles] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
   const [review, setReview] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [uploadedImageId, setUploadedImageId] = useState(null);
   const [result, setResult] = useState(null);
 
-  // obtain token from localStorage for authentication
   const token = localStorage.getItem("token");
+
+  useEffect(() => {
+    async function fetchStalls() {
+      try {
+        const res = await fetch("http://localhost:3000/stalls", {
+          headers: { Authorization: token ? `Bearer ${token}` : "" },
+        });
+        if (!res.ok) throw new Error("Failed to fetch stalls");
+        const data = await res.json();
+        setStalls(data);
+      } catch (err) {
+        alert("Error loading stalls: " + err.message);
+      }
+    }
+    fetchStalls();
+  }, [token]);
+
+  useEffect(() => {
+    async function fetchMenuItems() {
+      if (!selectedStallId) {
+        setMenuItems([]);
+        setSelectedMenuItemId("");
+        return;
+      }
+      try {
+        const res = await fetch(
+          `http://localhost:3000/stalls/${selectedStallId}/menu`,
+          { headers: { Authorization: token ? `Bearer ${token}` : "" } }
+        );
+        if (!res.ok) throw new Error("Failed to fetch menu items");
+        const data = await res.json();
+        setMenuItems(data);
+        setSelectedMenuItemId(""); // reset selected menu item on stall change
+      } catch (err) {
+        alert("Error loading menu items: " + err.message);
+      }
+    }
+    fetchMenuItems();
+  }, [selectedStallId, token]);
 
   function onFileChange(e) {
     const f = Array.from(e.target.files || []);
     setFiles(f);
     setPreviewUrls(f.map((file) => URL.createObjectURL(file)));
-    setUploadedImageId(null); // reset previously uploaded image ID when new files selected
+    setUploadedImageId(null);
   }
 
-  // Uploads first image from the selected files (adjust if you want multiple upload)
   async function handleImageUpload() {
+    if (!selectedMenuItemId) {
+      alert("Please select a menu item first");
+      return;
+    }
     if (!files.length) return alert("Please choose at least one photo");
+
     setLoading(true);
     setResult(null);
-
     try {
       const fd = new FormData();
-      fd.append("imageFile", files[0]); // your backend expects imageFile as field name
-      // Optionally add menuItemId or stallId if needed by your backend
-      // fd.append('stallId', 'stall-123');
+      fd.append("imageFile", files[0]);
 
-      const uploadRes = await fetch("http://localhost:3000/images/upload", {
+      const res = await fetch("http://localhost:3000/images/upload", {
         method: "POST",
         headers: { Authorization: token ? `Bearer ${token}` : "" },
         body: fd,
       });
 
-      if (!uploadRes.ok) {
-        const errorText = await uploadRes.text();
-        throw new Error(
-          errorText || `Upload failed with status ${uploadRes.status}`
-        );
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText || `Upload failed with status ${res.status}`);
       }
 
-      const uploadData = await uploadRes.json();
-      setUploadedImageId(uploadData.image.ImageID); // save uploaded image ID for linking to review
-      setResult({ upload: uploadData });
+      const data = await res.json();
+      setUploadedImageId(data.image.ImageID);
+      setResult({ upload: data });
       alert(
         "Image uploaded and verified successfully. You can now submit the review."
       );
@@ -59,6 +102,11 @@ export default function UploadPage() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+
+    if (!selectedMenuItemId) {
+      alert("Please select a menu item first");
+      return;
+    }
     if (!uploadedImageId) {
       alert("Please upload an image first");
       return;
@@ -67,35 +115,40 @@ export default function UploadPage() {
       alert("Please write a review");
       return;
     }
-    setLoading(true);
 
+    setLoading(true);
     try {
-      const reviewRes = await fetch("http://localhost:3000/reviews", {
+      const res = await fetch("http://localhost:3000/reviews", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: token ? `Bearer ${token}` : "",
         },
         body: JSON.stringify({
-          menuItemId: 9, // replace with actual menu item ID in context
-          rating: 5, // you can add rating input UI accordingly
+          menuItemId: Number(selectedMenuItemId),
+          rating: 5,
           reviewText: review,
           imageId: uploadedImageId,
         }),
       });
 
-      if (!reviewRes.ok) {
-        const errorText = await reviewRes.text();
-        throw new Error(errorText || "Review submission failed");
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText || "Review submission failed");
       }
 
-      const reviewData = await reviewRes.json();
-      setResult((prev) => ({ ...prev, review: reviewData }));
+      const data = await res.json();
+      setResult((prev) => ({ ...prev, review: data }));
       alert("Review submitted successfully");
+
+      // reset all
       setFiles([]);
       setPreviewUrls([]);
       setReview("");
       setUploadedImageId(null);
+      setSelectedStallId("");
+      setMenuItems([]);
+      setSelectedMenuItemId("");
     } catch (err) {
       alert("Review submission error: " + err.message);
     } finally {
@@ -108,6 +161,37 @@ export default function UploadPage() {
       <h2 className="title">Upload Photos & Review</h2>
 
       <form className="upload-form" onSubmit={handleSubmit}>
+        <label htmlFor="stallSelect">Select Stall:</label>
+        <select
+          id="stallSelect"
+          value={selectedStallId}
+          onChange={(e) => setSelectedStallId(e.target.value)}
+          required
+        >
+          <option value="">-- Select a stall --</option>
+          {stalls.map((stall) => (
+            <option key={stall.StallID} value={stall.StallID}>
+              {stall.StallName}
+            </option>
+          ))}
+        </select>
+
+        <label htmlFor="menuItemSelect">Select Menu Item:</label>
+        <select
+          id="menuItemSelect"
+          value={selectedMenuItemId}
+          onChange={(e) => setSelectedMenuItemId(e.target.value)}
+          required
+          disabled={!menuItems.length}
+        >
+          <option value="">-- Select a menu item --</option>
+          {menuItems.map((item) => (
+            <option key={item.MenuItemID} value={item.MenuItemID}>
+              {item.Name}
+            </option>
+          ))}
+        </select>
+
         <label className="file-drop" htmlFor="fileInput">
           <input
             id="fileInput"
@@ -164,14 +248,13 @@ export default function UploadPage() {
         </label>
 
         <div className="preview-grid" aria-live="polite">
-          {previewUrls.map((u, i) => (
+          {previewUrls.map((url, i) => (
             <div key={i} className="preview-item">
-              <img src={u} alt={`preview-${i}`} className="preview-img" />
+              <img src={url} alt={`preview-${i}`} className="preview-img" />
             </div>
           ))}
         </div>
 
-        {/* Button to upload first image from selection */}
         {!uploadedImageId && (
           <button
             type="button"
@@ -183,7 +266,6 @@ export default function UploadPage() {
           </button>
         )}
 
-        {/* Review text area shown only after image is uploaded */}
         {uploadedImageId && (
           <>
             <textarea
@@ -210,6 +292,9 @@ export default function UploadPage() {
                   setPreviewUrls([]);
                   setReview("");
                   setUploadedImageId(null);
+                  setSelectedStallId("");
+                  setMenuItems([]);
+                  setSelectedMenuItemId("");
                   setResult(null);
                 }}
               >
