@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import { useLocation } from "react-router-dom";
 import Button from "@mui/material/Button";
 import txnLoading from "../assets/progressSpinner.gif";
 import commonConfigs from "../config";
@@ -9,10 +10,11 @@ import '../NetsQrSamplePage.css';
 class NetsQrSampleLayout extends Component {
   constructor(props) {
     super(props);
+    const passedAmount = this.props.location?.state?.totalAmount;
     this.state = {
       convertTime: {},
       secondsNetsTimeout: 300,
-      amount: "3",
+      amount: parseFloat(passedAmount).toFixed(2),
       txnId: "sandbox_nets|m|8ff8e5b6-d43e-4786-8ac5-7accf8c5bd9b",
       mobile: "",
       netsQrPayment: txnLoading,
@@ -316,4 +318,7 @@ class NetsQrSampleLayout extends Component {
   }
 }
 
-export default NetsQrSampleLayout;
+export default function NetsQrPageWrapper(props) {
+    const location = useLocation();
+    return <NetsQrSampleLayout {...props} location={location} />;
+}

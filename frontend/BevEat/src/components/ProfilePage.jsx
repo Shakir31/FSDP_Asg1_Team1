@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { User, Coins, Star } from 'lucide-react'; // <-- 1. Import Star icon
+import { useNavigate } from 'react-router-dom'; // 1. Import useNavigate
+import { User, Coins, Star } from 'lucide-react';
 import '../ProfilePage.css';
 
 // Helper component for star ratings
@@ -21,9 +22,11 @@ const StarRating = ({ rating }) => {
 function ProfilePage() {
   const [user, setUser] = useState(null);
   const [coins, setCoins] = useState(0);
-  const [reviews, setReviews] = useState([]); // <-- 2. Add state for reviews
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  const navigate = useNavigate(); // 2. Initialize the hook
 
   useEffect(() => {
     const getToken = () => {
@@ -32,15 +35,17 @@ function ProfilePage() {
 
     const fetchData = async () => {
       const token = getToken();
+
+      // 1. Check if token exists locally
       if (!token) {
-        setError("You are not logged in.");
-        setLoading(false);
+        alert("Please log in to view your profile.");
+        navigate("/login");
         return;
       }
 
       try {
         setLoading(true);
-        // 3. Add the new reviews fetch to the Promise.all
+        
         const [profileResponse, coinsResponse, reviewsResponse] = await Promise.all([
           fetch("http://localhost:3000/users/profile", {
             headers: { Authorization: `Bearer ${token}` },
@@ -48,40 +53,48 @@ function ProfilePage() {
           fetch("http://localhost:3000/coins/balance", {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          // New fetch for user's reviews
           fetch("http://localhost:3000/reviews/user", {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
 
-        if (!profileResponse.ok) {
-          throw new Error("Failed to fetch profile");
+        // 2. Check if the token was actually valid (API returned 401 or 403)
+        if (profileResponse.status === 401 || profileResponse.status === 403) {
+            throw new Error("Session expired"); // Throw specific error
         }
+
+        if (!profileResponse.ok) throw new Error("Failed to fetch profile");
+        if (!coinsResponse.ok) throw new Error("Failed to fetch coins");
+        if (!reviewsResponse.ok) throw new Error("Failed to fetch reviews");
+
         const profileData = await profileResponse.json();
-        setUser(profileData);
-
-        if (!coinsResponse.ok) {
-          throw new Error("Failed to fetch coins");
-        }
         const coinsData = await coinsResponse.json();
-        setCoins(coinsData.coins);
-
-        // 4. Set the reviews state
-        if (!reviewsResponse.ok) {
-          throw new Error("Failed to fetch reviews");
-        }
         const reviewsData = await reviewsResponse.json();
+
+        setUser(profileData);
+        setCoins(coinsData.coins);
         setReviews(reviewsData);
 
       } catch (err) {
-        setError(err.message);
+        console.error("Profile Error:", err);
+        
+        // 3. Handle Invalid/Expired Token Error
+        if (err.message === "Session expired" || err.message === "Failed to fetch profile") {
+            alert("Your session has expired. Please log in again.");
+            // Clear invalid tokens so the loop doesn't repeat
+            localStorage.removeItem("token");
+            sessionStorage.removeItem("token");
+            navigate("/login");
+        } else {
+            setError(err.message);
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [navigate]);
 
   if (loading) {
     return <div className="profile-wrapper"><p>Loading profile...</p></div>;
@@ -92,10 +105,9 @@ function ProfilePage() {
   }
 
   if (!user) {
-    return <div className="profile-wrapper"><p>Please log in to see your profile.</p></div>;
+    return null; // Don't render anything if redirecting
   }
 
-  // 5. Add the JSX to render the reviews
   return (
     <div className="profile-wrapper">
       <div className="profile-container">
@@ -109,7 +121,6 @@ function ProfilePage() {
         </div>
       </div>
 
-      {/* --- NEW REVIEWS SECTION --- */}
       <div className="profile-reviews-container">
         <h3 className="profile-section-title">My Reviews</h3>
         {reviews.length > 0 ? (
