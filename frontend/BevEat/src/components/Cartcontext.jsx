@@ -26,6 +26,26 @@ export function CartProvider({ children }) {
     localStorage.setItem("orders", JSON.stringify(orders));
   }, [orders]);
 
+  // fetch orders from backend on load (use /orders/history, not /orders)
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const { res } = await tryFetchVariants("GET", "/orders/history");
+        const data = await res.json();
+        if (mounted && Array.isArray(data)) {
+          setOrders(data);
+        }
+      } catch (err) {
+        // keep local orders if backend unavailable — log for debugging
+        console.debug("Could not fetch orders from backend:", err?.message || err);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const [appliedVoucherId, setAppliedVoucherId] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("cash"); // can be 'cash'|'nets'|null
 
@@ -92,8 +112,7 @@ export function CartPage() {
   const navigate = useNavigate();
   const {
     items,
-    setItems, // <-- added so we can clear cart after placing order
-    // need setOrders so we can save fallback/local orders
+    setItems,
     setOrders,
     updateQty,
     vouchers,
@@ -103,7 +122,7 @@ export function CartPage() {
     setPaymentMethod,
   } = useCart();
 
-  const [placing, setPlacing] = useState(false); // <--- new: shows progress while posting
+  const [placing, setPlacing] = useState(false);
 
   const subtotal = calcSubtotal(items);
   const appliedVoucher = vouchers.find((v) => v.id === appliedVoucherId) || null;
@@ -119,34 +138,27 @@ export function CartPage() {
     }
 
     const payload = {
-      items,
+      items: items.map((it) => ({
+        id: it.id,
+        name: it.name,
+        qty: Number(it.qty || 0),
+        price: Number(Number(it.price || 0).toFixed(2)),
+      })),
       paymentMethod,
       voucherId: appliedVoucherId,
-      subtotal,
-      discount,
-      total,
+      subtotal: Number(Number(subtotal || 0).toFixed(2)),
+      subtotalAmount: Number(Number(subtotal || 0).toFixed(2)),
+      discount: Number(Number(discount || 0).toFixed(2)),
+      total: Number(Number(total || 0).toFixed(2)),
+      totalAmount: Number(Number(total || 0).toFixed(2)),
       placedAt: new Date().toISOString(),
     };
 
-    // build URL using Vite env var if set; trim trailing slash
-    const base = (import.meta?.env?.VITE_API_BASE || "").replace(/\/$/, "");
-    const url = base ? `${base}/orders` : "/orders";
-
+    // try backend variants (/orders, /api/orders, relative proxy). falls back to local-only if none succeed.
     setPlacing(true);
     try {
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        // Treat missing endpoint specially so we can fallback
-        if (res.status === 404) throw new Error("BACKEND_NOT_FOUND");
-        const text = await res.text().catch(() => "");
-        throw new Error(`Order failed: ${res.status} ${text}`);
-      }
-
+      const { res, url } = await tryFetchVariants("POST", "/orders", payload);
+      console.log("Order POST succeeded at:", url);
       const data = await res.json();
 
       // save order into app state so Profile can display it
@@ -378,4 +390,49 @@ export function CheckoutSuccess() {
       <p>Thank you for your purchase.</p>
     </div>
   );
+}
+
+// helper: resolve API base and try multiple endpoint variants (/orders and /api/orders)
+const resolveApiBase = () => {
+  const viteApi = import.meta?.env?.VITE_API_BASE || "";
+  const savedApi = localStorage.getItem("API_BASE") || "";
+  const fallback = "http://localhost:3000";
+  return (viteApi || savedApi || fallback).replace(/\/$/, "");
+};
+
+async function tryFetchVariants(method, endpoint, body) {
+  const base = resolveApiBase();
+  const variants = [
+    `${base}${endpoint}`,
+    `${base}/api${endpoint}`,
+    endpoint,
+    `/api${endpoint}`,
+  ].filter(Boolean);
+
+  let lastError = null;
+  for (const url of variants) {
+    try {
+      const opts = {
+        method,
+        headers: { "Content-Type": "application/json" },
+      };
+      // attach bearer token if available (backend endpoints are protected)
+      const token = localStorage.getItem("token") || localStorage.getItem("authToken");
+      if (token) {
+        opts.headers.Authorization = `Bearer ${token}`;
+      }
+      if (body) {
+        opts.body = JSON.stringify(body);
+      }
+      const res = await fetch(url, opts);
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+      return { res, url };
+    } catch (err) {
+      lastError = err;
+      console.warn(`Fetch error (tried ${url}):`, err);
+    }
+  }
+  throw lastError;
 }
