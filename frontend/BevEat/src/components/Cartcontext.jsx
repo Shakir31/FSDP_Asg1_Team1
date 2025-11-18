@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import "../Cart.css";
 import { useEffect } from "react";
 
@@ -15,6 +15,16 @@ export function CartProvider({ children }) {
   const [vouchers, setVouchers] = useState([
     { id: "v1", code: "DISC1", description: "Save $1.00", amountOff: 1.0 },
   ]);
+
+  // store past orders so Profile can show them
+  const [orders, setOrders] = useState(() => {
+    const saved = localStorage.getItem("orders");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem("orders", JSON.stringify(orders));
+  }, [orders]);
 
   const [appliedVoucherId, setAppliedVoucherId] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("cash"); // can be 'cash'|'nets'|null
@@ -53,6 +63,8 @@ export function CartProvider({ children }) {
       value={{
         items,
         setItems,
+        orders,
+        setOrders,
         addItem,
         updateQty,
         removeItem,
@@ -80,6 +92,9 @@ export function CartPage() {
   const navigate = useNavigate();
   const {
     items,
+    setItems, // <-- added so we can clear cart after placing order
+    // need setOrders so we can save fallback/local orders
+    setOrders,
     updateQty,
     vouchers,
     appliedVoucherId,
@@ -88,17 +103,97 @@ export function CartPage() {
     setPaymentMethod,
   } = useCart();
 
+  const [placing, setPlacing] = useState(false); // <--- new: shows progress while posting
+
   const subtotal = calcSubtotal(items);
   const appliedVoucher = vouchers.find((v) => v.id === appliedVoucherId) || null;
   const discount = appliedVoucher ? appliedVoucher.amountOff || 0 : 0;
   const total = Math.max(0, subtotal - discount);
 
-  const handleCheckout = () => {
+  // POST order to backend and navigate depending on payment method
+  const handleCheckout = async () => {
     if (items.length === 0) return;
-    if (paymentMethod === "nets") {
-      navigate("/nets-qr", { state: { totalAmount: total } });
-    } else {
-      navigate("/checkout"), { state: { totalAmount: total } };
+    if (!paymentMethod) {
+      alert("Please select a payment method.");
+      return;
+    }
+
+    const payload = {
+      items,
+      paymentMethod,
+      voucherId: appliedVoucherId,
+      subtotal,
+      discount,
+      total,
+      placedAt: new Date().toISOString(),
+    };
+
+    // build URL using Vite env var if set; trim trailing slash
+    const base = (import.meta?.env?.VITE_API_BASE || "").replace(/\/$/, "");
+    const url = base ? `${base}/orders` : "/orders";
+
+    setPlacing(true);
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        // Treat missing endpoint specially so we can fallback
+        if (res.status === 404) throw new Error("BACKEND_NOT_FOUND");
+        const text = await res.text().catch(() => "");
+        throw new Error(`Order failed: ${res.status} ${text}`);
+      }
+
+      const data = await res.json();
+
+      // save order into app state so Profile can display it
+      setOrders((prev) => [data, ...prev]);
+
+      // Clear cart and voucher
+      setItems([]);
+      setAppliedVoucherId(null);
+
+      // Navigate to payment flow based on method
+      if (paymentMethod === "nets") {
+        // send to NETS QR flow with order and amount
+        navigate("/nets-qr", { state: { totalAmount: total, order: data } });
+      } else {
+        // cash: show checkout/order placed page (pay on delivery)
+        navigate("/checkout", { state: { order: data } });
+      }
+      return;
+    } catch (err) {
+      console.error("checkout error:", err);
+
+      // Fallback: persist a local order so Profile can show it
+      const localOrder = {
+        id: `local-${Date.now()}`,
+        ...payload,
+        status: "placed",
+        note:
+          err?.message === "BACKEND_NOT_FOUND"
+            ? "Saved locally because backend /orders was not found (404)."
+            : "Saved locally (network/backend error).",
+      };
+
+      setOrders((prev) => [localOrder, ...prev]);
+      setItems([]);
+      setAppliedVoucherId(null);
+      // Navigate to the appropriate page even when saved locally
+      if (paymentMethod === "nets") {
+        navigate("/nets-qr", { state: { totalAmount: total, order: localOrder, offline: true } });
+      } else {
+        navigate("/checkout", { state: { order: localOrder, offline: true } });
+      }
+
+      alert(
+        "Order saved locally. Backend unreachable. Please check your network connection."
+      );
+    } finally {
+      setPlacing(false);
     }
   };
 
@@ -114,38 +209,41 @@ export function CartPage() {
             <div className="cart-list" style={{ marginTop: 8 }}>
               {items.length === 0 ? (
                 <div className="cart-empty">Your cart is empty.</div>
-              ) : (
-                items.map((it) => (
-                  <div key={it.id} className="cart-item">
-                    <div className="cart-item-left">
-                      <div className="cart-item-title">{it.name}</div>
-                      {it.desc && <div className="cart-item-desc">{it.desc}</div>}
-                    </div>
+              ) : null}
 
-                    <div className="qty-controls" role="group" aria-label="quantity">
-                      <button
-                        className="qty-btn"
-                        onClick={() => updateQty(it.id, it.qty - 1)}
-                        aria-label="decrease"
-                        type="button"
-                      >
-                        −
-                      </button>
-                      <div className="qty-count">{it.qty}</div>
-                      <button
-                        className="qty-btn"
-                        onClick={() => updateQty(it.id, it.qty + 1)}
-                        aria-label="increase"
-                        type="button"
-                      >
-                        +
-                      </button>
-                    </div>
+              {items.length > 0 &&
+                items.map((it) => {
+                  return (
+                    <div key={it.id} className="cart-item">
+                      <div className="cart-item-left">
+                        <div className="cart-item-title">{it.name}</div>
+                        {it.desc && <div className="cart-item-desc">{it.desc}</div>}
+                      </div>
 
-                    <div className="cart-item-price">SGD {(it.price * it.qty).toFixed(2)}</div>
-                  </div>
-                ))
-              )}
+                      <div className="qty-controls" role="group" aria-label="quantity">
+                        <button
+                          className="qty-btn"
+                          onClick={() => updateQty(it.id, it.qty - 1)}
+                          aria-label="decrease"
+                          type="button"
+                        >
+                          -
+                        </button>
+                        <div className="qty-count">{it.qty}</div>
+                        <button
+                          className="qty-btn"
+                          onClick={() => updateQty(it.id, it.qty + 1)}
+                          aria-label="increase"
+                          type="button"
+                        >
+                          +
+                        </button>
+                      </div>
+
+                      <div className="cart-item-price">SGD {(it.price * it.qty).toFixed(2)}</div>
+                    </div>
+                  );
+                })}
             </div>
           </div>
         </div>
@@ -196,8 +294,13 @@ export function CartPage() {
                 <div style={{ fontWeight: 900 }}>SGD {total.toFixed(2)}</div>
               </div>
 
-              <button className="btn btn-orange" onClick={handleCheckout} style={{ width: "100%" }}>
-                Checkout
+              <button
+                className="btn btn-orange"
+                onClick={handleCheckout}
+                style={{ width: "100%" }}
+                disabled={!paymentMethod || items.length === 0 || placing}
+              >
+                {placing ? "Placing order..." : "Checkout"}
               </button>
             </div>
           </div>
@@ -245,6 +348,21 @@ export function CartPage() {
 }
 
 export function CheckoutPage() {
+  const location = useLocation();
+  const order = location?.state?.order || null;
+
+  // If an order exists in state show order placed / pay on delivery message
+  if (order) {
+    return (
+      <div style={{ padding: 24 }}>
+        <h2 style={{ color: "var(--orange)" }}>Order Placed</h2>
+        <p>Your order (ID: {order.id || "—"}) has been placed. Please pay when you receive the food.</p>
+        <p style={{ color: "var(--muted)" }}>We will notify you when the order is being prepared.</p>
+      </div>
+    );
+  }
+
+  // Fallback placeholder if navigated directly
   return (
     <div style={{ padding: 24 }}>
       <h2 style={{ color: "var(--orange)" }}>Checkout</h2>
