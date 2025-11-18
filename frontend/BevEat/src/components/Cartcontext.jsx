@@ -1,14 +1,16 @@
 import React, { createContext, useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../Cart.css";
+import { useEffect } from "react";
 
 export const CartContext = createContext(null);
 
 export function CartProvider({ children }) {
-  const [items, setItems] = useState([
-    { id: "1", name: "Item A", qty: 1, price: 3.5, desc: "Small cup" },
-    { id: "2", name: "Item B", qty: 2, price: 2.0, desc: "With syrup" },
-  ]);
+  // Initialize items from localStorage
+  const [items, setItems] = useState(() => {
+    const saved = localStorage.getItem("cartItems");
+    return saved ? JSON.parse(saved) : [];
+  });
 
   const [vouchers, setVouchers] = useState([
     { id: "v1", code: "DISC1", description: "Save $1.00", amountOff: 1.0 },
@@ -17,9 +19,27 @@ export function CartProvider({ children }) {
   const [appliedVoucherId, setAppliedVoucherId] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("cash"); // can be 'cash'|'nets'|null
 
+  useEffect(() => {
+    localStorage.setItem("cartItems", JSON.stringify(items));
+  }, [items]);
+
+  const addItem = (item) => {
+    setItems((prev) => {
+      // Check if item already exists
+      const existing = prev.find((i) => i.id === item.id);
+      if (existing) {
+        // If exists, increment quantity
+        return prev.map((i) =>
+          i.id === item.id ? { ...i, qty: i.qty + 1 } : i
+        );
+      }
+      // Else add new item with qty 1
+      return [...prev, { ...item, qty: 1 }];
+    });
+  };
+
   const updateQty = (id, qty) => {
     if (qty <= 0) {
-      // remove item when qty goes to zero
       setItems((prev) => prev.filter((it) => it.id !== id));
       return;
     }
@@ -33,6 +53,7 @@ export function CartProvider({ children }) {
       value={{
         items,
         setItems,
+        addItem,
         updateQty,
         removeItem,
         vouchers,
