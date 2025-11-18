@@ -95,8 +95,11 @@ export function CartPage() {
 
   const handleCheckout = () => {
     if (items.length === 0) return;
-    if (paymentMethod === "nets") navigate("/nets-qr");
-    else navigate("/checkout");
+    if (paymentMethod === "nets") {
+      navigate("/nets-qr", { state: { totalAmount: total } });
+    } else {
+      navigate("/checkout"), { state: { totalAmount: total } };
+    }
   };
 
   return (

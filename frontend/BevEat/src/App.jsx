@@ -9,7 +9,7 @@ import MainLayout from "./components/MainLayout";
 import Product from "./components/Product";
 import StallPhotos from "./components/StallPhotos";
 import ProfilePage from "./components/ProfilePage";
-
+import Home from "./components/Home";
 import NetsQrSamplePage from "./components/NetsQrSamplePage";
 import TxnNetsSuccessStatusPage from "./components/TxnNetsSuccessStatusPage";
 import TxnNetsFailStatusPage from "./components/TxnNetsFailStatusPage";
@@ -26,8 +26,8 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Signup />} />
-        {/* <Route path="/home" element={<Home />} /> */}
         <Route element={<MainLayout />}>
+          <Route path="/home" element={<Home />} />
           <Route path="/stalls/:id" element={<StallPage />} />
           <Route path="/stalls/:id/photos" element={<StallPhotos />} />
           <Route path="/menu-item/:itemId" element={<Product />} />
