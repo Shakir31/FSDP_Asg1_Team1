@@ -22,7 +22,6 @@ const {
   authenticateToken,
   authorizeRoles,
 } = require("./middlewares/authMiddleware");
-
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -36,15 +35,33 @@ app.post("/register", authController.registerUser);
 app.post("/login", authController.loginUser);
 app.get("/users/profile", authenticateToken, authController.getUserProfile);
 
+// Helper function to ensure handler is implemented
+function ensureHandler(handler, name) {
+  if (typeof handler === "function") return handler;
+  return (req, res) => {
+    res.status(501).json({ error: `Handler not implemented: ${name}` });
+  };
+}
+
 //admin: users list
-app.get("/admin/users", authenticateToken, authorizeRoles("admin"), authController.listUsers);
-app.get("/admin/users/:id", authenticateToken, authorizeRoles("admin"), authController.getUser);
-app.put("/admin/users/:id", authenticateToken, authorizeRoles("admin"), authController.updateUser);
-app.delete("/admin/users/:id", authenticateToken, authorizeRoles("admin"), authController.deleteUser);
+app.get("/admin/users", authenticateToken, ensureHandler(authorizeRoles("admin"), 'authorizeRoles("admin")'), ensureHandler(authController.listUsers, "authController.listUsers"));
+app.get("/admin/users/:id", authenticateToken, ensureHandler(authorizeRoles("admin"), 'authorizeRoles("admin")'), ensureHandler(authController.getUser, "authController.getUser"));
+app.put("/admin/users/:id", authenticateToken, ensureHandler(authorizeRoles("admin"), 'authorizeRoles("admin")'), ensureHandler(authController.updateUser, "authController.updateUser"));
+app.delete("/admin/users/:id", authenticateToken, ensureHandler(authorizeRoles("admin"), 'authorizeRoles("admin")'), ensureHandler(authController.deleteUser, "authController.deleteUser"));
 
 //admin: stalls list
-app.get("/admin/stalls", authenticateToken, authorizeRoles("admin"), stallController.getAllStalls);
-app.get("/admin/stalls/:id", authenticateToken, authorizeRoles("admin"), stallController.getStallById);
+app.get(
+  "/admin/stalls",
+  authenticateToken,
+  authorizeRoles("admin"),
+  stallController.getAllStalls
+);
+app.get(
+  "/admin/stalls/:id",
+  authenticateToken,
+  authorizeRoles("admin"),
+  stallController.getStallById
+);
 // app.put("/admin/stalls/:id", authenticateToken, authorizeRoles("admin"), (req, res) => {
 //   res.status(501).json({ error: 'Not implemented' });
 // });

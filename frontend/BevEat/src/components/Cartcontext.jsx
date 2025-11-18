@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { createContext, useContext, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import "../Cart.css";
 
 export const CartContext = createContext(null);
@@ -14,6 +14,36 @@ export function CartProvider({ children }) {
   const [vouchers, setVouchers] = useState([
     { id: "v1", code: "DISC1", description: "Save $1.00", amountOff: 1.0 },
   ]);
+
+  // store past orders so Profile can show them
+  const [orders, setOrders] = useState(() => {
+    const saved = localStorage.getItem("orders");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem("orders", JSON.stringify(orders));
+  }, [orders]);
+
+  // fetch orders from backend on load (use /orders/history, not /orders)
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const { res } = await tryFetchVariants("GET", "/orders/history");
+        const data = await res.json();
+        if (mounted && Array.isArray(data)) {
+          setOrders(data);
+        }
+      } catch (err) {
+        // keep local orders if backend unavailable — log for debugging
+        console.debug("Could not fetch orders from backend:", err?.message || err);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const [appliedVoucherId, setAppliedVoucherId] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("cash"); // can be 'cash'|'nets'|null
@@ -52,6 +82,8 @@ export function CartProvider({ children }) {
       value={{
         items,
         setItems,
+        orders,
+        setOrders,
         addItem,
         updateQty,
         removeItem,
@@ -79,6 +111,8 @@ export function CartPage() {
   const navigate = useNavigate();
   const {
     items,
+    setItems,
+    setOrders,
     updateQty,
     vouchers,
     appliedVoucherId,
@@ -87,18 +121,90 @@ export function CartPage() {
     setPaymentMethod,
   } = useCart();
 
+  const [placing, setPlacing] = useState(false);
+
   const subtotal = calcSubtotal(items);
   const appliedVoucher = vouchers.find((v) => v.id === appliedVoucherId) || null;
   const discount = appliedVoucher ? appliedVoucher.amountOff || 0 : 0;
   const total = Math.max(0, subtotal - discount);
 
-  const handleCheckout = () => {
+  // POST order to backend and navigate depending on payment method
+  const handleCheckout = async () => {
     if (items.length === 0) return;
-    if (paymentMethod === "nets") {
-      navigate("/nets-qr", { state: { totalAmount: total } });
-    } else {
-      // FIX 1: Fixed the comma placement here so state is passed correctly
-      navigate("/checkout", { state: { totalAmount: total } });
+    if (!paymentMethod) {
+      alert("Please select a payment method.");
+      return;
+    }
+
+    const payload = {
+      items: items.map((it) => ({
+        id: it.id,
+        name: it.name,
+        qty: Number(it.qty || 0),
+        price: Number(Number(it.price || 0).toFixed(2)),
+      })),
+      paymentMethod,
+      voucherId: appliedVoucherId,
+      subtotal: Number(Number(subtotal || 0).toFixed(2)),
+      subtotalAmount: Number(Number(subtotal || 0).toFixed(2)),
+      discount: Number(Number(discount || 0).toFixed(2)),
+      total: Number(Number(total || 0).toFixed(2)),
+      totalAmount: Number(Number(total || 0).toFixed(2)),
+      placedAt: new Date().toISOString(),
+    };
+
+    // try backend variants (/orders, /api/orders, relative proxy). falls back to local-only if none succeed.
+    setPlacing(true);
+    try {
+      const { res, url } = await tryFetchVariants("POST", "/orders", payload);
+      console.log("Order POST succeeded at:", url);
+      const data = await res.json();
+
+      // save order into app state so Profile can display it
+      setOrders((prev) => [data, ...prev]);
+
+      // Clear cart and voucher
+      setItems([]);
+      setAppliedVoucherId(null);
+
+      // Navigate to payment flow based on method
+      if (paymentMethod === "nets") {
+        // send to NETS QR flow with order and amount
+        navigate("/nets-qr", { state: { totalAmount: total, order: data } });
+      } else {
+        // cash: show checkout/order placed page (pay on delivery)
+        navigate("/checkout", { state: { order: data } });
+      }
+      return;
+    } catch (err) {
+      console.error("checkout error:", err);
+
+      // Fallback: persist a local order so Profile can show it
+      const localOrder = {
+        id: `local-${Date.now()}`,
+        ...payload,
+        status: "placed",
+        note:
+          err?.message === "BACKEND_NOT_FOUND"
+            ? "Saved locally because backend /orders was not found (404)."
+            : "Saved locally (network/backend error).",
+      };
+
+      setOrders((prev) => [localOrder, ...prev]);
+      setItems([]);
+      setAppliedVoucherId(null);
+      // Navigate to the appropriate page even when saved locally
+      if (paymentMethod === "nets") {
+        navigate("/nets-qr", { state: { totalAmount: total, order: localOrder, offline: true } });
+      } else {
+        navigate("/checkout", { state: { order: localOrder, offline: true } });
+      }
+
+      alert(
+        "Order saved locally. Backend unreachable. Please check your network connection."
+      );
+    } finally {
+      setPlacing(false);
     }
   };
 
@@ -114,38 +220,41 @@ export function CartPage() {
             <div className="cart-list" style={{ marginTop: 8 }}>
               {items.length === 0 ? (
                 <div className="cart-empty">Your cart is empty.</div>
-              ) : (
-                items.map((it) => (
-                  <div key={it.id} className="cart-item">
-                    <div className="cart-item-left">
-                      <div className="cart-item-title">{it.name}</div>
-                      {it.desc && <div className="cart-item-desc">{it.desc}</div>}
-                    </div>
+              ) : null}
 
-                    <div className="qty-controls" role="group" aria-label="quantity">
-                      <button
-                        className="qty-btn"
-                        onClick={() => updateQty(it.id, it.qty - 1)}
-                        aria-label="decrease"
-                        type="button"
-                      >
-                        −
-                      </button>
-                      <div className="qty-count">{it.qty}</div>
-                      <button
-                        className="qty-btn"
-                        onClick={() => updateQty(it.id, it.qty + 1)}
-                        aria-label="increase"
-                        type="button"
-                      >
-                        +
-                      </button>
-                    </div>
+              {items.length > 0 &&
+                items.map((it) => {
+                  return (
+                    <div key={it.id} className="cart-item">
+                      <div className="cart-item-left">
+                        <div className="cart-item-title">{it.name}</div>
+                        {it.desc && <div className="cart-item-desc">{it.desc}</div>}
+                      </div>
 
-                    <div className="cart-item-price">SGD {(it.price * it.qty).toFixed(2)}</div>
-                  </div>
-                ))
-              )}
+                      <div className="qty-controls" role="group" aria-label="quantity">
+                        <button
+                          className="qty-btn"
+                          onClick={() => updateQty(it.id, it.qty - 1)}
+                          aria-label="decrease"
+                          type="button"
+                        >
+                          -
+                        </button>
+                        <div className="qty-count">{it.qty}</div>
+                        <button
+                          className="qty-btn"
+                          onClick={() => updateQty(it.id, it.qty + 1)}
+                          aria-label="increase"
+                          type="button"
+                        >
+                          +
+                        </button>
+                      </div>
+
+                      <div className="cart-item-price">SGD {(it.price * it.qty).toFixed(2)}</div>
+                    </div>
+                  );
+                })}
             </div>
           </div>
         </div>
@@ -196,8 +305,13 @@ export function CartPage() {
                 <div style={{ fontWeight: 900 }}>SGD {total.toFixed(2)}</div>
               </div>
 
-              <button className="btn btn-orange" onClick={handleCheckout} style={{ width: "100%" }}>
-                Checkout
+              <button
+                className="btn btn-orange"
+                onClick={handleCheckout}
+                style={{ width: "100%" }}
+                disabled={!paymentMethod || items.length === 0 || placing}
+              >
+                {placing ? "Placing order..." : "Checkout"}
               </button>
             </div>
           </div>
@@ -245,67 +359,21 @@ export function CartPage() {
 }
 
 export function CheckoutPage() {
-  const navigate = useNavigate();
-  // FIX 2: Get voucher details to calculate correct total in checkout
-  const { items, setItems, vouchers, appliedVoucherId } = useCart(); 
-  const [loading, setLoading] = useState(false);
+  const location = useLocation();
+  const order = location?.state?.order || null;
 
-  const subtotal = items.reduce((s, it) => s + (it.price || 0) * (it.qty || 0), 0);
-  
-  // Calculate discount again to ensure backend receives the correct discounted amount
-  const appliedVoucher = vouchers.find((v) => v.id === appliedVoucherId) || null;
-  const discount = appliedVoucher ? appliedVoucher.amountOff || 0 : 0;
-  const totalAmount = Math.max(0, subtotal - discount);
+  // If an order exists in state show order placed / pay on delivery message
+  if (order) {
+    return (
+      <div style={{ padding: 24 }}>
+        <h2 style={{ color: "var(--orange)" }}>Order Placed</h2>
+        <p>Your order (ID: {order.id || "—"}) has been placed. Please pay when you receive the food.</p>
+        <p style={{ color: "var(--muted)" }}>We will notify you when the order is being prepared.</p>
+      </div>
+    );
+  }
 
-  const handleConfirmPayment = async () => {
-    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-    if (!token) {
-      alert("Please log in to place an order.");
-      navigate("/login");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const orderItems = items.map(item => ({
-        menuItemId: item.id,
-        quantity: item.qty,
-        price: item.price
-      }));
-
-      const response = await fetch("http://localhost:3000/orders", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          items: orderItems,
-          totalAmount: totalAmount
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to place order");
-      }
-
-      const data = await response.json();
-      console.log("Order placed:", data);
-
-      setItems([]); // Clear the cart
-      alert("Order placed successfully!");
-      navigate("/checkout/success");
-
-    } catch (error) {
-      console.error("Checkout Error:", error);
-      alert("Error placing order: " + error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Fallback placeholder if navigated directly
   return (
     <div style={{ padding: 24, maxWidth: '600px', margin: '0 auto' }}>
       <h2 style={{ color: "var(--orange)" }}>Checkout Confirmation</h2>
@@ -354,4 +422,49 @@ export function CheckoutSuccess() {
       <p>Thank you for your purchase.</p>
     </div>
   );
+}
+
+// helper: resolve API base and try multiple endpoint variants (/orders and /api/orders)
+const resolveApiBase = () => {
+  const viteApi = import.meta?.env?.VITE_API_BASE || "";
+  const savedApi = localStorage.getItem("API_BASE") || "";
+  const fallback = "http://localhost:3000";
+  return (viteApi || savedApi || fallback).replace(/\/$/, "");
+};
+
+async function tryFetchVariants(method, endpoint, body) {
+  const base = resolveApiBase();
+  const variants = [
+    `${base}${endpoint}`,
+    `${base}/api${endpoint}`,
+    endpoint,
+    `/api${endpoint}`,
+  ].filter(Boolean);
+
+  let lastError = null;
+  for (const url of variants) {
+    try {
+      const opts = {
+        method,
+        headers: { "Content-Type": "application/json" },
+      };
+      // attach bearer token if available (backend endpoints are protected)
+      const token = localStorage.getItem("token") || localStorage.getItem("authToken");
+      if (token) {
+        opts.headers.Authorization = `Bearer ${token}`;
+      }
+      if (body) {
+        opts.body = JSON.stringify(body);
+      }
+      const res = await fetch(url, opts);
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+      return { res, url };
+    } catch (err) {
+      lastError = err;
+      console.warn(`Fetch error (tried ${url}):`, err);
+    }
+  }
+  throw lastError;
 }
