@@ -37,14 +37,44 @@ app.post("/login", authController.loginUser);
 app.get("/users/profile", authenticateToken, authController.getUserProfile);
 
 //admin: users list
-app.get("/admin/users", authenticateToken, authorizeRoles("admin"), authController.listUsers);
-app.get("/admin/users/:id", authenticateToken, authorizeRoles("admin"), authController.getUser);
-app.put("/admin/users/:id", authenticateToken, authorizeRoles("admin"), authController.updateUser);
-app.delete("/admin/users/:id", authenticateToken, authorizeRoles("admin"), authController.deleteUser);
+app.get(
+  "/admin/users",
+  authenticateToken,
+  authorizeRoles("admin"),
+  authController.listUsers
+);
+app.get(
+  "/admin/users/:id",
+  authenticateToken,
+  authorizeRoles("admin"),
+  authController.getUserProfile
+);
+app.put(
+  "/admin/users/:id",
+  authenticateToken,
+  authorizeRoles("admin"),
+  authController.updateUser
+);
+app.delete(
+  "/admin/users/:id",
+  authenticateToken,
+  authorizeRoles("admin"),
+  authController.deleteUser
+);
 
 //admin: stalls list
-app.get("/admin/stalls", authenticateToken, authorizeRoles("admin"), stallController.getAllStalls);
-app.get("/admin/stalls/:id", authenticateToken, authorizeRoles("admin"), stallController.getStallById);
+app.get(
+  "/admin/stalls",
+  authenticateToken,
+  authorizeRoles("admin"),
+  stallController.getAllStalls
+);
+app.get(
+  "/admin/stalls/:id",
+  authenticateToken,
+  authorizeRoles("admin"),
+  stallController.getStallById
+);
 // app.put("/admin/stalls/:id", authenticateToken, authorizeRoles("admin"), (req, res) => {
 //   res.status(501).json({ error: 'Not implemented' });
 // });
