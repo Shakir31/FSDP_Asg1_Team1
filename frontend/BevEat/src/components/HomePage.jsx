@@ -1,8 +1,18 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import '../Home.css';
 
 function Home() {
+  const [stalls, setStalls] = useState([]);
+
+  // Fetch stalls from backend
+  useEffect(() => {
+    fetch('http://localhost:3000/stalls')
+      .then(res => res.json())
+      .then(data => setStalls(data))
+      .catch(err => console.error('Error fetching stalls:', err));
+  }, []);
+
   return (
     <div className="home-page">
       {/* Hero Section */}
@@ -14,7 +24,7 @@ function Home() {
       <section className="stalls">
         <div className="section-header">
           <h2>Popular Stalls Near You</h2>
-          <Link to="/stalls" className="see-all">See all &gt;</Link>
+          <Link to="/stalls/hawker/test" className="see-all">See all &gt;</Link>
         </div>
 
         <div className="filters">
