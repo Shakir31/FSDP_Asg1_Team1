@@ -1,7 +1,6 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../Cart.css";
-import { useEffect } from "react";
 
 export const CartContext = createContext(null);
 
@@ -98,7 +97,8 @@ export function CartPage() {
     if (paymentMethod === "nets") {
       navigate("/nets-qr", { state: { totalAmount: total } });
     } else {
-      navigate("/checkout"), { state: { totalAmount: total } };
+      // FIX 1: Fixed the comma placement here so state is passed correctly
+      navigate("/checkout", { state: { totalAmount: total } });
     }
   };
 
@@ -245,10 +245,104 @@ export function CartPage() {
 }
 
 export function CheckoutPage() {
+  const navigate = useNavigate();
+  // FIX 2: Get voucher details to calculate correct total in checkout
+  const { items, setItems, vouchers, appliedVoucherId } = useCart(); 
+  const [loading, setLoading] = useState(false);
+
+  const subtotal = items.reduce((s, it) => s + (it.price || 0) * (it.qty || 0), 0);
+  
+  // Calculate discount again to ensure backend receives the correct discounted amount
+  const appliedVoucher = vouchers.find((v) => v.id === appliedVoucherId) || null;
+  const discount = appliedVoucher ? appliedVoucher.amountOff || 0 : 0;
+  const totalAmount = Math.max(0, subtotal - discount);
+
+  const handleConfirmPayment = async () => {
+    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+    if (!token) {
+      alert("Please log in to place an order.");
+      navigate("/login");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const orderItems = items.map(item => ({
+        menuItemId: item.id,
+        quantity: item.qty,
+        price: item.price
+      }));
+
+      const response = await fetch("http://localhost:3000/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          items: orderItems,
+          totalAmount: totalAmount
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to place order");
+      }
+
+      const data = await response.json();
+      console.log("Order placed:", data);
+
+      setItems([]); // Clear the cart
+      alert("Order placed successfully!");
+      navigate("/checkout/success");
+
+    } catch (error) {
+      console.error("Checkout Error:", error);
+      alert("Error placing order: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div style={{ padding: 24 }}>
-      <h2 style={{ color: "var(--orange)" }}>Checkout</h2>
-      <p>Proceed with cash checkout flow (placeholder).</p>
+    <div style={{ padding: 24, maxWidth: '600px', margin: '0 auto' }}>
+      <h2 style={{ color: "var(--orange)" }}>Checkout Confirmation</h2>
+      
+      <div className="card" style={{ marginBottom: '20px' }}>
+        <h3>Order Summary</h3>
+        {items.map(item => (
+            <div key={item.id} style={{display:'flex', justifyContent:'space-between', marginBottom:'8px'}}>
+                <span>{item.qty}x {item.name}</span>
+                <span>${(item.price * item.qty).toFixed(2)}</span>
+            </div>
+        ))}
+        
+        {discount > 0 && (
+             <div style={{display:'flex', justifyContent:'space-between', marginBottom:'8px', color: '#666'}}>
+                <span>Discount ({appliedVoucher?.code}):</span>
+                <span>-${discount.toFixed(2)}</span>
+            </div>
+        )}
+
+        <hr style={{borderColor: '#eee', margin:'10px 0'}}/>
+        <div style={{display:'flex', justifyContent:'space-between', fontWeight:'bold', fontSize:'1.2em'}}>
+            <span>Total:</span>
+            <span>${totalAmount.toFixed(2)}</span>
+        </div>
+      </div>
+
+      <p>Payment Method: Cash (Pay at counter)</p>
+      
+      <button 
+        className="btn btn-orange" 
+        style={{ width: "100%", fontSize: '1.1em' }}
+        onClick={handleConfirmPayment}
+        disabled={loading || items.length === 0}
+      >
+        {loading ? "Processing..." : "Confirm & Place Order"}
+      </button>
     </div>
   );
 }

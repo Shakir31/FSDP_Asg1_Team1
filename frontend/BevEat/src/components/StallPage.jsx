@@ -1,26 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom'; // Import useParams and hooks
+import { Link, useParams } from 'react-router-dom'; 
 import { Search, ShoppingCart, User } from 'lucide-react';
-import '../StallPage.css'; // We'll create this
+import '../StallPage.css'; 
 import logo from '../assets/logo.png';
 import hero from '../assets/hero.png';
 
 function StallPage() {
-  // --- State for your data ---
   const [stall, setStall] = useState(null);
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { id } = useParams(); // <-- Gets the stall ID from the URL
+  const { id } = useParams(); 
 
-  // --- Data fetching logic ---
   useEffect(() => {
     async function fetchStallData() {
       try {
         setLoading(true);
         
-        // --- Fetch 1: Get the stall's details ---
-        // This requires the backend endpoint we discussed
         const stallResponse = await fetch(`http://localhost:3000/stalls/${id}`);
         if (!stallResponse.ok) {
           throw new Error(`Stall not found (ID: ${id})`);
@@ -28,8 +24,6 @@ function StallPage() {
         const stallData = await stallResponse.json();
         setStall(stallData);
 
-        // --- Fetch 2: Get the stall's menu items ---
-        // This endpoint already exists in your app.js
         const menuResponse = await fetch(`http://localhost:3000/stalls/${id}/menu`);
         if (!menuResponse.ok) {
           throw new Error('Menu items not found');
@@ -45,9 +39,8 @@ function StallPage() {
     }
 
     fetchStallData();
-  }, [id]); // This effect re-runs if the 'id' in the URL changes
+  }, [id]);
 
-  // --- Dynamic content to render ---
   let menuContent;
   if (loading) {
     menuContent = <p>Loading...</p>;
@@ -66,7 +59,7 @@ function StallPage() {
               >
               <div key={item.MenuItemID} className="menu-item">
                 <img 
-                  src={item.MainImageURL || hero} // Use hero as fallback
+                  src={item.MainImageURL || hero} 
                   alt={item.Name} 
                   className="menu-item-image"
                 />
@@ -89,8 +82,13 @@ function StallPage() {
   return (
     <div className="stall-page-wrapper">
       <main className="stall-page-content">
-        <div className="hero-section" style={{ backgroundImage: `url(${hero})` }}>
-          {/* You could eventually put the stall's image here */}
+        {/* UPDATED: Uses stall.Stall_Image if available, otherwise default hero */}
+        <div 
+          className="hero-section" 
+          style={{ 
+            backgroundImage: `url(${stall?.Stall_Image || hero})` 
+          }}
+        >
           {error && <p className="hero-error">Error: {error}</p>}
           {stall && (
             <div className="hero-content">

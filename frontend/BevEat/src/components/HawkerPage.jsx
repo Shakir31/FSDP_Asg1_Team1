@@ -1,8 +1,31 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import '../HawkerPage.css'; // You will need to create this CSS file
+import '../HawkerPage.css';
 
 function HawkerPage() {
+  const [stalls, setStalls] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    async function fetchStalls() {
+      try {
+        const response = await fetch("http://localhost:3000/stalls");
+        if (!response.ok) {
+          throw new Error("Failed to fetch stalls");
+        }
+        const data = await response.json();
+        setStalls(data);
+      } catch (err) {
+        console.error(err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchStalls();
+  }, []);
+
   return (
     <div className="hawker-page">
       {/* Banner Section */}
@@ -10,74 +33,32 @@ function HawkerPage() {
         <img src="/images/maxwell 2nd.png" alt="Maxwell Food Centre" className="banner-img" />
         <div className="banner-overlay"></div>
         <div className="banner-content">
-            <h1>Maxwell Food Centre</h1>
-            <p>1 Kadayanallur St, Singapore 069184</p>
+            <h1>Explore All Stalls</h1>
+            <p>Discover the best food near you</p>
             <button className="filter-btn">Filter <span className="arrow">▼</span></button>
         </div>
       </section>
 
       {/* Hawker Stalls Grid */}
       <section className="hawkers">
+        {loading && <p>Loading stalls...</p>}
+        {error && <p style={{color: 'red'}}>Error: {error}</p>}
+        
         <div className="hawker-grid">
-            {/* Note: In the future, you will map() these from your database */}
-            
-            <Link to="/stalls/1" className="hawker-card-link">
-              <div className="hawker-card">
-                  <img src="/images/buta kin.jpg" alt="Buta Kin" />
-                  <h3>Buta Kin</h3>
-                  <p>144 Upper Bukit Timah Rd, #04-28</p>
-                  <p className="distance">📍 1km Away</p>
-              </div>
-            </Link>
-
-            <div className="hawker-card">
-                <img src="/images/nasi lemak.jpg" alt="Roasted Pork Belly Nasi Lemak" />
-                <h3>Roasted Pork Belly Nasi Lemak</h3>
-                <p>Blk 105 Hougang Ave 1, #02-28</p>
-                <p className="distance">📍 2km Away</p>
-            </div>
-
-            <div className="hawker-card">
-                <img src="/images/cheese prata.jpg" alt="Rahmath Cheese Prata" />
-                <h3>Rahmath Cheese Prata</h3>
-                <p>Toa Payoh Vista Market, #01-08</p>
-                <p className="distance">📍 1.2km Away</p>
-            </div>
-
-            <div className="hawker-card">
-                <img src="/images/bak kut teh.jpg" alt="Joo Siah Bak Koot Teh" />
-                <h3>Joo Siah Bak Koot Teh</h3>
-                <p>349 Jurong East Ave 1, #01-1215</p>
-                <p className="distance">📍 0.8km Away</p>
-            </div>
-
-            <div className="hawker-card">
-                <img src="/images/chicken rice.jpg" alt="Tian Tian Chicken Rice" />
-                <h3>Tian Tian Chicken Rice</h3>
-                <p>1 Kadayanallur St, #01-10 Maxwell Food Centre</p>
-                <p className="distance">📍 0.5km Away</p>
-            </div>
-
-            <div className="hawker-card">
-                <img src="/images/oyster cake.webp" alt="Maxwell Fuzhou Oyster Cake" />
-                <h3>Heng Carrot Cake</h3>
-                <p>1 Kadayanallur St, #01-28 Maxwell Food Centre</p>
-                <p className="distance">📍 0.7km Away</p>
-            </div>
-
-            <div className="hawker-card">
-                <img src="/images/zhen porridge.jpg" alt="Zhen Zhen Porridge" />
-                <h3>Zhen Zhen Porridge</h3>
-                <p>1 Kadayanallur St, #01-54 Maxwell Food Centre</p>
-                <p className="distance">📍 0.6km Away</p>
-            </div>
-
-            <div className="hawker-card">
-                <img src="/images/jiang nan.jpg" alt="Taste of Jiang Nan" />
-                <h3>Hup Kee Fried Oyster</h3>
-                <p>1 Kadayanallur St, #01-73 Maxwell Food Centre</p>
-                <p className="distance">📍 0.9km Away</p>
-            </div>
+            {!loading && !error && stalls.map((stall) => (
+                <Link to={`/stalls/${stall.StallID}`} className="hawker-card-link" key={stall.StallID}>
+                  <div className="hawker-card">
+                      <img 
+                        src={stall.Stall_Image || "/images/buta kin.jpg"} 
+                        alt={stall.StallName}
+                        onError={(e) => {e.target.src = "/images/buta kin.jpg"}} 
+                      />
+                      <h3>{stall.StallName}</h3>
+                      <p>{stall.Hawker_Centre}</p>
+                      {/* Location/Distance removed as requested */}
+                  </div>
+                </Link>
+            ))}
         </div>
     </section>
     </div>
