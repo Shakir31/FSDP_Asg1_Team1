@@ -75,6 +75,7 @@ export default function UploadPage() {
     try {
       const fd = new FormData();
       fd.append("imageFile", files[0]);
+      fd.append("menuItemId", selectedMenuItemId);
 
       const res = await fetch("http://localhost:3000/images/upload", {
         method: "POST",
