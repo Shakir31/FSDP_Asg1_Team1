@@ -139,6 +139,33 @@
   color:#333;
 }
 
+.rating-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.rating-label {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+.stars-wrapper {
+  display: flex;
+  gap: 6px;
+}
+
+.star-icon {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.star-icon:hover {
+  transform: scale(1.15);
+}
+
 /* Responsive */
 @media (max-width:640px){
   .upload-container{ padding:16px; margin:12px; }

@@ -9,6 +9,9 @@
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   border-bottom: 1px solid #e2e8f0;
   flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
 .navbar-item {
@@ -66,4 +69,29 @@
 
 .icon-link:hover {
   color: #ff7622;
+}
+
+.cart-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cart-badge {
+  position: absolute;
+  top: -5px;    /* Adjusts vertical position */
+  right: -8px;  /* Adjusts horizontal position */
+  background-color: #ff7622; /* Your brand orange color */
+  color: white;
+  font-size: 11px;
+  font-weight: bold;
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffffff; /* Adds a small white border for contrast */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }

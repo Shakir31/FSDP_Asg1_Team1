@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Star } from "lucide-react"; // Import Star icon
 import "../UploadPage.css";
 
 export default function UploadPage() {
@@ -9,6 +10,7 @@ export default function UploadPage() {
 
   const [files, setFiles] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
+  const [rating, setRating] = useState(5);
   const [review, setReview] = useState("");
 
   const [loading, setLoading] = useState(false);
@@ -48,7 +50,7 @@ export default function UploadPage() {
         if (!res.ok) throw new Error("Failed to fetch menu items");
         const data = await res.json();
         setMenuItems(data);
-        setSelectedMenuItemId(""); // reset selected menu item on stall change
+        setSelectedMenuItemId(""); 
       } catch (err) {
         alert("Error loading menu items: " + err.message);
       }
@@ -92,7 +94,7 @@ export default function UploadPage() {
       setUploadedImageId(data.image.ImageID);
       setResult({ upload: data });
       alert(
-        "Image uploaded and verified successfully. You can now submit the review."
+        "Image uploaded and verified successfully. You can now rate and submit the review."
       );
     } catch (err) {
       alert("Upload error: " + err.message);
@@ -127,7 +129,7 @@ export default function UploadPage() {
         },
         body: JSON.stringify({
           menuItemId: Number(selectedMenuItemId),
-          rating: 5,
+          rating: rating, // Use the state rating instead of hardcoded 5
           reviewText: review,
           imageId: uploadedImageId,
         }),
@@ -146,6 +148,7 @@ export default function UploadPage() {
       setFiles([]);
       setPreviewUrls([]);
       setReview("");
+      setRating(5); // Reset rating
       setUploadedImageId(null);
       setSelectedStallId("");
       setMenuItems([]);
@@ -269,6 +272,21 @@ export default function UploadPage() {
 
         {uploadedImageId && (
           <>
+          <div className="rating-container">
+              <label className="rating-label">Rating:</label>
+                <div className="stars-wrapper">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      size={32}
+                      className="star-icon" 
+                      fill={star <= rating ? "var(--orange)" : "none"}
+                      stroke={star <= rating ? "var(--orange)" : "#ccc"}
+                      onClick={() => setRating(star)}
+                    />
+                  ))}
+                </div>
+              </div>
             <textarea
               className="review"
               placeholder="Write a short review (required)"
@@ -292,6 +310,7 @@ export default function UploadPage() {
                   setFiles([]);
                   setPreviewUrls([]);
                   setReview("");
+                  setRating(5);
                   setUploadedImageId(null);
                   setSelectedStallId("");
                   setMenuItems([]);
