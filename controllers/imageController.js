@@ -1,16 +1,15 @@
 const imageModel = require("../models/imageModel");
 const axios = require("axios");
-const FormData = require("form-data");
-const sharp = require("sharp");
 const cloudinary = require("cloudinary").v2;
 const multer = require("multer");
 
-const LOGMEAL_API_KEY = process.env.LOGMEAL_API_KEY;
 const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME;
 const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY;
 const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET;
 
-// Configure Cloudinary
+const AI_MICROSERVICE_URL =
+  process.env.AI_MICROSERVICE_URL || "http://localhost:5000/verify-food";
+
 cloudinary.config({
   cloud_name: CLOUDINARY_CLOUD_NAME,
   api_key: CLOUDINARY_API_KEY,
@@ -27,43 +26,14 @@ const upload = multer({
   },
 }).single("imageFile");
 
+// New: call AI microservice with imageUrl, return JSON { isFood, confidence }
 async function aiFoodImageVerification(imageUrl) {
   try {
-    const response = await axios.get(imageUrl, { responseType: "arraybuffer" });
-    let imageBuffer = Buffer.from(response.data, "binary");
-
-    imageBuffer = await sharp(imageBuffer)
-      .resize({ width: 800 })
-      .jpeg({ quality: 80 })
-      .toBuffer();
-
-    if (imageBuffer.length > 1024 * 1024) {
-      throw new Error("Image still too large after resizing");
-    }
-
-    const formData = new FormData();
-    formData.append("image", imageBuffer, { filename: "image.jpg" });
-
-    const apiResponse = await axios.post(
-      "https://api.logmeal.es/v2/recognition/dish",
-      formData,
-      {
-        headers: {
-          ...formData.getHeaders(),
-          Authorization: `Bearer ${LOGMEAL_API_KEY}`,
-        },
-      }
-    );
-
-    const prediction = apiResponse.data;
-    const results = prediction.recognition_results;
-
-    if (!Array.isArray(results) || results.length === 0) return false;
-
-    return results.some((r) => typeof r.prob === "number" && r.prob >= 0.2);
+    const response = await axios.post(AI_MICROSERVICE_URL, { imageUrl });
+    return response.data; // expected: { isFood: boolean, confidence: number }
   } catch (error) {
-    console.error("AI image verification error", error);
-    return false;
+    console.error("AI microservice call error:", error.message || error);
+    return { isFood: false, confidence: 0 };
   }
 }
 
@@ -84,52 +54,49 @@ async function uploadImage(req, res) {
       let imageUrl;
 
       if (req.file) {
-        // Local file uploaded, upload to Cloudinary
-        const uploadResult = await cloudinary.uploader.upload_stream(
-          { folder: "food_app_images" },
-          async (error, result) => {
-            if (error) {
-              console.error("Cloudinary upload error", error);
-              return res
-                .status(500)
-                .json({ error: "Failed to upload image to cloud" });
+        // Upload local file buffer to Cloudinary
+        const uploadResult = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { folder: "food_app_images" },
+            (error, result) => {
+              if (error) return reject(error);
+              resolve(result);
             }
+          );
+          const streamifier = require("streamifier");
+          streamifier.createReadStream(req.file.buffer).pipe(stream);
+        });
 
-            imageUrl = result.secure_url;
-            menuItemId = req.body.menuItemId;
-
-            // Verify food image
-            const isFood = await aiFoodImageVerification(imageUrl);
-            if (!isFood)
-              return res
-                .status(400)
-                .json({ error: "Image failed food verification" });
-
-            const newImage = await imageModel.insertImage(
-              menuItemId,
-              uploaderId,
-              imageUrl
-            );
-            return res
-              .status(201)
-              .json({ message: "Image uploaded", image: newImage });
-          }
-        );
-
-        // Pipe buffer for multer file to cloudinary stream
-        require("streamifier")
-          .createReadStream(req.file.buffer)
-          .pipe(uploadResult);
-      } else if (req.body.imageUrl && req.body.menuItemId) {
-        // If user sent URL, use original flow for verification
-        imageUrl = req.body.imageUrl;
+        imageUrl = uploadResult.secure_url;
         menuItemId = req.body.menuItemId;
 
-        const isFood = await aiFoodImageVerification(imageUrl);
-        if (!isFood)
+        // Verify food image via your AI microservice
+        const { isFood } = await aiFoodImageVerification(imageUrl);
+        if (!isFood) {
           return res
             .status(400)
             .json({ error: "Image failed food verification" });
+        }
+
+        const newImage = await imageModel.insertImage(
+          menuItemId,
+          uploaderId,
+          imageUrl
+        );
+        return res
+          .status(201)
+          .json({ message: "Image uploaded", image: newImage });
+      } else if (req.body.imageUrl && req.body.menuItemId) {
+        imageUrl = req.body.imageUrl;
+        menuItemId = req.body.menuItemId;
+
+        // Verify food image via your AI microservice
+        const { isFood } = await aiFoodImageVerification(imageUrl);
+        if (!isFood) {
+          return res
+            .status(400)
+            .json({ error: "Image failed food verification" });
+        }
 
         const newImage = await imageModel.insertImage(
           menuItemId,
@@ -146,7 +113,7 @@ async function uploadImage(req, res) {
       }
     } catch (error) {
       console.error("Upload image error", error);
-      res.status(500).json({ error: "Error uploading image" });
+      return res.status(500).json({ error: "Error uploading image" });
     }
   });
 }

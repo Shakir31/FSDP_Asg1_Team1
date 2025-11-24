@@ -55,7 +55,8 @@
   border-radius: 8px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
   width: 100%;
-  max-width: 800px; /* Make reviews container wider */
+  max-width: 1000px; /* Make reviews container wider */
+  margin: auto;
 }
 
 .profile-section-title {
@@ -64,19 +65,23 @@
   color: #121223;
   margin: 0 0 1.5rem 0;
   border-bottom: 2px solid #f4f4f5;
-  padding-bottom: 0.5rem;
 }
 
 .review-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(300px, 1fr)
+  ); /* Responsive grid columns */
+  gap: 1rem; /* Space between items */
 }
 
 .review-card {
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .review-card-header {
@@ -124,8 +129,6 @@
   margin-top: 0.5rem;
 }
 
-/* ... (Keep your existing CSS above this) ... */
-
 /* New Styles for Orders Section */
 .profile-section {
   margin-bottom: 2rem;
@@ -138,7 +141,20 @@
   gap: 0.5rem;
 }
 
-/* Order Rows inside the card body */
+.order-list {
+  /* Use the same grid style as review-list to keep consistency */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+/* You need to apply this class to the container wrapping orders list in ProfilePage.jsx */
+.review-list.review-list--orders {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
 .order-row {
   display: flex;
   justify-content: space-between;
@@ -152,7 +168,6 @@
   flex-shrink: 0; /* Prevents label from squishing */
 }
 
-/* Status specific colors */
 .status-text {
   font-weight: 700;
 }
@@ -179,7 +194,6 @@
   font-size: 1.05rem;
 }
 
-/* Payment specific styling */
 .payment-row {
   border-top: 1px solid #eee;
   padding-top: 0.75rem;

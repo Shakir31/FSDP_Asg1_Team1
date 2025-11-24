@@ -38,7 +38,10 @@ export function CartProvider({ children }) {
         }
       } catch (err) {
         // keep local orders if backend unavailable — log for debugging
-        console.debug("Could not fetch orders from backend:", err?.message || err);
+        console.debug(
+          "Could not fetch orders from backend:",
+          err?.message || err
+        );
       }
     })();
     return () => {
@@ -76,7 +79,8 @@ export function CartProvider({ children }) {
     setItems((prev) => prev.map((it) => (it.id === id ? { ...it, qty } : it)));
   };
 
-  const removeItem = (id) => setItems((prev) => prev.filter((it) => it.id !== id));
+  const removeItem = (id) =>
+    setItems((prev) => prev.filter((it) => it.id !== id));
 
   return (
     <CartContext.Provider
@@ -125,7 +129,8 @@ export function CartPage() {
   const [placing, setPlacing] = useState(false);
 
   const subtotal = calcSubtotal(items);
-  const appliedVoucher = vouchers.find((v) => v.id === appliedVoucherId) || null;
+  const appliedVoucher =
+    vouchers.find((v) => v.id === appliedVoucherId) || null;
   const discount = appliedVoucher ? appliedVoucher.amountOff || 0 : 0;
   const total = Math.max(0, subtotal - discount);
 
@@ -196,7 +201,9 @@ export function CartPage() {
       setAppliedVoucherId(null);
       // Navigate to the appropriate page even when saved locally
       if (paymentMethod === "nets") {
-        navigate("/nets-qr", { state: { totalAmount: total, order: localOrder, offline: true } });
+        navigate("/nets-qr", {
+          state: { totalAmount: total, order: localOrder, offline: true },
+        });
       } else {
         navigate("/checkout", { state: { order: localOrder, offline: true } });
       }
@@ -229,10 +236,16 @@ export function CartPage() {
                     <div key={it.id} className="cart-item">
                       <div className="cart-item-left">
                         <div className="cart-item-title">{it.name}</div>
-                        {it.desc && <div className="cart-item-desc">{it.desc}</div>}
+                        {it.desc && (
+                          <div className="cart-item-desc">{it.desc}</div>
+                        )}
                       </div>
 
-                      <div className="qty-controls" role="group" aria-label="quantity">
+                      <div
+                        className="qty-controls"
+                        role="group"
+                        aria-label="quantity"
+                      >
                         <button
                           className="qty-btn"
                           onClick={() => updateQty(it.id, it.qty - 1)}
@@ -252,7 +265,9 @@ export function CartPage() {
                         </button>
                       </div>
 
-                      <div className="cart-item-price">SGD {(it.price * it.qty).toFixed(2)}</div>
+                      <div className="cart-item-price">
+                        SGD {(it.price * it.qty).toFixed(2)}
+                      </div>
                     </div>
                   );
                 })}
@@ -263,7 +278,9 @@ export function CartPage() {
         {/* RIGHT: Payment and vouchers */}
         <aside className="cart-right">
           <div className="card payment-card">
-            <h3 style={{ marginTop: 0, color: "var(--orange)" }}>Payment Method</h3>
+            <h3 style={{ marginTop: 0, color: "var(--orange)" }}>
+              Payment Method
+            </h3>
 
             <div style={{ marginTop: 8 }}>
               {/* Use checkboxes-like toggle so selection can be cleared */}
@@ -271,7 +288,9 @@ export function CartPage() {
                 <input
                   type="checkbox"
                   checked={paymentMethod === "cash"}
-                  onChange={() => setPaymentMethod(paymentMethod === "cash" ? null : "cash")}
+                  onChange={() =>
+                    setPaymentMethod(paymentMethod === "cash" ? null : "cash")
+                  }
                 />
                 <span style={{ fontWeight: 700 }}>Cash</span>
               </label>
@@ -280,7 +299,9 @@ export function CartPage() {
                 <input
                   type="checkbox"
                   checked={paymentMethod === "nets"}
-                  onChange={() => setPaymentMethod(paymentMethod === "nets" ? null : "nets")}
+                  onChange={() =>
+                    setPaymentMethod(paymentMethod === "nets" ? null : "nets")
+                  }
                 />
                 <span style={{ fontWeight: 700 }}>NETS</span>
               </label>
@@ -288,20 +309,48 @@ export function CartPage() {
 
             <div className="payment-divider" />
 
-            <div className="cart-footer" style={{ marginTop: 12, flexDirection: "column", alignItems: "stretch", gap: 12 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div
+              className="cart-footer"
+              style={{
+                marginTop: 12,
+                flexDirection: "column",
+                alignItems: "stretch",
+                gap: 12,
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
                 <div style={{ fontSize: 16 }}>Subtotal</div>
                 <div style={{ fontWeight: 700 }}>SGD {subtotal.toFixed(2)}</div>
               </div>
 
               {appliedVoucher && (
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", color: "var(--muted)" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    color: "var(--muted)",
+                  }}
+                >
                   <div>Voucher ({appliedVoucher.code})</div>
                   <div>-SGD {discount.toFixed(2)}</div>
                 </div>
               )}
 
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 18 }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  fontSize: 18,
+                }}
+              >
                 <div style={{ fontWeight: 700 }}>Total</div>
                 <div style={{ fontWeight: 900 }}>SGD {total.toFixed(2)}</div>
               </div>
@@ -329,11 +378,17 @@ export function CartPage() {
                     <input
                       type="checkbox"
                       checked={appliedVoucherId === v.id}
-                      onChange={() => setAppliedVoucherId(appliedVoucherId === v.id ? null : v.id)}
+                      onChange={() =>
+                        setAppliedVoucherId(
+                          appliedVoucherId === v.id ? null : v.id
+                        )
+                      }
                     />
                     <div>
                       <div style={{ fontWeight: 700 }}>{v.code}</div>
-                      <div style={{ fontSize: 13, color: "var(--muted)" }}>{v.description}</div>
+                      <div style={{ fontSize: 13, color: "var(--muted)" }}>
+                        {v.description}
+                      </div>
                     </div>
                   </label>
                 ))}
@@ -368,45 +423,73 @@ export function CheckoutPage() {
     return (
       <div style={{ padding: 24 }}>
         <h2 style={{ color: "var(--orange)" }}>Order Placed</h2>
-        <p>Your order (ID: {order.id || "—"}) has been placed. Please pay when you receive the food.</p>
-        <p style={{ color: "var(--muted)" }}>We will notify you when the order is being prepared.</p>
+        <p>
+          Your order (ID: {order.id || "—"}) has been placed. Please pay when
+          you receive the food.
+        </p>
+        <p style={{ color: "var(--muted)" }}>
+          We will notify you when the order is being prepared.
+        </p>
       </div>
     );
   }
 
   // Fallback placeholder if navigated directly
   return (
-    <div style={{ padding: 24, maxWidth: '600px', margin: '0 auto' }}>
+    <div style={{ padding: 24, maxWidth: "600px", margin: "0 auto" }}>
       <h2 style={{ color: "var(--orange)" }}>Checkout Confirmation</h2>
-      
-      <div className="card" style={{ marginBottom: '20px' }}>
+
+      <div className="card" style={{ marginBottom: "20px" }}>
         <h3>Order Summary</h3>
-        {items.map(item => (
-            <div key={item.id} style={{display:'flex', justifyContent:'space-between', marginBottom:'8px'}}>
-                <span>{item.qty}x {item.name}</span>
-                <span>${(item.price * item.qty).toFixed(2)}</span>
-            </div>
+        {items.map((item) => (
+          <div
+            key={item.id}
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              marginBottom: "8px",
+            }}
+          >
+            <span>
+              {item.qty}x {item.name}
+            </span>
+            <span>${(item.price * item.qty).toFixed(2)}</span>
+          </div>
         ))}
-        
+
         {discount > 0 && (
-             <div style={{display:'flex', justifyContent:'space-between', marginBottom:'8px', color: '#666'}}>
-                <span>Discount ({appliedVoucher?.code}):</span>
-                <span>-${discount.toFixed(2)}</span>
-            </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              marginBottom: "8px",
+              color: "#666",
+            }}
+          >
+            <span>Discount ({appliedVoucher?.code}):</span>
+            <span>-${discount.toFixed(2)}</span>
+          </div>
         )}
 
-        <hr style={{borderColor: '#eee', margin:'10px 0'}}/>
-        <div style={{display:'flex', justifyContent:'space-between', fontWeight:'bold', fontSize:'1.2em'}}>
-            <span>Total:</span>
-            <span>${totalAmount.toFixed(2)}</span>
+        <hr style={{ borderColor: "#eee", margin: "10px 0" }} />
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            fontWeight: "bold",
+            fontSize: "1.2em",
+          }}
+        >
+          <span>Total:</span>
+          <span>${totalAmount.toFixed(2)}</span>
         </div>
       </div>
 
       <p>Payment Method: Cash (Pay at counter)</p>
-      
-      <button 
-        className="btn btn-orange" 
-        style={{ width: "100%", fontSize: '1.1em' }}
+
+      <button
+        className="btn btn-orange"
+        style={{ width: "100%", fontSize: "1.1em" }}
         onClick={handleConfirmPayment}
         disabled={loading || items.length === 0}
       >
@@ -450,7 +533,8 @@ async function tryFetchVariants(method, endpoint, body) {
         headers: { "Content-Type": "application/json" },
       };
       // attach bearer token if available (backend endpoints are protected)
-      const token = localStorage.getItem("token") || localStorage.getItem("authToken");
+      const token =
+        localStorage.getItem("token") || localStorage.getItem("authToken");
       if (token) {
         opts.headers.Authorization = `Bearer ${token}`;
       }
