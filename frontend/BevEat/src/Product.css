@@ -5,7 +5,13 @@
   padding: 2rem;
   display: flex;
   justify-content: center; /* Changed to center */
-  align-items: flex-start; /* Aligns content to the top */
+  align-items: center; /* Center content horizontally */
+}
+
+/* New: To wrap all page content and set max width */
+.product-content-main {
+  max-width: 1200px; 
+  width: 100%;
 }
 
 /* This is the new side-by-side layout container */
@@ -83,6 +89,111 @@
   line-height: 1.6;
 }
 
+/* --- Reviews Section Styles (UPDATED) --- */
+.product-reviews-section {
+  width: 100%;
+  padding-top: 2rem;
+  margin-top: 2rem;
+  border-top: 1px solid #ddd;
+}
+
+.reviews-title {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #121223;
+    margin: 0 0 1.5rem 0;
+}
+
+.review-list-container {
+    display: flex;
+    flex-wrap: wrap; 
+    gap: 3rem; /* Per user request */
+    justify-content: space-around; /* Per user request */
+}
+
+.review-card {
+  /* Set fixed width to allow a maximum of 3 cards in the 1200px container, enabling wrapping and centering */
+  width: 360px;
+  flex-shrink: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.review-card-header {
+  display: flex;
+  flex-direction: column; 
+  align-items: center; /* Centers children horizontally */
+  background-color: #f8f9fa;
+  /* Increased vertical padding */
+  padding: 1.25rem 2rem; 
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.star-rating {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 0.25rem; 
+}
+
+/* New style for the date element */
+.review-date-standalone {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 0.25rem;
+}
+
+/* The previous review-date class is no longer needed but kept for completeness */
+.review-date {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.review-card-body {
+  /* Increased padding significantly to make the card body bigger */
+  /* Increased vertical padding */
+  padding: 2.5rem; 
+  display: flex;
+  flex-direction: column;
+  gap: 1rem; /* Increased spacing between elements */
+  align-items: center; /* Centers elements like the image and text block */
+  text-align: center; /* Centers lines of text inside the text block */
+}
+
+.review-text {
+  color: #333;
+  font-size: 1.1rem; /* Increased text size */
+  line-height: 1.7; /* Increased line height */
+  margin: 0;
+  text-align: center; /* Explicitly centers the text lines inside the paragraph */
+}
+
+.review-card-image {
+  width: 100%;
+  max-width: 100%; /* Allows image to fill card width */
+  height: auto;
+  border-radius: 4px;
+  /* Replaced margin-top with generic margin, relying on align-items: center for centering */
+  margin: 0.5rem auto 0; 
+}
+
+.review-empty {
+  padding: 1rem;
+  color: #666;
+  text-align: center;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #eee;
+}
+
+.review-error {
+  color: red;
+  padding: 1rem;
+  text-align: center;
+}
+
 /* --- Responsive styles for smaller screens --- */
 @media (max-width: 900px) {
   .product-layout {
@@ -113,4 +224,19 @@
   .product-price {
     font-size: 1.5rem;
   }
+}
+
+/* Additional media query to ensure single column on small phones */
+@media (max-width: 620px) {
+    .review-list-container {
+        /* On small screens, switch back to stretching, single column layout for responsiveness */
+        grid-template-columns: 1fr;
+        justify-content: unset; /* Remove centering on small screens where stretching is preferred */
+    }
+    .review-card {
+        width: unset; /* Allow card to stretch 100% on small screens */
+    }
+    .review-card-body {
+        padding: 1.5rem;
+    }
 }
