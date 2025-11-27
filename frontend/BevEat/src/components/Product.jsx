@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom'; 
 import { useCart } from './Cartcontext';
 import { Star } from 'lucide-react'; // Added Star import
+import { ThumbsUp } from 'lucide-react'; // Added ThumbsUp import
 import '../Product.css';
 import hero from '../assets/hero.png'; 
 
@@ -29,6 +30,32 @@ function Product() {
   const [reviews, setReviews] = useState([]); // New state for reviews
   const [reviewsLoading, setReviewsLoading] = useState(true); // New state for reviews loading
   const [reviewsError, setReviewsError] = useState(null); // New state for reviews error
+  
+  async function handleUpvote(imageId) {
+    const token = localStorage.getItem('token') || sessionStorage.getItem("token");
+    if (!token) {
+        alert("Please log in to upvote.");
+        return;
+    }
+    try {
+        const res = await fetch('http://localhost:3000/images/upvote', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ imageId })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            alert("Upvoted!");
+        } else {
+            alert(data.error || "Failed to upvote");
+        }
+    } catch (err) {
+        alert("Error: " + err.message);
+    }
+  }
   
   // 2. This line will now work because it's imported
   const navigate = useNavigate(); 
@@ -126,6 +153,12 @@ function Product() {
                         className="review-card-image"
                       />
                     )}
+                    <button
+                      onClick={() => handleUpvote(review.ReviewID)}
+                      className="upvote-button"
+                    >
+                      <ThumbsUp size={18} />
+                    </button>
                 </div>
               </div>
             ))}

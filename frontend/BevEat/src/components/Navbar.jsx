@@ -25,9 +25,6 @@ function Navbar() {
         <Link to="/redeem" className="navbar-link">Redeem</Link>
       </div>
       <div className="navbar-item">
-        <Link to="/contact" className="navbar-link">Contact Us</Link>
-      </div>
-      <div className="navbar-item">
         <div className="search-container">
           <input type="text" placeholder="Search..." />
           <button className="search-button">

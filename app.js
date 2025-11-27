@@ -123,7 +123,7 @@ app.post(
   validateImageUpload,
   imageController.uploadImage
 );
-// app.post("/images/upvote", authenticateToken, imageController.upvoteImage);
+app.post("/images/upvote", authenticateToken, imageController.upvoteImage);
 
 //coin gamification endpoints
 app.get("/coins/balance", authenticateToken, coinController.getUserCoins);

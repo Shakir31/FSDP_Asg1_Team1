@@ -194,6 +194,34 @@
   text-align: center;
 }
 
+.upvote-button {
+  border-radius: 4px;
+  padding: 6px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  margin-top: 8px;
+}
+
+.upvote-button:hover {
+  background-color: #00f93e;
+}
+
+.upvote-button:active {
+  transform: scale(0.98);
+}
+
+/* Optional: A 'minimal' variant for tight spaces (like the photo grid) */
+.upvote-button.minimal {
+  border: none;
+  padding: 4px;
+  margin-top: 0;
+}
+
 /* --- Responsive styles for smaller screens --- */
 @media (max-width: 900px) {
   .product-layout {
