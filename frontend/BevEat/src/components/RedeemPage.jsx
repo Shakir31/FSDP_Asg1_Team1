@@ -11,6 +11,7 @@ export default function RedeemPage() {
     userCoins = 0,
     redeemVoucher = async () => ({ ok: false }),
     refreshCoins,
+    refreshVouchers,
     applyVoucher,
   } = ctx;
 
@@ -20,7 +21,8 @@ export default function RedeemPage() {
   useEffect(() => {
     // refresh coins when page mounts (if function available)
     if (typeof refreshCoins === "function") refreshCoins();
-  }, [refreshCoins]);
+    if (typeof refreshVouchers === "function") refreshVouchers();
+  }, [refreshCoins, refreshVouchers]);
 
   async function handleRedeem(v) {
     if (!window.confirm(`Redeem "${v.title}" for ${v.cost} coins?`)) return;

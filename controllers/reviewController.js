@@ -1,9 +1,11 @@
 const reviewModel = require("../models/reviewModel");
+const coinModel = require("../models/coinModel");
 
 async function createReview(req, res) {
   try {
     const userId = parseInt(req.user.userId, 10);
     const { menuItemId, rating, reviewText, imageId } = req.body;
+    const coinAmount = 5;
 
     if (!menuItemId || !rating || !reviewText) {
       return res.status(400).json({ error: "Missing required fields" });
@@ -15,6 +17,12 @@ async function createReview(req, res) {
       rating,
       reviewText,
       imageId
+    );
+    await coinModel.addCoins(userId, coinAmount);
+    await coinModel.insertCoinTransaction(
+      userId,
+      coinAmount,
+      "Review submission reward"
     );
     res.status(201).json({ message: "Review created", review: newReview });
   } catch (error) {

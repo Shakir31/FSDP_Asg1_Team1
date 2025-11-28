@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { ThumbsUp } from 'lucide-react';
 import '../StallPhotos.css';
 
 function StallPhotos() {
@@ -9,7 +10,33 @@ function StallPhotos() {
   const [stallName, setStallName] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  async function handleUpvote(imageId) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('You must be logged in to upvote images.');
+      return;
+    }
 
+    try {
+      const res = await fetch('http://localhost:3000/images/upvote', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ imageId })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert('Upvoted successfully!');
+      } else {
+        alert(data.error || 'Upvote failed.');
+      }
+    } catch (err) {
+      alert('Error upvoting image: ' + err.message);
+    }
+  }
   useEffect(() => {
     async function fetchStallImages() {
       try {
@@ -51,6 +78,12 @@ function StallPhotos() {
           <div key={image.ImageID} className="photo-card">
             <img src={image.ImageURL} alt={image.MenuItemName || 'Stall Photo'} className="photo-img" />
             <p className="photo-caption">For: {image.MenuItemName}</p>
+            <button
+              onClick={() => handleUpvote(image.ImageID)}
+              className="upvote-button"
+            >
+              <ThumbsUp size={18} />
+              </button>
           </div>
         ))}
       </div>

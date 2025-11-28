@@ -39,7 +39,6 @@ const commonConfigs = {
     apiHeader: {
         "Content-Type": "application/json",
         Accept: "application/json",
-        // Sample uses "api-key" and "project-id", NOT "x-api-key"
         "api-key": import.meta.env.VITE_API_KEY, 
         "project-id": import.meta.env.VITE_PROJECT_ID 
     },
