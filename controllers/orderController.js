@@ -8,7 +8,7 @@ async function placeOrder(req, res) {
     }
     const { items, totalAmount } = req.body;
     const newOrder = await orderModel.createOrder(userId, items, totalAmount);
-    res.status(201).json({ orderId: newOrder.OrderID });
+    res.status(201).json({ orderId: newOrder.orderid });
   } catch (error) {
     console.error("Place order error", error);
     res.status(500).json({ error: "Error placing order" });

@@ -66,23 +66,23 @@ function Home() {
             !error &&
             stalls.map((stall) => (
               <Link
-                to={`/stalls/${stall.StallID}`}
+                to={`/stalls/${stall.stallid}`}
                 className="card-link"
-                key={stall.StallID}
+                key={stall.stallid}
               >
                 <div className="card">
                   <img
                     src={
-                      stall.Stall_Image ||
+                      stall.stall_image ||
                       "https://res.cloudinary.com/dv9rwydip/image/upload/v1761451673/samples/cup-on-a-table.jpg"
                     }
-                    alt={stall.StallName}
+                    alt={stall.stallname}
                     onError={(e) => {
                       e.target.src = "/images/buta kin.jpg";
                     }} // Fallback image
                   />
-                  <h3>{stall.StallName}</h3>
-                  <p>{stall.Hawker_Centre}</p>
+                  <h3>{stall.stallname}</h3>
+                  <p>{stall.hawker_centre}</p>
                   {/* Location/Distance removed as requested */}
                 </div>
               </Link>

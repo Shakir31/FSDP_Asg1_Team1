@@ -50,7 +50,7 @@ export default function UploadPage() {
         if (!res.ok) throw new Error("Failed to fetch menu items");
         const data = await res.json();
         setMenuItems(data);
-        setSelectedMenuItemId(""); 
+        setSelectedMenuItemId("");
       } catch (err) {
         alert("Error loading menu items: " + err.message);
       }
@@ -91,7 +91,7 @@ export default function UploadPage() {
       }
 
       const data = await res.json();
-      setUploadedImageId(data.image.ImageID);
+      setUploadedImageId(data.image.imageid);
       setResult({ upload: data });
       alert(
         "Image uploaded and verified successfully. You can now rate and submit the review."
@@ -174,8 +174,8 @@ export default function UploadPage() {
         >
           <option value="">-- Select a stall --</option>
           {stalls.map((stall) => (
-            <option key={stall.StallID} value={stall.StallID}>
-              {stall.StallName}
+            <option key={stall.stallid} value={stall.stallid}>
+              {stall.stallname}
             </option>
           ))}
         </select>
@@ -190,8 +190,8 @@ export default function UploadPage() {
         >
           <option value="">-- Select a menu item --</option>
           {menuItems.map((item) => (
-            <option key={item.MenuItemID} value={item.MenuItemID}>
-              {item.Name}
+            <option key={item.menuitemid} value={item.menuitemid}>
+              {item.name}
             </option>
           ))}
         </select>
@@ -272,21 +272,21 @@ export default function UploadPage() {
 
         {uploadedImageId && (
           <>
-          <div className="rating-container">
+            <div className="rating-container">
               <label className="rating-label">Rating:</label>
-                <div className="stars-wrapper">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Star
-                      key={star}
-                      size={32}
-                      className="star-icon" 
-                      fill={star <= rating ? "var(--orange)" : "none"}
-                      stroke={star <= rating ? "var(--orange)" : "#ccc"}
-                      onClick={() => setRating(star)}
-                    />
-                  ))}
-                </div>
+              <div className="stars-wrapper">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    size={32}
+                    className="star-icon"
+                    fill={star <= rating ? "var(--orange)" : "none"}
+                    stroke={star <= rating ? "var(--orange)" : "#ccc"}
+                    onClick={() => setRating(star)}
+                  />
+                ))}
               </div>
+            </div>
             <textarea
               className="review"
               placeholder="Write a short review (required)"

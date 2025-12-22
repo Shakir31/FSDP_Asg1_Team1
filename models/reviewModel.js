@@ -1,101 +1,134 @@
-const sql = require("mssql");
-const dbConfig = require("../dbConfig");
+const supabase = require("../supabaseClient");
 
 async function createReview(menuItemId, userId, rating, reviewText, imageId) {
-  let connection;
   try {
-    connection = await sql.connect(dbConfig);
-    const result = await connection
-      .request()
-      .input("menuItemId", sql.Int, menuItemId)
-      .input("userId", sql.Int, userId)
-      .input("rating", sql.Int, rating)
-      .input("reviewText", sql.NVarChar, reviewText)
-      .input("imageId", sql.Int, imageId)
-      .query(
-        "INSERT INTO Reviews (MenuItemID, UserID, Rating, ReviewText, ImageID) OUTPUT INSERTED.* VALUES (@menuItemId, @userId, @rating, @reviewText, @imageId)"
-      );
-    return result.recordset[0];
+    const { data, error } = await supabase
+      .from("reviews")
+      .insert([
+        {
+          menuitemid: menuItemId,
+          userid: userId,
+          rating: rating,
+          reviewtext: reviewText,
+          imageid: imageId,
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
   } catch (error) {
     throw error;
-  } finally {
-    if (connection) await connection.close();
   }
 }
 
 async function getReviewsByMenuItem(menuItemId) {
-  let connection;
   try {
-    connection = await sql.connect(dbConfig);
-    const result = await connection
-      .request()
-      .input("menuItemId", sql.Int, menuItemId).query(`
-        SELECT r.*, i.ImageURL
-        FROM Reviews r
-        LEFT JOIN Images i ON r.ImageID = i.ImageID
-        WHERE r.MenuItemID = @menuItemId
-        ORDER BY r.CreatedAt DESC
-      `);
-    return result.recordset;
+    const { data, error } = await supabase
+      .from("reviews")
+      .select(
+        `
+        *,
+        images (
+          imageurl
+        )
+      `
+      )
+      .eq("menuitemid", menuItemId)
+      .order("createdat", { ascending: false });
+
+    if (error) throw error;
+
+    // Reshape to include imageurl at top level
+    const formattedData = data.map((review) => ({
+      ...review,
+      imageurl: review.images?.imageurl || null,
+      images: undefined, // Remove nested object
+    }));
+
+    return formattedData;
   } catch (error) {
     throw error;
-  } finally {
-    if (connection) await connection.close();
   }
 }
 
 async function getReviewsByStall(stallId) {
-  let connection;
   try {
-    connection = await sql.connect(dbConfig);
-    const result = await connection.request().input("stallId", sql.Int, stallId)
-      .query(`
-        SELECT r.*, i.ImageURL
-        FROM Reviews r
-        INNER JOIN MenuItems m ON r.MenuItemID = m.MenuItemID
-        LEFT JOIN Images i ON r.ImageID = i.ImageID
-        WHERE m.StallID = @stallId
-        ORDER BY r.CreatedAt DESC
-      `);
-    return result.recordset;
+    const { data, error } = await supabase
+      .from("reviews")
+      .select(
+        `
+        *,
+        menuitems!inner (
+          stallid
+        ),
+        images (
+          imageurl
+        )
+      `
+      )
+      .eq("menuitems.stallid", stallId)
+      .order("createdat", { ascending: false });
+
+    if (error) throw error;
+
+    // Reshape to include imageurl at top level
+    const formattedData = data.map((review) => ({
+      ...review,
+      imageurl: review.images?.imageurl || null,
+      menuitems: undefined, // Remove nested object
+      images: undefined, // Remove nested object
+    }));
+
+    return formattedData;
   } catch (error) {
     throw error;
-  } finally {
-    if (connection) await connection.close();
   }
 }
 
 async function getReviewsByUser(userId) {
-  let connection;
   try {
-    connection = await sql.connect(dbConfig);
-    const result = await connection
-      .request()
-      .input("userId", sql.Int, userId).query(`
-        SELECT 
-          r.ReviewID, 
-          r.Rating, 
-          r.ReviewText, 
-          r.CreatedAt,
-          m.Name AS MenuItemName,
-          i.ImageURL
-        FROM Reviews r
-        INNER JOIN MenuItems m ON r.MenuItemID = m.MenuItemID
-        LEFT JOIN Images i ON r.ImageID = i.ImageID
-        WHERE r.UserID = @userId
-        ORDER BY r.CreatedAt DESC
-      `);
-    return result.recordset;
+    const { data, error } = await supabase
+      .from("reviews")
+      .select(
+        `
+        reviewid,
+        rating,
+        reviewtext,
+        createdat,
+        menuitems (
+          name
+        ),
+        images (
+          imageurl
+        )
+      `
+      )
+      .eq("userid", userId)
+      .order("createdat", { ascending: false });
+
+    if (error) throw error;
+
+    // Reshape to match your original format
+    const formattedData = data.map((review) => ({
+      reviewid: review.reviewid,
+      rating: review.rating,
+      reviewtext: review.reviewtext,
+      createdat: review.createdat,
+      menuitemname: review.menuitems?.name || null,
+      imageurl: review.images?.imageurl || null,
+    }));
+
+    return formattedData;
   } catch (error) {
     throw error;
-  } finally {
-    if (connection) await connection.close();
   }
 }
 
-module.exports = { 
-  createReview, 
-  getReviewsByMenuItem, 
+module.exports = {
+  createReview,
+  getReviewsByMenuItem,
   getReviewsByStall,
   getReviewsByUser,
 };

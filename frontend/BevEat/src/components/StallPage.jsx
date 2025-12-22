@@ -55,21 +55,21 @@ function StallPage() {
           {menuItems.length > 0 ? (
             menuItems.map((item) => (
               <Link
-                key={item.MenuItemID}
-                to={`/menu-item/${item.MenuItemID}`}
+                key={item.menuitemid}
+                to={`/menu-item/${item.menuitemid}`}
                 className="menu-item-link"
               >
-                <div key={item.MenuItemID} className="menu-item">
+                <div key={item.menuitemid} className="menu-item">
                   <img
-                    src={item.MainImageURL || hero}
-                    alt={item.Name}
+                    src={item.mainimageurl || hero}
+                    alt={item.name}
                     className="menu-item-image"
                   />
                   <div className="menu-item-content">
-                    <h3 className="menu-item-name">{item.Name}</h3>
-                    <p className="menu-item-description">{item.Description}</p>
+                    <h3 className="menu-item-name">{item.name}</h3>
+                    <p className="menu-item-description">{item.description}</p>
                     <p className="menu-item-price">
-                      ${parseFloat(item.Price).toFixed(2)}
+                      ${parseFloat(item.price).toFixed(2)}
                     </p>
                   </div>
                 </div>
@@ -86,11 +86,11 @@ function StallPage() {
   return (
     <div className="stall-page-wrapper">
       <main className="stall-page-content">
-        {/* UPDATED: Uses stall.Stall_Image if available, otherwise default hero */}
+        {/* UPDATED: Uses stall.stall_image if available, otherwise default hero */}
         <div
           className="hero-section"
           style={{
-            backgroundImage: `url(${stall?.Stall_Image || hero})`,
+            backgroundImage: `url(${stall?.stall_image || hero})`,
           }}
         >
           {error && <p className="hero-error">Error: {error}</p>}
@@ -99,13 +99,13 @@ function StallPage() {
               <button onClick={() => navigate(`/home`)} className="back-button">
                 &larr; Back to Home
               </button>
-              <h1 className="hero-title">{stall.StallName}</h1>
-              <p className="hero-description">{stall.Description}</p>
+              <h1 className="hero-title">{stall.stallname}</h1>
+              <p className="hero-description">{stall.description}</p>
               <p className="hero-info">
-                <strong>Location:</strong> {stall.Hawker_Centre}
+                <strong>Location:</strong> {stall.hawker_centre}
               </p>
               <p className="hero-info">
-                <strong>Category:</strong> {stall.Category}
+                <strong>Category:</strong> {stall.category}
               </p>
               <Link to={`/stalls/${id}/photos`} className="hero-photos-button">
                 View Photos

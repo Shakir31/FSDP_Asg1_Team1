@@ -59,20 +59,20 @@ function HawkerPage() {
             !error &&
             stalls.map((stall) => (
               <Link
-                to={`/stalls/${stall.StallID}`}
+                to={`/stalls/${stall.stallid}`}
                 className="hawker-card-link"
-                key={stall.StallID}
+                key={stall.stallid}
               >
                 <div className="hawker-card">
                   <img
-                    src={stall.Stall_Image || "/images/buta kin.jpg"}
-                    alt={stall.StallName}
+                    src={stall.stall_image || "/images/buta kin.jpg"}
+                    alt={stall.stallname}
                     onError={(e) => {
                       e.target.src = "/images/buta kin.jpg";
                     }}
                   />
-                  <h3>{stall.StallName}</h3>
-                  <p>{stall.Hawker_Centre}</p>
+                  <h3>{stall.stallname}</h3>
+                  <p>{stall.hawker_centre}</p>
                   {/* Location/Distance removed as requested */}
                 </div>
               </Link>

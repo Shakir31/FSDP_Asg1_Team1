@@ -1,84 +1,71 @@
-const sql = require("mssql");
-const dbConfig = require("../dbConfig");
+const supabase = require("../supabaseClient");
 
 async function createOrder(userId, items, totalAmount) {
-  let connection;
   try {
-    connection = await sql.connect(dbConfig);
-    const transaction = new sql.Transaction(connection);
-    await transaction.begin();
+    // Step 1: Create the order
+    const { data: orderData, error: orderError } = await supabase
+      .from("orders")
+      .insert([
+        {
+          userid: userId,
+          totalamount: totalAmount,
+          orderstatus: "Pending",
+          paymentstatus: "Unpaid",
+        },
+      ])
+      .select()
+      .single();
 
-    const request = new sql.Request(transaction);
-    request.input("userId", sql.Int, userId);
-    request.input("totalAmount", sql.Decimal(8, 2), totalAmount);
+    if (orderError) throw orderError;
 
-    const orderResult = await request.query(
-      `INSERT INTO Orders (UserID, TotalAmount, OrderStatus, PaymentStatus) OUTPUT INSERTED.OrderID VALUES (@userId, @totalAmount, 'Pending', 'Unpaid')`
-    );
+    const orderId = orderData.orderid;
 
-    const orderId = orderResult.recordset[0].OrderID;
+    // Step 2: Insert all order items
+    const orderItems = items.map((item) => ({
+      orderid: orderId,
+      menuitemid: item.menuItemId,
+      quantity: item.quantity,
+      price: item.price,
+    }));
 
-    // Insert order items one by one, awaiting each to prevent blocking
-    for (const item of items) {
-      const itemRequest = new sql.Request(transaction);
-      itemRequest.input("orderId", sql.Int, orderId);
-      itemRequest.input("menuItemId", sql.Int, item.menuItemId);
-      itemRequest.input("quantity", sql.Int, item.quantity);
-      itemRequest.input("price", sql.Decimal(6, 2), item.price);
-      await itemRequest.query(
-        `INSERT INTO OrderItems (OrderID, MenuItemID, Quantity, Price) VALUES (@orderId, @menuItemId, @quantity, @price)`
-      );
-    }
+    const { error: itemsError } = await supabase
+      .from("orderitems")
+      .insert(orderItems);
 
-    await transaction.commit();
+    if (itemsError) throw itemsError;
+
     return { OrderID: orderId };
   } catch (error) {
-    if (connection) {
-      try {
-        await connection.rollback();
-      } catch (e) {
-        console.error("Rollback error", e);
-      }
-    }
+    console.error("Create order error", error);
     throw error;
-  } finally {
-    if (connection) await connection.close();
   }
 }
 
 async function getOrdersByUser(userId) {
-  let connection;
   try {
-    connection = await sql.connect(dbConfig);
-    const result = await connection
-      .request()
-      .input("userId", sql.Int, userId)
-      .query(
-        "SELECT * FROM Orders WHERE UserID = @userId ORDER BY OrderDate DESC"
-      );
-    return result.recordset;
+    const { data, error } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("userid", userId)
+      .order("orderdate", { ascending: false });
+
+    if (error) throw error;
+    return data;
   } catch (error) {
     throw error;
-  } finally {
-    if (connection) await connection.close();
   }
 }
 
 async function updatePaymentStatus(orderId, paymentStatus) {
-  let connection;
   try {
-    connection = await sql.connect(dbConfig);
-    await connection
-      .request()
-      .input("orderId", sql.Int, orderId)
-      .input("paymentStatus", sql.VarChar, paymentStatus)
-      .query(
-        "UPDATE Orders SET PaymentStatus = @paymentStatus WHERE OrderID = @orderId"
-      );
+    const { error } = await supabase
+      .from("orders")
+      .update({ paymentstatus: paymentStatus })
+      .eq("orderid", orderId);
+
+    if (error) throw error;
   } catch (error) {
     throw error;
-  } finally {
-    if (connection) await connection.close();
   }
 }
 

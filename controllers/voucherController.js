@@ -12,9 +12,6 @@ async function getAllVouchers(req, res) {
 
 async function redeemVoucher(req, res) {
   try {
-    console.log("REQ BODY:", req.body);
-    console.log("REQ USER:", req.user);
-
     const userId = parseInt(req.user.userId, 10);
     if (isNaN(userId))
       return res.status(400).json({ error: "Invalid user ID" });

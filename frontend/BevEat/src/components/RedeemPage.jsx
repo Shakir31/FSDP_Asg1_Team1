@@ -39,12 +39,12 @@ export default function RedeemPage() {
       if (res.ok) {
         const data = await res.json();
         const mapped = data.map((v) => ({
-          id: v.VoucherID,
-          title: v.Name,
-          description: v.Description,
-          cost: v.CoinCost,
-          quantity: v.QuantityAvailable,
-          expiry: v.ExpiryDate,
+          id: v.voucherid,
+          title: v.name,
+          description: v.description,
+          cost: v.coincost,
+          quantity: v.quantityavailable,
+          expiry: v.expirydate,
         }));
         setAvailableVouchers(mapped);
       }

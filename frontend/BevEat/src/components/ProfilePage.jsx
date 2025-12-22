@@ -132,7 +132,7 @@ function ProfilePage() {
         <div className="profile-picture-container">
           <User size={80} color="#121223" />
         </div>
-        <h2 className="profile-name">{user.Name}</h2>
+        <h2 className="profile-name">{user.name}</h2>
         <div className="profile-coins">
           <Coins size={24} color="#ff7622" />
           <span>{coins} Coins</span>
@@ -149,13 +149,13 @@ function ProfilePage() {
         {orders.length > 0 ? (
           <div className="review-list">
             {orders.map((order) => (
-              <div key={order.OrderID} className="review-card">
+              <div key={order.orderid} className="review-card">
                 <div className="review-card-header">
                   <span className="review-item-name">
-                    Order #{order.OrderID}
+                    Order #{order.orderid}
                   </span>
                   <span className="review-date">
-                    {new Date(order.OrderDate).toLocaleDateString()}
+                    {new Date(order.orderdate).toLocaleDateString()}
                   </span>
                 </div>
                 <div className="review-card-body">
@@ -164,10 +164,10 @@ function ProfilePage() {
                     <span className="order-label">Status:</span>
                     <span
                       className={`status-text ${getStatusClass(
-                        order.OrderStatus
+                        order.orderstatus
                       )}`}
                     >
-                      {order.OrderStatus}
+                      {order.orderstatus}
                     </span>
                   </div>
 
@@ -175,14 +175,14 @@ function ProfilePage() {
                   <div className="order-row">
                     <span className="order-label">Total:</span>
                     <span className="order-total-price">
-                      ${order.TotalAmount.toFixed(2)}
+                      ${order.totalamount.toFixed(2)}
                     </span>
                   </div>
 
                   {/* 4. Payment */}
                   <div className="order-row payment-row">
                     <span className="order-label">Payment:</span>
-                    <span className="payment-text">{order.PaymentStatus}</span>
+                    <span className="payment-text">{order.paymentstatus}</span>
                   </div>
                 </div>
               </div>
@@ -208,21 +208,21 @@ function ProfilePage() {
         {reviews.length > 0 ? (
           <div className="review-list">
             {reviews.map((review) => (
-              <div key={review.ReviewID} className="review-card">
+              <div key={review.reviewid} className="review-card">
                 <div className="review-card-header">
                   <span className="review-item-name">
-                    {review.MenuItemName}
+                    {review.menuitemname}
                   </span>
                   <span className="review-date">
-                    {new Date(review.CreatedAt).toLocaleDateString()}
+                    {new Date(review.createdat).toLocaleDateString()}
                   </span>
                 </div>
                 <div className="review-card-body">
-                  <StarRating rating={review.Rating} />
-                  <p className="review-text">{review.ReviewText}</p>
-                  {review.ImageURL && (
+                  <StarRating rating={review.rating} />
+                  <p className="review-text">{review.reviewtext}</p>
+                  {review.imageurl && (
                     <img
-                      src={review.ImageURL}
+                      src={review.imageurl}
                       alt="User review"
                       className="review-card-image"
                     />

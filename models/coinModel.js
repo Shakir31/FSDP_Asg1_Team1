@@ -1,57 +1,59 @@
-const sql = require("mssql");
-const dbConfig = require("../dbConfig");
+const supabase = require("../supabaseClient");
 
 async function addCoins(userId, amount) {
-  let connection;
   try {
-    connection = await sql.connect(dbConfig);
-    await connection
-      .request()
-      .input("userId", sql.Int, userId)
-      .input("amount", sql.Int, amount)
-      .query("UPDATE Users SET Coins = Coins + @amount WHERE UserID = @userId");
+    // Get current coins
+    const { data: userData, error: fetchError } = await supabase
+      .from("users")
+      .select("coins")
+      .eq("userid", userId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    const newCoins = (userData.coins || 0) + amount;
+
+    // Update coins
+    const { error: updateError } = await supabase
+      .from("users")
+      .update({ coins: newCoins })
+      .eq("userid", userId);
+
+    if (updateError) throw updateError;
   } catch (error) {
     throw error;
-  } finally {
-    if (connection) await connection.close();
   }
 }
 
 async function insertCoinTransaction(userId, coins, description) {
-  let connection;
   try {
-    connection = await sql.connect(dbConfig);
-    await connection
-      .request()
-      .input("userId", sql.Int, userId)
-      .input("coins", sql.Int, coins)
-      .input("description", sql.VarChar, description)
-      .query(
-        "INSERT INTO CoinTransactions (UserID, CoinsEarned, Description) VALUES (@userId, @coins, @description)"
-      );
+    const { error } = await supabase.from("cointransactions").insert([
+      {
+        userid: userId,
+        coinsearned: coins,
+        description: description,
+      },
+    ]);
+
+    if (error) throw error;
   } catch (error) {
     throw error;
-  } finally {
-    if (connection) await connection.close();
   }
 }
 
 async function getUserCoins(userId) {
-  let connection;
   try {
-    connection = await sql.connect(dbConfig);
-    const result = await connection
-      .request()
-      .input("userId", sql.Int, userId)
-      .query("SELECT Coins FROM Users WHERE UserID = @userId");
-    if (result.recordset.length > 0) {
-      return result.recordset[0].Coins;
-    }
-    return 0; // or null if user not found
+    const { data, error } = await supabase
+      .from("users")
+      .select("coins")
+      .eq("userid", userId)
+      .single();
+
+    if (error && error.code !== "PGRST116") throw error;
+
+    return data ? data.coins : 0;
   } catch (error) {
     throw error;
-  } finally {
-    if (connection) await connection.close();
   }
 }
 
