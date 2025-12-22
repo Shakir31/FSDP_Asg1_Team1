@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../Cart.css";
 
-
 export const CartContext = createContext(null);
 
 export function CartProvider({ children }) {
@@ -60,7 +59,8 @@ export function CartProvider({ children }) {
   const [availableVouchers, setAvailableVouchers] = useState([]);
 
   const refreshCoins = async () => {
-    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+    const token =
+      localStorage.getItem("token") || sessionStorage.getItem("token");
     if (!token) return;
 
     try {
@@ -75,55 +75,6 @@ export function CartProvider({ children }) {
       console.error("Error fetching coin balance:", err);
     }
   };
-
-  const refreshVouchers = async () => {
-    try {
-      // Fetches all available vouchers from the backend
-      const res = await fetch("http://localhost:3000/vouchers");
-      if (res.ok) {
-        const data = await res.json();
-        // Map DB fields (VoucherID, CoinCost) to Frontend fields (id, cost)
-        const mapped = data.map((v) => ({
-          id: v.VoucherID,
-          title: v.Name,
-          description: v.Description,
-          cost: v.CoinCost,
-        }));
-        setAvailableVouchers(mapped);
-      }
-    } catch (err) {
-      console.error("Error fetching vouchers:", err);
-    }
-  };
-
-  const redeemVoucher = async (voucherId) => {
-    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-    if (!token) return { ok: false, error: "Please login to redeem." };
-
-    try {
-      const res = await fetch("http://localhost:3000/vouchers/redeem", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ voucherId }),
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        // On success, update coin balance immediately
-        await refreshCoins();
-        return { ok: true, data };
-      } else {
-        return { ok: false, error: data.error || "Redemption failed" };
-      }
-    } catch (err) {
-      return { ok: false, error: err.message };
-    }
-  };
-
-
 
   const addItem = (item) => {
     setItems((prev) => {
@@ -169,8 +120,6 @@ export function CartProvider({ children }) {
         userCoins,
         availableVouchers,
         refreshCoins,
-        refreshVouchers,
-        redeemVoucher,
       }}
     >
       {children}

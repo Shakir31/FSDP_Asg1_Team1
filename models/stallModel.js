@@ -1,37 +1,35 @@
-const sql = require("mssql");
-const dbConfig = require("../dbConfig");
+const supabase = require("../supabaseClient");
 
 async function createStall(stallName, description, hawker_centre, category) {
-  let connection;
   try {
-    connection = await sql.connect(dbConfig);
-    const result = await connection
-      .request()
-      .input("stallName", sql.VarChar, stallName)
-      .input("description", sql.VarChar, description)
-      .input("hawker_centre", sql.VarChar, hawker_centre)
-      .input("category", sql.VarChar, category)
-      .query(
-        "INSERT INTO Stalls (StallName, Description, Hawker_Centre, Category) OUTPUT INSERTED.* VALUES (@stallName, @description, @hawker_centre, @category)"
-      );
-    return result.recordset[0];
+    const { data, error } = await supabase
+      .from("stalls")
+      .insert([
+        {
+          stallname: stallName,
+          description: description,
+          hawker_centre: hawker_centre,
+          category: category,
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
   } catch (error) {
     throw error;
-  } finally {
-    if (connection) await connection.close();
   }
 }
 
 async function getAllStalls() {
-  let connection;
   try {
-    connection = await sql.connect(dbConfig);
-    const result = await connection.request().query("SELECT * FROM Stalls");
-    return result.recordset;
+    const { data, error } = await supabase.from("stalls").select("*");
+
+    if (error) throw error;
+    return data;
   } catch (error) {
     throw error;
-  } finally {
-    if (connection) await connection.close();
   }
 }
 
@@ -43,145 +41,145 @@ async function createMenuItem(
   url,
   category
 ) {
-  let connection;
   try {
-    connection = await sql.connect(dbConfig);
-    const result = await connection
-      .request()
-      .input("stallId", sql.Int, stallId)
-      .input("name", sql.VarChar, name)
-      .input("description", sql.VarChar, description)
-      .input("price", sql.Decimal(6, 2), price)
-      .input("url", sql.VarChar, url)
-      .input("category", sql.VarChar, category)
-      .query(
-        "INSERT INTO MenuItems (StallID, Name, Description, Price, MainImageURL, Category) OUTPUT INSERTED.* VALUES (@stallId, @name, @description, @price, @url, @category)"
-      );
-    return result.recordset[0];
+    const { data, error } = await supabase
+      .from("menuitems")
+      .insert([
+        {
+          stallid: stallId,
+          name: name,
+          description: description,
+          price: price,
+          mainimageurl: url,
+          category: category,
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
   } catch (error) {
     throw error;
-  } finally {
-    if (connection) await connection.close();
   }
 }
 
 async function getMenuByStall(stallId) {
-  let connection;
   try {
-    connection = await sql.connect(dbConfig);
-    const result = await connection
-      .request()
-      .input("stallId", sql.Int, stallId)
-      .query("SELECT * FROM MenuItems WHERE StallID = @stallId");
-    return result.recordset;
+    const { data, error } = await supabase
+      .from("menuitems")
+      .select("*")
+      .eq("stallid", stallId);
+
+    if (error) throw error;
+    return data;
   } catch (error) {
     throw error;
-  } finally {
-    if (connection) await connection.close();
   }
 }
 
 async function updateMenuItemPhoto(menuItemId, imageUrl) {
-  let connection;
   try {
-    connection = await sql.connect(dbConfig);
-    await connection
-      .request()
-      .input("menuItemId", sql.Int, menuItemId)
-      .input("imageUrl", sql.VarChar, imageUrl)
-      .query(
-        "UPDATE MenuItems SET MainImageURL = @imageUrl WHERE MenuItemID = @menuItemId"
-      );
+    const { error } = await supabase
+      .from("menuitems")
+      .update({ mainimageurl: imageUrl })
+      .eq("menuitemid", menuItemId);
+
+    if (error) throw error;
   } catch (error) {
     throw error;
-  } finally {
-    if (connection) await connection.close();
   }
 }
 
 async function getStallsByCategory(category) {
-  let connection;
   try {
-    connection = await sql.connect(dbConfig);
-    const result = await connection
-      .request()
-      .input("category", sql.VarChar, category)
-      .query("SELECT * FROM Stalls WHERE Category = @category");
-    return result.recordset;
+    const { data, error } = await supabase
+      .from("stalls")
+      .select("*")
+      .eq("category", category);
+
+    if (error) throw error;
+    return data;
   } catch (error) {
     throw error;
-  } finally {
-    if (connection) await connection.close();
   }
 }
 
 async function getStallsByHawkerCentre(hawkerCentre) {
-  let connection;
   try {
-    connection = await sql.connect(dbConfig);
-    const result = await connection
-      .request()
-      .input("hawker_centre", sql.VarChar, hawkerCentre)
-      .query("SELECT * FROM Stalls WHERE Hawker_Centre = @hawker_centre");
-    return result.recordset;
+    const { data, error } = await supabase
+      .from("stalls")
+      .select("*")
+      .eq("hawker_centre", hawkerCentre);
+
+    if (error) throw error;
+    return data;
   } catch (error) {
     throw error;
-  } finally {
-    if (connection) await connection.close();
   }
 }
 
 async function getStallById(stallId) {
-  let connection;
   try {
-    connection = await sql.connect(dbConfig);
-    const result = await connection
-      .request()
-      .input("stallId", sql.Int, stallId)
-      .query("SELECT * FROM Stalls WHERE StallID = @stallId");
-    return result.recordset[0];
+    const { data, error } = await supabase
+      .from("stalls")
+      .select("*")
+      .eq("stallid", stallId)
+      .single();
+
+    if (error && error.code !== "PGRST116") throw error;
+    return data;
   } catch (error) {
     throw error;
-  } finally {
-    if (connection) await connection.close();
   }
 }
 
 async function getMenuItemById(menuItemId) {
-  let connection;
   try {
-    connection = await sql.connect(dbConfig);
-    const result = await connection
-      .request()
-      .input("menuItemId", sql.Int, menuItemId)
-      .query("SELECT * FROM MenuItems WHERE MenuItemID = @menuItemId");
-    return result.recordset[0]; // Return the first (and only) item found
+    const { data, error } = await supabase
+      .from("menuitems")
+      .select("*")
+      .eq("menuitemid", menuItemId)
+      .single();
+
+    if (error && error.code !== "PGRST116") throw error;
+    return data;
   } catch (error) {
     throw error;
-  } finally {
-    if (connection) await connection.close();
   }
 }
 
 async function getImagesByStall(stallId) {
-  let connection;
   try {
-    connection = await sql.connect(dbConfig);
-    const result = await connection
-      .request()
-      .input("stallId", sql.Int, stallId)
-      .query(`
-        SELECT i.ImageID, i.ImageURL, i.UploadedAt, m.Name as MenuItemName
-        FROM Images i
-        INNER JOIN MenuItems m ON i.MenuItemID = m.MenuItemID
-        WHERE m.StallID = @stallId
-        ORDER BY i.UploadedAt DESC
-      `);
-    return result.recordset;
+    const { data, error } = await supabase
+      .from("images")
+      .select(
+        `
+        imageid,
+        imageurl,
+        uploadedat,
+        menuitems!inner (
+          name,
+          stallid
+        )
+      `
+      )
+      .eq("menuitems.stallid", stallId)
+      .order("uploadedat", { ascending: false });
+
+    if (error) throw error;
+
+    // Reshape the data to match your original format
+    const formattedData = data.map((img) => ({
+      imageid: img.imageid,
+      imageurl: img.imageurl,
+      uploadedat: img.uploadedat,
+      menuitemname: img.menuitems.name,
+    }));
+
+    return formattedData;
   } catch (error) {
     throw error;
-  } finally {
-    if (connection) await connection.close();
   }
 }
 

@@ -1,98 +1,118 @@
-const sql = require("mssql");
-const dbConfig = require("../dbConfig");
+const supabase = require("../supabaseClient");
 
 async function getAllVouchers() {
-  let connection;
   try {
-    connection = await sql.connect(dbConfig);
-    const result = await connection
-      .request()
-      .query(
-        "SELECT VoucherID, Name, Description, CoinCost, QuantityAvailable, ExpiryDate FROM Vouchers WHERE QuantityAvailable > 0 AND ExpiryDate > GETDATE()"
-      );
-    return result.recordset;
+    const { data, error } = await supabase
+      .from("vouchers")
+      .select(
+        "voucherid, name, description, coincost, quantityavailable, expirydate"
+      )
+      .gt("quantityavailable", 0)
+      .gt("expirydate", new Date().toISOString());
+
+    if (error) throw error;
+    return data;
   } catch (error) {
     throw error;
-  } finally {
-    if (connection) await connection.close();
   }
 }
 
 async function redeemVoucher(userId, voucherId) {
-  let connection;
   try {
-    connection = await sql.connect(dbConfig);
+    // Step 1: Get voucher details
+    const { data: voucher, error: voucherError } = await supabase
+      .from("vouchers")
+      .select("*")
+      .eq("voucherid", voucherId)
+      .gt("quantityavailable", 0)
+      .gt("expirydate", new Date().toISOString())
+      .single();
 
-    //get voucher details
-    const voucherResult = await connection
-      .request()
-      .input("voucherId", sql.Int, voucherId)
-      .query(
-        "SELECT * FROM Vouchers WHERE VoucherID = @voucherId AND QuantityAvailable > 0 AND ExpiryDate > GETDATE()"
-      );
-    if (voucherResult.recordset.length === 0)
+    if (voucherError || !voucher) {
       throw new Error("Voucher not available");
-    const voucher = voucherResult.recordset[0];
+    }
 
-    //check user coins
-    const userResult = await connection
-      .request()
-      .input("userId", sql.Int, userId)
-      .query("SELECT Coins FROM Users WHERE UserID = @userId");
-    if (userResult.recordset.length === 0) throw new Error("User not found");
-    if (userResult.recordset[0].Coins < voucher.CoinCost)
+    // Step 2: Check user coins
+    const { data: user, error: userError } = await supabase
+      .from("users")
+      .select("coins")
+      .eq("userid", userId)
+      .single();
+
+    if (userError || !user) {
+      throw new Error("User not found");
+    }
+
+    if (user.coins < voucher.coincost) {
       throw new Error("Insufficient coins");
+    }
 
-    //deduct voucher quantity
-    await connection
-      .request()
-      .input("voucherId", sql.Int, voucherId)
-      .query(
-        "UPDATE Vouchers SET QuantityAvailable = QuantityAvailable - 1 WHERE VoucherID = @voucherId"
-      );
+    // Step 3: Deduct voucher quantity
+    const { error: updateVoucherError } = await supabase
+      .from("vouchers")
+      .update({ quantityavailable: voucher.quantityavailable - 1 })
+      .eq("voucherid", voucherId);
 
-    //deduct user coins
-    await connection
-      .request()
-      .input("userId", sql.Int, userId)
-      .input("coins", sql.Int, voucher.CoinCost)
-      .query("UPDATE Users SET Coins = Coins - @coins WHERE UserID = @userId");
+    if (updateVoucherError) throw updateVoucherError;
 
-    //insert user voucher record
-    await connection
-      .request()
-      .input("userId", sql.Int, userId)
-      .input("voucherId", sql.Int, voucherId)
-      .query(
-        "INSERT INTO UserVouchers (UserID, VoucherID) VALUES (@userId, @voucherId)"
-      );
+    // Step 4: Deduct user coins
+    const { error: updateCoinsError } = await supabase
+      .from("users")
+      .update({ coins: user.coins - voucher.coincost })
+      .eq("userid", userId);
+
+    if (updateCoinsError) throw updateCoinsError;
+
+    // Step 5: Insert user voucher record
+    const { error: insertError } = await supabase.from("uservouchers").insert([
+      {
+        userid: userId,
+        voucherid: voucherId,
+      },
+    ]);
+
+    if (insertError) throw insertError;
 
     return { message: "Voucher redeemed successfully" };
   } catch (error) {
     throw error;
-  } finally {
-    if (connection) await connection.close();
   }
 }
 
 async function getUserRedeemedVouchers(userId) {
-  let connection;
   try {
-    connection = await sql.connect(dbConfig);
-    // Select user vouchers joined with voucher details
-    const result = await connection.request().input("userId", sql.Int, userId)
-      .query(`
-        SELECT uv.UserVoucherID, v.Name, v.Description, v.CoinCost, v.ExpiryDate, uv.RedeemedAt
-        FROM UserVouchers uv
-        INNER JOIN Vouchers v ON uv.VoucherID = v.VoucherID
-        WHERE uv.UserID = @userId
-        ORDER BY uv.RedeemedAt DESC
-      `);
-    return result.recordset;
+    const { data, error } = await supabase
+      .from("uservouchers")
+      .select(
+        `
+        uservoucherid,
+        redeemedat,
+        vouchers (
+          name,
+          description,
+          coincost,
+          expirydate
+        )
+      `
+      )
+      .eq("userid", userId)
+      .order("redeemedat", { ascending: false });
+
+    if (error) throw error;
+
+    // Reshape the data to match your original format
+    const formattedData = data.map((uv) => ({
+      uservoucherid: uv.uservoucherid,
+      name: uv.vouchers.name,
+      description: uv.vouchers.description,
+      coincost: uv.vouchers.coincost,
+      expirydate: uv.vouchers.expirydate,
+      redeemedat: uv.redeemedat,
+    }));
+
+    return formattedData;
   } catch (error) {
     throw error;
-  } finally {
-    if (connection) await connection.close();
   }
 }
 
