@@ -95,3 +95,92 @@
   border: 2px solid #ffffff; /* Adds a small white border for contrast */
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
+
+/* 1. Container for the icon and menu */
+.profile-icon-container {
+  position: relative;
+  height: auto; /* Ensures it doesn't stretch the full navbar height */
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* 2. The invisible trigger area (optional, for padding) */
+.profile-trigger {
+  padding: 10px 0; /* Adds a little hit area without stretching */
+}
+
+/* 3. The Dropdown Menu Box */
+.profile-dropdown {
+  display: none; /* Hidden by default */
+  position: absolute;
+  top: 100%; /* Pushes it below the icon */
+  right: -10px; /* Aligns it nicely with the icon */
+  background-color: #ffffff;
+  min-width: 150px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  z-index: 1100;
+  flex-direction: column;
+  
+  /* CRITICAL: Allows the arrow to stick out the top */
+  overflow: visible; 
+}
+
+/* 4. The "Arrow" / Triangle Icon */
+.profile-dropdown::before {
+  content: '';
+  position: absolute;
+  top: -6px; /* Moves it up to bridge the gap */
+  right: 18px; /* Aligns with the user icon center */
+  width: 12px;
+  height: 12px;
+  background-color: #ffffff;
+  
+  /* Create the triangle shape using borders */
+  border-top: 1px solid #e2e8f0;
+  border-left: 1px solid #e2e8f0;
+  transform: rotate(45deg);
+}
+
+/* 5. Show dropdown on hover */
+.profile-icon-container:hover .profile-dropdown {
+  display: flex;
+}
+
+/* 6. Menu Item Styles */
+.dropdown-item {
+  padding: 12px 20px;
+  text-decoration: none;
+  color: #333;
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s, background-color 0.2s;
+}
+
+.dropdown-item:hover {
+  background-color: #fff0e6;
+  color: #ff7622;
+}
+
+/* Optional: Add a separator line above Logout if desired */
+.logout-btn {
+  border-top: 1px solid #f0f0f0;
+}
+
+/* Fix rounding for first and last items so they match the box */
+.dropdown-item:first-child {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+.dropdown-item:last-child {
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
