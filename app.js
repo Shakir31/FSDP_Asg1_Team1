@@ -8,6 +8,7 @@ dotenv.config();
 
 const authController = require("./controllers/userController");
 const stallController = require("./controllers/stallController");
+const hawkerController = require("./controllers/hawkerController");
 const orderController = require("./controllers/orderController");
 const imageController = require("./controllers/imageController");
 const coinController = require("./controllers/coinController");
@@ -44,10 +45,30 @@ function ensureHandler(handler, name) {
 }
 
 //admin: users list
-app.get("/admin/users", authenticateToken, ensureHandler(authorizeRoles("admin"), 'authorizeRoles("admin")'), ensureHandler(authController.listUsers, "authController.listUsers"));
-app.get("/admin/users/:id", authenticateToken, ensureHandler(authorizeRoles("admin"), 'authorizeRoles("admin")'), ensureHandler(authController.getUser, "authController.getUser"));
-app.put("/admin/users/:id", authenticateToken, ensureHandler(authorizeRoles("admin"), 'authorizeRoles("admin")'), ensureHandler(authController.updateUser, "authController.updateUser"));
-app.delete("/admin/users/:id", authenticateToken, ensureHandler(authorizeRoles("admin"), 'authorizeRoles("admin")'), ensureHandler(authController.deleteUser, "authController.deleteUser"));
+app.get(
+  "/admin/users",
+  authenticateToken,
+  ensureHandler(authorizeRoles("admin"), 'authorizeRoles("admin")'),
+  ensureHandler(authController.listUsers, "authController.listUsers")
+);
+app.get(
+  "/admin/users/:id",
+  authenticateToken,
+  ensureHandler(authorizeRoles("admin"), 'authorizeRoles("admin")'),
+  ensureHandler(authController.getUser, "authController.getUser")
+);
+app.put(
+  "/admin/users/:id",
+  authenticateToken,
+  ensureHandler(authorizeRoles("admin"), 'authorizeRoles("admin")'),
+  ensureHandler(authController.updateUser, "authController.updateUser")
+);
+app.delete(
+  "/admin/users/:id",
+  authenticateToken,
+  ensureHandler(authorizeRoles("admin"), 'authorizeRoles("admin")'),
+  ensureHandler(authController.deleteUser, "authController.deleteUser")
+);
 
 //admin: stalls list
 app.get(
@@ -95,6 +116,16 @@ app.put(
   authenticateToken,
   authorizeRoles("stall_owner"),
   stallController.updateMenuItemPhoto
+);
+
+//hawker endpoints
+app.get("/hawker-centres", hawkerController.getAllHawkerCentres);
+app.get("/hawker-centres/search", hawkerController.searchHawkerCentres);
+app.get("/hawker-centres/status", hawkerController.getHawkerCentresByStatus);
+app.get("/hawker-centres/:id", hawkerController.getHawkerCentreById);
+app.get(
+  "/hawker-centres/:id/stalls",
+  hawkerController.getStallsByHawkerCentreId
 );
 
 //order endpoints

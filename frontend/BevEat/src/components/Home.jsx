@@ -4,9 +4,11 @@ import "../Home.css";
 
 function Home() {
   const [stalls, setStalls] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  let stalls_data;
+  const [hawkerCentres, setHawkerCentres] = useState([]);
+  const [stallsLoading, setStallsLoading] = useState(true);
+  const [hawkersLoading, setHawkersLoading] = useState(true);
+  const [stallsError, setStallsError] = useState(null);
+  const [hawkersError, setHawkersError] = useState(null);
 
   useEffect(() => {
     async function fetchStalls() {
@@ -16,17 +18,35 @@ function Home() {
           throw new Error("Failed to fetch stalls");
         }
         const data = await response.json();
-        // Optionally slice the data to only show top 4-8 stalls on home page
-        setStalls(data);
-        stalls_data = data;
+        // Show only first 4 stalls on homepage
+        setStalls(data.slice(0, 4));
       } catch (err) {
         console.error(err);
-        setError(err.message);
+        setStallsError(err.message);
       } finally {
-        setLoading(false);
+        setStallsLoading(false);
       }
     }
+
+    async function fetchHawkerCentres() {
+      try {
+        const response = await fetch("http://localhost:3000/hawker-centres");
+        if (!response.ok) {
+          throw new Error("Failed to fetch hawker centres");
+        }
+        const data = await response.json();
+        // Show only first 4 hawker centres on homepage
+        setHawkerCentres(data.slice(0, 4));
+      } catch (err) {
+        console.error(err);
+        setHawkersError(err.message);
+      } finally {
+        setHawkersLoading(false);
+      }
+    }
+
     fetchStalls();
+    fetchHawkerCentres();
   }, []);
 
   return (
@@ -44,26 +64,17 @@ function Home() {
       <section className="stalls">
         <div className="section-header">
           <h2>Popular Stalls Near You</h2>
-          <Link to="/hawkers" className="see-all">
+          <Link to="/stalls" className="see-all">
             See all &gt;
           </Link>
         </div>
 
-        <div className="filters">
-          <button>All</button>
-          <button>Rice</button>
-          <button>Noodles</button>
-          <button>Soup</button>
-          <button>Indian</button>
-          <button>Halal</button>
-        </div>
-
-        {loading && <p>Loading stalls...</p>}
-        {error && <p style={{ color: "red" }}>Error: {error}</p>}
+        {stallsLoading && <p>Loading stalls...</p>}
+        {stallsError && <p style={{ color: "red" }}>Error: {stallsError}</p>}
 
         <div className="card-grid">
-          {!loading &&
-            !error &&
+          {!stallsLoading &&
+            !stallsError &&
             stalls.map((stall) => (
               <Link
                 to={`/stalls/${stall.stallid}`}
@@ -78,60 +89,56 @@ function Home() {
                     }
                     alt={stall.stallname}
                     onError={(e) => {
-                      e.target.src = "/images/buta kin.jpg";
-                    }} // Fallback image
+                      e.target.src =
+                        "https://res.cloudinary.com/dv9rwydip/image/upload/v1761451673/samples/cup-on-a-table.jpg";
+                    }}
                   />
                   <h3>{stall.stallname}</h3>
-                  <p>{stall.hawker_centre}</p>
-                  {/* Location/Distance removed as requested */}
+                  <p>{stall.description}</p>
                 </div>
               </Link>
             ))}
         </div>
       </section>
 
-      {/* Hawker Centres Section (Static for now) */}
+      {/* Hawker Centres Section */}
       <section className="hawker">
         <div className="section-header">
           <h2>Hawker Centres Near You</h2>
-          <Link to="/home" className="see-all">
+          <Link to="/hawker-centres" className="see-all">
             See all &gt;
           </Link>
         </div>
 
+        {hawkersLoading && <p>Loading hawker centres...</p>}
+        {hawkersError && <p style={{ color: "red" }}>Error: {hawkersError}</p>}
+
         <div className="card-grid">
-          <div className="card">
-            <img
-              src="https://res.cloudinary.com/dv9rwydip/image/upload/v1763507632/Screenshot_2025-11-19_071248_gejxjk.png"
-              alt="Maxwell Food Centre"
-            />
-            <h3>Maxwell Food Centre</h3>
-            <p>1 Kadayanallur St, Singapore 069184</p>
-          </div>
-          <div className="card">
-            <img
-              src="https://res.cloudinary.com/dv9rwydip/image/upload/v1763507634/Screenshot_2025-11-19_071307_rprijx.png"
-              alt="Sembawang Hills Food Centre"
-            />
-            <h3>Sembawang Hills Food Centre</h3>
-            <p>590 Upper Thomson Rd, Singapore 574419</p>
-          </div>
-          <div className="card">
-            <img
-              src="https://res.cloudinary.com/dv9rwydip/image/upload/v1763507635/Screenshot_2025-11-19_071320_z4yujm.png"
-              alt="Taman Jurong Market & Food Centre"
-            />
-            <h3>Taman Jurong Market & Food Centre</h3>
-            <p>3 Yung Sheng Rd, Singapore 618499</p>
-          </div>
-          <div className="card">
-            <img
-              src="https://res.cloudinary.com/dv9rwydip/image/upload/v1763507633/Screenshot_2025-11-19_071328_iwaxwk.png"
-              alt="ABC Brickworks Market & Food Centre"
-            />
-            <h3>ABC Brickworks Market & Food Centre</h3>
-            <p>6 Jalan Bukit Merah, Singapore 150006</p>
-          </div>
+          {!hawkersLoading &&
+            !hawkersError &&
+            hawkerCentres.map((hawker) => (
+              <Link
+                to={`/hawker-centres/${hawker.id}`}
+                className="card-link"
+                key={hawker.id}
+              >
+                <div className="card">
+                  <img
+                    src={
+                      hawker.photo_url ||
+                      "https://res.cloudinary.com/dv9rwydip/image/upload/v1763507632/Screenshot_2025-11-19_071248_gejxjk.png"
+                    }
+                    alt={hawker.name}
+                    onError={(e) => {
+                      e.target.src =
+                        "https://res.cloudinary.com/dv9rwydip/image/upload/v1763507632/Screenshot_2025-11-19_071248_gejxjk.png";
+                    }}
+                  />
+                  <h3>{hawker.name}</h3>
+                  <p>{hawker.address}</p>
+                </div>
+              </Link>
+            ))}
         </div>
       </section>
     </div>

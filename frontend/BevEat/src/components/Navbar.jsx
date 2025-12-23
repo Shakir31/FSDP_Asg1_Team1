@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Search, ShoppingCart, User } from 'lucide-react';
-import { useCart } from './Cartcontext';
+import { useCart } from './Cartcontext'; // 1. Import the cart hook
 import logo from '../assets/logo.png';
 import '../Navbar.css';
 
@@ -26,18 +26,14 @@ function Navbar() {
         </Link>
       </div>
       <div className="navbar-item">
-        <Link to="/home" className="navbar-link">Home</Link>
+        <Link to="/home" className="navbar-link">
+          Home
+        </Link>
       </div>
       <div className="navbar-item">
-        <Link to="/redeem" className="navbar-link">Redeem</Link>
-      </div>
-      <div className="navbar-item">
-        <div className="search-container">
-          <input type="text" placeholder="Search..." />
-          <button className="search-button">
-            <Search size={20} />
-          </button>
-        </div>
+        <Link to="/redeem" className="navbar-link">
+          Redeem
+        </Link>
       </div>
       <div className="navbar-item">
         <Link to="/cart" className="icon-link cart-wrapper">
