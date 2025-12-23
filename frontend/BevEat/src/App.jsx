@@ -14,6 +14,8 @@ import StallUpdate from "./components/StallUpdate";
 import StallCreate from "./components/StallCreate";
 import Product from "./components/Product";
 import StallPhotos from "./components/StallPhotos";
+import StallsBrowse from "./components/StallsBrowse";
+import HawkerCentresBrowse from "./components/HawkerCentresBrowse";
 import ProfilePage from "./components/ProfilePage";
 import Home from "./components/Home";
 import HawkerPage from "./components/HawkerPage";
@@ -22,7 +24,12 @@ import TxnNetsSuccessStatusPage from "./components/TxnNetsSuccessStatusPage";
 import TxnNetsFailStatusPage from "./components/TxnNetsFailStatusPage";
 import UploadPage from "./components/UploadPage";
 import RedeemPage from "./components/RedeemPage";
-import { CartProvider, CartPage, CheckoutPage, CheckoutSuccess } from "./components/Cartcontext";
+import {
+  CartProvider,
+  CartPage,
+  CheckoutPage,
+  CheckoutSuccess,
+} from "./components/Cartcontext";
 
 function App() {
   const [count, setCount] = useState(0);
@@ -34,9 +41,11 @@ function App() {
         <Route path="/register" element={<Signup />} />
         <Route element={<MainLayout />}>
           <Route path="/home" element={<Home />} />
-          <Route path="/hawkers" element={<HawkerPage />} />
+          <Route path="/hawker-centres/:id" element={<HawkerPage />} />
           <Route path="/stalls/:id" element={<StallPage />} />
           <Route path="/stalls/:id/photos" element={<StallPhotos />} />
+          <Route path="/stalls" element={<StallsBrowse />} />
+          <Route path="/hawker-centres" element={<HawkerCentresBrowse />} />
           <Route path="/menu-item/:itemId" element={<Product />} />
           <Route path="/admin" element={<AdminHome />} />
           <Route path="/admin/users" element={<UserAccount />} />
@@ -49,7 +58,10 @@ function App() {
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/checkout/success" element={<CheckoutSuccess />} />
           <Route path="/nets-qr" element={<NetsQrSamplePage />} />
-          <Route path="/nets-qr/success" element={<TxnNetsSuccessStatusPage />} />
+          <Route
+            path="/nets-qr/success"
+            element={<TxnNetsSuccessStatusPage />}
+          />
           <Route path="/nets-qr/fail" element={<TxnNetsFailStatusPage />} />
           <Route path="/upload" element={<UploadPage />} />
           <Route path="/redeem" element={<RedeemPage />} />
