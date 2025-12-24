@@ -12,6 +12,29 @@ function authenticateToken(req, res, next) {
   });
 }
 
+function optionalAuth(req, res, next) {
+  const authHeader = req.headers["authorization"];
+
+  if (!authHeader) {
+    // No token provided, continue without user info
+    return next();
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  if (!token) {
+    return next();
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (!err) {
+      req.user = user; // Add user info if token is valid
+    }
+    // Continue even if token is invalid (that's the "optional" part)
+    next();
+  });
+}
+
 function authorizeRoles(...roles) {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
@@ -21,4 +44,4 @@ function authorizeRoles(...roles) {
   };
 }
 
-module.exports = { authenticateToken, authorizeRoles };
+module.exports = { authenticateToken, optionalAuth, authorizeRoles };

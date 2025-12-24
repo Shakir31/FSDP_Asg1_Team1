@@ -125,8 +125,13 @@ async function upvoteImage(req, res) {
       return res.status(400).json({ error: "Invalid userId from token" });
     }
     const { imageId } = req.body;
-    await imageModel.voteImage(userId, imageId);
-    res.status(201).json({ message: "Image upvoted" });
+
+    const result = await imageModel.voteImage(userId, imageId);
+
+    res.status(200).json({
+      message: result.message,
+      upvoted: result.upvoted,
+    });
   } catch (error) {
     console.error("Upvote image error", error);
     res.status(400).json({ error: error.message });

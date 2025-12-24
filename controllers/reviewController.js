@@ -34,7 +34,17 @@ async function createReview(req, res) {
 async function getReviewsByMenuItem(req, res) {
   try {
     const { menuItemId } = req.params;
-    const reviews = await reviewModel.getReviewsByMenuItem(menuItemId);
+
+    // Extract userId from token if provided (optional authentication)
+    let currentUserId = null;
+    if (req.user && req.user.userId) {
+      currentUserId = req.user.userId;
+    }
+
+    const reviews = await reviewModel.getReviewsByMenuItem(
+      menuItemId,
+      currentUserId
+    );
     res.json(reviews);
   } catch (error) {
     console.error("Get reviews by menu item error", error);
@@ -67,4 +77,9 @@ async function getReviewsByUser(req, res) {
   }
 }
 
-module.exports = { createReview, getReviewsByMenuItem, getReviewsByStall, getReviewsByUser };
+module.exports = {
+  createReview,
+  getReviewsByMenuItem,
+  getReviewsByStall,
+  getReviewsByUser,
+};

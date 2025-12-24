@@ -149,15 +149,17 @@ async function getMenuItemById(menuItemId) {
   }
 }
 
-async function getImagesByStall(stallId) {
+async function getImagesByStall(stallId, currentUserId = null) {
   try {
-    const { data, error } = await supabase
+    // First, get images with user info and menu item name
+    const { data: images, error } = await supabase
       .from("images")
       .select(
         `
         imageid,
         imageurl,
         uploadedat,
+        uploaderid,
         menuitems!inner (
           name,
           stallid
@@ -169,15 +171,56 @@ async function getImagesByStall(stallId) {
 
     if (error) throw error;
 
-    // Reshape the data to match your original format
-    const formattedData = data.map((img) => ({
-      imageid: img.imageid,
-      imageurl: img.imageurl,
-      uploadedat: img.uploadedat,
-      menuitemname: img.menuitems.name,
-    }));
+    // For each image, fetch additional data
+    const enrichedData = await Promise.all(
+      images.map(async (img) => {
+        // Get uploader username
+        const { data: user } = await supabase
+          .from("users")
+          .select("name, email")
+          .eq("userid", img.uploaderid)
+          .maybeSingle();
 
-    return formattedData;
+        // Get review text AND rating for this image
+        const { data: review } = await supabase
+          .from("reviews")
+          .select("reviewtext, rating")
+          .eq("imageid", img.imageid)
+          .maybeSingle();
+
+        // Get upvote count
+        const { count: upvoteCount } = await supabase
+          .from("imagevotes")
+          .select("*", { count: "exact", head: true })
+          .eq("imageid", img.imageid);
+
+        // Check if current user has upvoted (if userId provided)
+        let userHasUpvoted = false;
+        if (currentUserId) {
+          const { data: userVote } = await supabase
+            .from("imagevotes")
+            .select("voteid")
+            .eq("imageid", img.imageid)
+            .eq("userid", currentUserId)
+            .maybeSingle();
+          userHasUpvoted = !!userVote;
+        }
+
+        return {
+          imageid: img.imageid,
+          imageurl: img.imageurl,
+          uploadedat: img.uploadedat,
+          menuitemname: img.menuitems.name,
+          username: user?.name || user?.email?.split("@")[0] || "Anonymous",
+          reviewtext: review?.reviewtext || null,
+          rating: review?.rating || null,
+          upvote_count: upvoteCount || 0,
+          user_has_upvoted: userHasUpvoted,
+        };
+      })
+    );
+
+    return enrichedData;
   } catch (error) {
     throw error;
   }

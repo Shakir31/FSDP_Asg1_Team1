@@ -21,6 +21,7 @@ const { validateImageUpload } = require("./middlewares/imageValidation");
 
 const {
   authenticateToken,
+  optionalAuth,
   authorizeRoles,
 } = require("./middlewares/authMiddleware");
 const app = express();
@@ -94,7 +95,7 @@ app.get(
 app.get("/stalls", stallController.getAllStalls);
 app.get("/stalls/category", stallController.getStallsByCategory);
 app.get("/stalls/hawker-centre", stallController.getStallsByHawkerCentre);
-app.get("/stalls/:id/photos", stallController.getStallImages);
+app.get("/stalls/:id/photos", optionalAuth, stallController.getStallImages);
 app.get("/stalls/:id", stallController.getStallById);
 app.get("/menu-item/:itemId", stallController.getMenuItemById);
 app.post(
@@ -187,7 +188,11 @@ app.post(
   authorizeRoles("customer"),
   reviewController.createReview
 );
-app.get("/reviews/menuitem/:menuItemId", reviewController.getReviewsByMenuItem);
+app.get(
+  "/reviews/menuitem/:menuItemId",
+  optionalAuth,
+  reviewController.getReviewsByMenuItem
+);
 app.get("/reviews/stall/:stallId", reviewController.getReviewsByStall);
 app.get("/reviews/user", authenticateToken, reviewController.getReviewsByUser);
 

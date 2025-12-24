@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ThumbsUp } from "lucide-react";
+import SocialPostCard from "./SocialPostCard";
 import "../StallPhotos.css";
 
 function StallPhotos() {
@@ -11,7 +11,7 @@ function StallPhotos() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  async function handleUpvote(imageId) {
+  async function handleUpvote(imageId, currentlyUpvoted) {
     const token = localStorage.getItem("token");
     if (!token) {
       alert("You must be logged in to upvote images.");
@@ -28,21 +28,47 @@ function StallPhotos() {
         body: JSON.stringify({ imageId }),
       });
       const data = await res.json();
+
       if (res.ok) {
-        alert("Upvoted successfully!");
+        // Update the local state to reflect the upvote toggle
+        setImages((prevImages) =>
+          prevImages.map((img) =>
+            img.imageid === imageId
+              ? {
+                  ...img,
+                  user_has_upvoted: data.upvoted,
+                  upvote_count: data.upvoted
+                    ? img.upvote_count + 1
+                    : img.upvote_count - 1,
+                }
+              : img
+          )
+        );
       } else {
-        alert(data.error || "Upvote failed.");
+        alert(data.error || "Action failed.");
       }
     } catch (err) {
-      alert("Error upvoting image: " + err.message);
+      alert("Error: " + err.message);
     }
   }
+
   useEffect(() => {
     async function fetchStallImages() {
       try {
         setLoading(true);
+        const token = localStorage.getItem("token");
+
+        const headers = {
+          "Content-Type": "application/json",
+        };
+
+        // Add auth token if available
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
+        }
+
         const [photoResponse, stallResponse] = await Promise.all([
-          fetch(`http://localhost:3000/stalls/${id}/photos`),
+          fetch(`http://localhost:3000/stalls/${id}/photos`, { headers }),
           fetch(`http://localhost:3000/stalls/${id}`),
         ]);
 
@@ -66,29 +92,24 @@ function StallPhotos() {
 
   let content;
   if (loading) {
-    content = <p>Loading photos...</p>;
+    content = <p className="loading-text">Loading photos...</p>;
   } else if (error) {
-    content = <p>Error: {error}</p>;
+    content = <p className="error-text">Error: {error}</p>;
   } else if (images.length === 0) {
-    content = <p>No photos have been uploaded for this stall yet.</p>;
+    content = (
+      <p className="no-photos-text">
+        No photos have been uploaded for this stall yet.
+      </p>
+    );
   } else {
     content = (
-      <div className="photo-grid">
+      <div className="social-feed">
         {images.map((image) => (
-          <div key={image.imageid} className="photo-card">
-            <img
-              src={image.imageurl}
-              alt={image.menuitemname || "Stall Photo"}
-              className="photo-img"
-            />
-            <p className="photo-caption">For: {image.menuitemname}</p>
-            <button
-              onClick={() => handleUpvote(image.imageid)}
-              className="upvote-button"
-            >
-              <ThumbsUp size={18} />
-            </button>
-          </div>
+          <SocialPostCard
+            key={image.imageid}
+            image={image}
+            onUpvote={handleUpvote}
+          />
         ))}
       </div>
     );

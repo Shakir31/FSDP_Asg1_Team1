@@ -122,8 +122,15 @@ async function getMenuItemById(req, res) {
 
 async function getStallImages(req, res) {
   try {
-    const { id } = req.params; // 'id' matches the route parameter
-    const images = await stallModel.getImagesByStall(id);
+    const { id } = req.params;
+
+    // Extract userId from token if provided (optional authentication)
+    let currentUserId = null;
+    if (req.user && req.user.userId) {
+      currentUserId = req.user.userId;
+    }
+
+    const images = await stallModel.getImagesByStall(id, currentUserId);
     res.json(images);
   } catch (error) {
     console.error("Get stall images error", error);
