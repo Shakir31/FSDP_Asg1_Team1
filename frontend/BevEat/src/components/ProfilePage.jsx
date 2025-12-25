@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Coins, Star, ShoppingBag } from "lucide-react";
+import { User, Coins, Star, ShoppingBag, Store, Bell } from "lucide-react";
 import "../ProfilePage.css";
 
 // Helper component for star ratings
@@ -24,6 +24,8 @@ function ProfilePage() {
   const [coins, setCoins] = useState(0);
   const [reviews, setReviews] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [stalls, setStalls] = useState([]);
+  const [notificationStats, setNotificationStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -46,44 +48,85 @@ function ProfilePage() {
       try {
         setLoading(true);
 
-        const [
-          profileResponse,
-          coinsResponse,
-          reviewsResponse,
-          ordersResponse,
-        ] = await Promise.all([
-          fetch("http://localhost:3000/users/profile", {
+        // Fetch profile first to check role
+        const profileResponse = await fetch(
+          "http://localhost:3000/users/profile",
+          {
             headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch("http://localhost:3000/coins/balance", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch("http://localhost:3000/reviews/user", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch("http://localhost:3000/orders/history", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
+          }
+        );
 
         if (profileResponse.status === 401 || profileResponse.status === 403) {
           throw new Error("Session expired");
         }
 
         if (!profileResponse.ok) throw new Error("Failed to fetch profile");
-        if (!coinsResponse.ok) throw new Error("Failed to fetch coins");
-        if (!reviewsResponse.ok) throw new Error("Failed to fetch reviews");
-        if (!ordersResponse.ok) throw new Error("Failed to fetch orders");
 
         const profileData = await profileResponse.json();
-        const coinsData = await coinsResponse.json();
-        const reviewsData = await reviewsResponse.json();
-        const ordersData = await ordersResponse.json();
-
         setUser(profileData);
-        setCoins(coinsData.coins);
-        setReviews(reviewsData);
-        setOrders(ordersData);
+
+        // Fetch different data based on role
+        if (profileData.role === "stall_owner") {
+          // Fetch stall owner specific data
+          const [coinsResponse, stallsResponse, notifStatsResponse] =
+            await Promise.all([
+              fetch("http://localhost:3000/coins/balance", {
+                headers: { Authorization: `Bearer ${token}` },
+              }),
+              fetch("http://localhost:3000/stalls", {
+                headers: { Authorization: `Bearer ${token}` },
+              }),
+              fetch("http://localhost:3000/notifications/stats", {
+                headers: { Authorization: `Bearer ${token}` },
+              }),
+            ]);
+
+          if (!coinsResponse.ok) throw new Error("Failed to fetch coins");
+
+          const coinsData = await coinsResponse.json();
+          setCoins(coinsData.coins);
+
+          // Get stalls owned by this user
+          if (stallsResponse.ok) {
+            const allStalls = await stallsResponse.json();
+            const myStalls = allStalls.filter(
+              (stall) => stall.owner_id === profileData.userid
+            );
+            setStalls(myStalls);
+          }
+
+          // Get notification stats
+          if (notifStatsResponse.ok) {
+            const notifData = await notifStatsResponse.json();
+            setNotificationStats(notifData);
+          }
+        } else {
+          // Fetch regular user data
+          const [coinsResponse, reviewsResponse, ordersResponse] =
+            await Promise.all([
+              fetch("http://localhost:3000/coins/balance", {
+                headers: { Authorization: `Bearer ${token}` },
+              }),
+              fetch("http://localhost:3000/reviews/user", {
+                headers: { Authorization: `Bearer ${token}` },
+              }),
+              fetch("http://localhost:3000/orders/history", {
+                headers: { Authorization: `Bearer ${token}` },
+              }),
+            ]);
+
+          if (!coinsResponse.ok) throw new Error("Failed to fetch coins");
+          if (!reviewsResponse.ok) throw new Error("Failed to fetch reviews");
+          if (!ordersResponse.ok) throw new Error("Failed to fetch orders");
+
+          const coinsData = await coinsResponse.json();
+          const reviewsData = await reviewsResponse.json();
+          const ordersData = await ordersResponse.json();
+
+          setCoins(coinsData.coins);
+          setReviews(reviewsData);
+          setOrders(ordersData);
+        }
       } catch (err) {
         console.error("Profile Error:", err);
         if (
@@ -126,6 +169,90 @@ function ProfilePage() {
     );
   if (!user) return null;
 
+  // Render for Stall Owners
+  if (user.role === "stall_owner") {
+    return (
+      <div className="profile-wrapper">
+        <div className="profile-container">
+          <div className="profile-picture-container">
+            <User size={80} color="#121223" />
+          </div>
+          <h2 className="profile-name">{user.name}</h2>
+          <div className="profile-role-badge">Stall Owner</div>
+          <div className="profile-coins">
+            <Coins size={24} color="#ff7622" />
+            <span>{coins} Coins</span>
+          </div>
+        </div>
+
+        {/* Notifications Section */}
+        {notificationStats && (
+          <div className="profile-reviews-container profile-section">
+            <div className="profile-section-title section-header-content">
+              <Bell size={20} />
+              <span>Photo Suggestions</span>
+            </div>
+            <div className="stall-owner-stats">
+              <div className="stat-box">
+                <div className="stat-number">{notificationStats.pending}</div>
+                <div className="stat-label">Pending</div>
+              </div>
+              <div className="stat-box">
+                <div className="stat-number">{notificationStats.approved}</div>
+                <div className="stat-label">Approved</div>
+              </div>
+              <div className="stat-box">
+                <div className="stat-number">{notificationStats.dismissed}</div>
+                <div className="stat-label">Dismissed</div>
+              </div>
+            </div>
+            <button
+              className="btn btn-orange"
+              style={{ marginTop: "16px", width: "100%" }}
+              onClick={() => navigate("/dashboard")}
+            >
+              View Dashboard
+            </button>
+          </div>
+        )}
+
+        {/* My Stalls Section */}
+        <div className="profile-reviews-container profile-section">
+          <div className="profile-section-title section-header-content">
+            <Store size={20} />
+            <span>My Stalls ({stalls.length})</span>
+          </div>
+
+          {stalls.length > 0 ? (
+            <div className="review-list">
+              {stalls.map((stall) => (
+                <div key={stall.stallid} className="review-card">
+                  <div className="review-card-header">
+                    <span className="review-item-name">{stall.stallname}</span>
+                    <span className="review-date">{stall.category}</span>
+                  </div>
+                  <div className="review-card-body">
+                    <p className="review-text">{stall.description}</p>
+                    <button
+                      className="btn btn-orange"
+                      style={{ marginTop: "12px" }}
+                      onClick={() => navigate(`/stalls/${stall.stallid}`)}
+                    >
+                      View Stall
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="empty-message">No stalls assigned yet.</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Render for Regular Users
   return (
     <div className="profile-wrapper">
       <div className="profile-container">

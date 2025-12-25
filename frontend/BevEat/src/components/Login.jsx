@@ -31,11 +31,15 @@ function Login() {
           sessionStorage.setItem("role", data.role);
         }
         alert("Login successful! Role: " + data.role);
-        //redirect or update UI accordingly
+
+        // Role-based redirect
         if (data.role === "admin" || data.role === "Admin") {
           window.location.href = "/admin";
+        } else if (data.role === "stall_owner") {
+          navigate("/dashboard");
+        } else {
+          navigate("/home");
         }
-        navigate("/home");
       } else {
         setError(data.error || "Login failed");
       }
@@ -83,7 +87,7 @@ function Login() {
             Login
           </button>
           <p className="signup-text">
-            Don’t have an account?{" "}
+            Don't have an account?{" "}
             <Link to="/register" className="btn">
               SIGN UP
             </Link>
