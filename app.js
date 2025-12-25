@@ -14,6 +14,7 @@ const imageController = require("./controllers/imageController");
 const coinController = require("./controllers/coinController");
 const voucherController = require("./controllers/voucherController");
 const reviewController = require("./controllers/reviewController");
+const notificationController = require("./controllers/notificationController");
 
 const { validateReview } = require("./middlewares/reviewValidation");
 const { validateMenuItem } = require("./middlewares/menuItemValidation");
@@ -31,6 +32,13 @@ const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+const cron = require("node-cron");
+
+// Run daily at 2am
+cron.schedule("0 2 * * *", () => {
+  require("./detectPopularPhotos");
+});
 
 //auth endpoints
 app.post("/register", authController.registerUser);
@@ -204,6 +212,41 @@ app.get("/reviews/user", authenticateToken, reviewController.getReviewsByUser);
 
 // // image upload route (ensure validateImageUpload matches frontend)
 // app.post("/images/upload", authenticateToken, validateImageUpload, imageController.uploadImage);
+
+app.get(
+  "/notifications",
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  notificationController.getMyNotifications
+);
+
+app.get(
+  "/notifications/stats",
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  notificationController.getNotificationStats
+);
+
+app.get(
+  "/notifications/:id",
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  notificationController.getNotificationById
+);
+
+app.post(
+  "/notifications/:id/approve",
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  notificationController.approveNotification
+);
+
+app.post(
+  "/notifications/:id/dismiss",
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  notificationController.dismissNotification
+);
 
 //start server
 app.listen(port, () => {
