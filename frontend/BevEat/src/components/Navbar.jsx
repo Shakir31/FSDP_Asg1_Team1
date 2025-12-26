@@ -40,18 +40,30 @@ function Navbar() {
         </Link>
       </div>
 
-      {/* Show Dashboard for stall owners, Redeem for regular users */}
-      <div className="navbar-item">
-        {isStallOwner ? (
-          <Link to="/dashboard" className="navbar-link">
-            Dashboard
-          </Link>
-        ) : (
+      {/* Show Dashboard and Menu for stall owners */}
+      {isStallOwner && (
+        <>
+          <div className="navbar-item">
+            <Link to="/dashboard" className="navbar-link">
+              Dashboard
+            </Link>
+          </div>
+          <div className="navbar-item">
+            <Link to="/menu-management" className="navbar-link">
+              Menu
+            </Link>
+          </div>
+        </>
+      )}
+
+      {/* Show Redeem for regular users */}
+      {!isStallOwner && (
+        <div className="navbar-item">
           <Link to="/redeem" className="navbar-link">
             Redeem
           </Link>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Only show Cart for regular users */}
       {!isStallOwner && (

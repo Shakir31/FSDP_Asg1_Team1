@@ -278,6 +278,33 @@
   margin-bottom: 8px;
 }
 
+/* Revert Button */
+.btn-revert {
+  padding: 10px 20px;
+  border: 2px solid #ff7622;
+  background: white;
+  color: #ff7622;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.btn-revert:hover:not(:disabled) {
+  background: #ff7622;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 118, 34, 0.3);
+}
+
+.btn-revert:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .image-comparison {

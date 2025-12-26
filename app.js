@@ -15,6 +15,7 @@ const coinController = require("./controllers/coinController");
 const voucherController = require("./controllers/voucherController");
 const reviewController = require("./controllers/reviewController");
 const notificationController = require("./controllers/notificationController");
+const menuManagementController = require("./controllers/menuManagementController");
 
 const { validateReview } = require("./middlewares/reviewValidation");
 const { validateMenuItem } = require("./middlewares/menuItemValidation");
@@ -246,6 +247,49 @@ app.post(
   authenticateToken,
   authorizeRoles("stall_owner"),
   notificationController.dismissNotification
+);
+
+app.post(
+  "/notifications/:id/revert",
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  notificationController.revertNotification
+);
+
+//menu management(for stall owners)
+app.get(
+  "/menu-management/my-stalls",
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  menuManagementController.getMyStalls
+);
+
+app.post(
+  "/menu-management/menuitems",
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  menuManagementController.createMenuItem
+);
+
+app.put(
+  "/menu-management/menuitems/:menuItemId",
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  menuManagementController.updateMenuItem
+);
+
+app.delete(
+  "/menu-management/menuitems/:menuItemId",
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  menuManagementController.deleteMenuItem
+);
+
+app.post(
+  "/menu-management/upload-image",
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  menuManagementController.uploadMenuItemImage
 );
 
 //start server

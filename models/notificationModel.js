@@ -236,10 +236,74 @@ async function getNotificationStats(userId) {
   }
 }
 
+async function revertNotification(notificationId, userId) {
+  try {
+    // Get notification with previous image
+    const { data: notification, error: notifError } = await supabase
+      .from("notifications")
+      .select(
+        `
+        userid,
+        menuitemid,
+        status,
+        previous_image_url
+      `
+      )
+      .eq("notificationid", notificationId)
+      .single();
+
+    if (notifError) throw notifError;
+
+    // Verify ownership
+    if (notification.userid !== userId) {
+      throw new Error("Access denied");
+    }
+
+    // Check if it was approved
+    if (notification.status !== "approved") {
+      throw new Error("Can only revert approved notifications");
+    }
+
+    // Check if previous image exists
+    if (!notification.previous_image_url) {
+      throw new Error("No previous image to revert to");
+    }
+
+    // Restore the previous image
+    const { error: updateError } = await supabase
+      .from("menuitems")
+      .update({
+        mainimageurl: notification.previous_image_url,
+      })
+      .eq("menuitemid", notification.menuitemid);
+
+    if (updateError) throw updateError;
+
+    // Update notification status back to pending
+    const { error: statusError } = await supabase
+      .from("notifications")
+      .update({
+        status: "pending",
+        updatedat: new Date().toISOString(),
+      })
+      .eq("notificationid", notificationId);
+
+    if (statusError) throw statusError;
+
+    return {
+      message: "Image reverted to original successfully",
+      restoredImageUrl: notification.previous_image_url,
+    };
+  } catch (error) {
+    throw error;
+  }
+}
+
 module.exports = {
   getNotificationsByUser,
   getNotificationById,
   approveNotification,
   dismissNotification,
   getNotificationStats,
+  revertNotification,
 };

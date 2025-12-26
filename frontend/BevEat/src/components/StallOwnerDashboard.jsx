@@ -125,6 +125,43 @@ function StallOwnerDashboard() {
     }
   }
 
+  async function handleRevert(notificationId) {
+    if (
+      !window.confirm(
+        "Revert to the original image? This will restore the previous menu item photo."
+      )
+    ) {
+      return;
+    }
+
+    setProcessingId(notificationId);
+    try {
+      const response = await fetch(
+        `http://localhost:3000/notifications/${notificationId}/revert`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to revert notification");
+      }
+
+      alert("Image reverted to original successfully!");
+      await fetchNotifications();
+      await fetchStats();
+    } catch (err) {
+      console.error(err);
+      alert("Error: " + err.message);
+    } finally {
+      setProcessingId(null);
+    }
+  }
+
   const filteredNotifications = notifications.filter(
     (notif) => filter === "all" || notif.status === filter
   );
@@ -296,11 +333,31 @@ function StallOwnerDashboard() {
 
                 {notif.status !== "pending" && (
                   <div className="notification-footer">
-                    <p style={{ fontSize: "0.9rem", color: "#666" }}>
+                    <p
+                      style={{
+                        fontSize: "0.9rem",
+                        color: "#666",
+                        marginBottom:
+                          notif.status === "approved" ? "12px" : "0",
+                      }}
+                    >
                       {notif.status === "approved"
                         ? "✓ Image has been replaced"
                         : "✗ Suggestion was dismissed"}
                     </p>
+
+                    {/* Revert button for approved notifications */}
+                    {notif.status === "approved" && (
+                      <button
+                        className="btn-revert"
+                        onClick={() => handleRevert(notif.notificationid)}
+                        disabled={processingId === notif.notificationid}
+                      >
+                        {processingId === notif.notificationid
+                          ? "Processing..."
+                          : "↩ Revert to Original"}
+                      </button>
+                    )}
                   </div>
                 )}
               </div>

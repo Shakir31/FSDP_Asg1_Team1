@@ -87,10 +87,35 @@ async function getNotificationStats(req, res) {
   }
 }
 
+async function revertNotification(req, res) {
+  try {
+    const userId = req.user.userId;
+    const { id } = req.params;
+
+    const result = await notificationModel.revertNotification(id, userId);
+    res.json(result);
+  } catch (error) {
+    console.error("Revert notification error", error);
+
+    if (error.message.includes("Access denied")) {
+      return res.status(403).json({ error: error.message });
+    }
+    if (
+      error.message.includes("Can only revert") ||
+      error.message.includes("No previous image")
+    ) {
+      return res.status(400).json({ error: error.message });
+    }
+
+    res.status(500).json({ error: "Error reverting notification" });
+  }
+}
+
 module.exports = {
   getMyNotifications,
   getNotificationById,
   approveNotification,
   dismissNotification,
   getNotificationStats,
+  revertNotification,
 };

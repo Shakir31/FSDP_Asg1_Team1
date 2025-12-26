@@ -25,6 +25,7 @@ import TxnNetsFailStatusPage from "./components/TxnNetsFailStatusPage";
 import UploadPage from "./components/UploadPage";
 import RedeemPage from "./components/RedeemPage";
 import StallOwnerDashboard from "./components/StallOwnerDashboard";
+import MenuManagement from "./components/MenuManagement";
 import {
   CartProvider,
   CartPage,
@@ -47,6 +48,7 @@ function App() {
           <Route path="/stalls/:id/photos" element={<StallPhotos />} />
           <Route path="/stalls" element={<StallsBrowse />} />
           <Route path="/dashboard" element={<StallOwnerDashboard />} />
+          <Route path="/menu-management" element={<MenuManagement />} />
           <Route path="/hawker-centres" element={<HawkerCentresBrowse />} />
           <Route path="/menu-item/:itemId" element={<Product />} />
           <Route path="/admin" element={<AdminHome />} />
