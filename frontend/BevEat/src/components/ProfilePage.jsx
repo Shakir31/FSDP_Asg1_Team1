@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Coins, Star, ShoppingBag, Store, Bell } from "lucide-react";
+import OrderDetailsModal from "./OrderDetailsModel";
 import "../ProfilePage.css";
 
 // Helper component for star ratings
@@ -26,6 +27,9 @@ function ProfilePage() {
   const [orders, setOrders] = useState([]);
   const [stalls, setStalls] = useState([]);
   const [notificationStats, setNotificationStats] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [orderDetails, setOrderDetails] = useState(null);
+  const [loadingOrderDetails, setLoadingOrderDetails] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -147,6 +151,41 @@ function ProfilePage() {
 
     fetchData();
   }, [navigate]);
+
+  // Open order details modal
+  const openOrderDetails = async (order) => {
+    setSelectedOrder(order);
+    setLoadingOrderDetails(true);
+
+    const token =
+      localStorage.getItem("token") || sessionStorage.getItem("token");
+
+    try {
+      const response = await fetch(
+        `http://localhost:3000/orders/${order.orderid}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to fetch order details");
+
+      const details = await response.json();
+      setOrderDetails(details);
+    } catch (err) {
+      console.error("Error fetching order details:", err);
+      alert("Failed to load order details");
+      setSelectedOrder(null);
+    } finally {
+      setLoadingOrderDetails(false);
+    }
+  };
+
+  // Close modal
+  const closeOrderDetails = () => {
+    setSelectedOrder(null);
+    setOrderDetails(null);
+  };
 
   // Helper function to get status class
   const getStatusClass = (status) => {
@@ -276,7 +315,11 @@ function ProfilePage() {
         {orders.length > 0 ? (
           <div className="review-list">
             {orders.map((order) => (
-              <div key={order.orderid} className="review-card">
+              <div
+                key={order.orderid}
+                className="review-card order-card-clickable"
+                onClick={() => openOrderDetails(order)}
+              >
                 <div className="review-card-header">
                   <span className="review-item-name">
                     Order #{order.orderid}
@@ -286,7 +329,6 @@ function ProfilePage() {
                   </span>
                 </div>
                 <div className="review-card-body">
-                  {/* 1. Status */}
                   <div className="order-row">
                     <span className="order-label">Status:</span>
                     <span
@@ -298,7 +340,6 @@ function ProfilePage() {
                     </span>
                   </div>
 
-                  {/* 3. Total */}
                   <div className="order-row">
                     <span className="order-label">Total:</span>
                     <span className="order-total-price">
@@ -306,7 +347,6 @@ function ProfilePage() {
                     </span>
                   </div>
 
-                  {/* 4. Payment */}
                   <div className="order-row payment-row">
                     <span className="order-label">Payment:</span>
                     <span className="payment-text">{order.paymentstatus}</span>
@@ -362,6 +402,16 @@ function ProfilePage() {
           <p className="empty-message">No reviews made</p>
         )}
       </div>
+
+      {/* Order Details Modal */}
+      {selectedOrder && (
+        <OrderDetailsModal
+          order={selectedOrder}
+          orderDetails={orderDetails}
+          loading={loadingOrderDetails}
+          onClose={closeOrderDetails}
+        />
+      )}
     </div>
   );
 }

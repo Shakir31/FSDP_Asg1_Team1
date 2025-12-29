@@ -26,6 +26,31 @@ async function getOrderHistory(req, res) {
   }
 }
 
+async function getOrderDetails(req, res) {
+  try {
+    const userId = req.user.userId;
+    const orderId = parseInt(req.params.orderId, 10);
+
+    if (isNaN(orderId)) {
+      return res.status(400).json({ error: "Invalid order ID" });
+    }
+
+    const orderDetails = await orderModel.getOrderDetailsWithItems(
+      orderId,
+      userId
+    );
+
+    if (!orderDetails) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    res.json(orderDetails);
+  } catch (error) {
+    console.error("Get order details error", error);
+    res.status(500).json({ error: "Error fetching order details" });
+  }
+}
+
 async function updatePaymentStatus(req, res) {
   try {
     const { orderId, paymentStatus } = req.body;
@@ -37,4 +62,9 @@ async function updatePaymentStatus(req, res) {
   }
 }
 
-module.exports = { placeOrder, getOrderHistory, updatePaymentStatus };
+module.exports = {
+  placeOrder,
+  getOrderHistory,
+  getOrderDetails,
+  updatePaymentStatus,
+};

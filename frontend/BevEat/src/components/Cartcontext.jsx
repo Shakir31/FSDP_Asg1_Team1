@@ -158,6 +158,8 @@ export function CartPage() {
   const total = Math.max(0, subtotal - discount);
 
   // POST order to backend and navigate depending on payment method
+  // Key fix: Change the payload mapping in handleCheckout
+
   const handleCheckout = async () => {
     if (items.length === 0) return;
     if (!paymentMethod) {
@@ -167,9 +169,9 @@ export function CartPage() {
 
     const payload = {
       items: items.map((it) => ({
-        id: it.id,
+        menuItemId: it.id, // Changed from 'id' to 'menuItemId'
         name: it.name,
-        qty: Number(it.qty || 0),
+        quantity: Number(it.qty || 0), // Changed from 'qty' to 'quantity'
         price: Number(Number(it.price || 0).toFixed(2)),
       })),
       paymentMethod,
@@ -182,33 +184,25 @@ export function CartPage() {
       placedAt: new Date().toISOString(),
     };
 
-    // try backend variants (/orders, /api/orders, relative proxy). falls back to local-only if none succeed.
     setPlacing(true);
     try {
       const { res, url } = await tryFetchVariants("POST", "/orders", payload);
       console.log("Order POST succeeded at:", url);
       const data = await res.json();
 
-      // save order into app state so Profile can display it
       setOrders((prev) => [data, ...prev]);
-
-      // Clear cart and voucher
       setItems([]);
       setAppliedVoucherId(null);
 
-      // Navigate to payment flow based on method
       if (paymentMethod === "nets") {
-        // send to NETS QR flow with order and amount
         navigate("/nets-qr", { state: { totalAmount: total, order: data } });
       } else {
-        // cash: show checkout/order placed page (pay on delivery)
         navigate("/checkout", { state: { order: data } });
       }
       return;
     } catch (err) {
       console.error("checkout error:", err);
 
-      // Fallback: persist a local order so Profile can show it
       const localOrder = {
         id: `local-${Date.now()}`,
         ...payload,
@@ -222,7 +216,7 @@ export function CartPage() {
       setOrders((prev) => [localOrder, ...prev]);
       setItems([]);
       setAppliedVoucherId(null);
-      // Navigate to the appropriate page even when saved locally
+
       if (paymentMethod === "nets") {
         navigate("/nets-qr", {
           state: { totalAmount: total, order: localOrder, offline: true },
