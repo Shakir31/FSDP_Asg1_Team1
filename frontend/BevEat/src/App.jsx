@@ -26,6 +26,12 @@ import UploadPage from "./components/UploadPage";
 import RedeemPage from "./components/RedeemPage";
 import StallOwnerDashboard from "./components/StallOwnerDashboard";
 import MenuManagement from "./components/MenuManagement";
+import LandingPage from "./components/LandingPage";
+import ForbiddenPage from "./components/ForbiddenPage";
+import {
+  ProtectedRoute,
+  RoleProtectedRoute,
+} from "./components/ProtectedRoute";
 import {
   CartProvider,
   CartPage,
@@ -39,36 +45,185 @@ function App() {
   return (
     <CartProvider>
       <Routes>
+        {/* Public routes - no authentication required */}
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Signup />} />
+        <Route path="/forbidden" element={<ForbiddenPage />} />
+
         <Route element={<MainLayout />}>
-          <Route path="/home" element={<Home />} />
+          {/* Public browsing routes */}
+          <Route path="/stalls" element={<StallsBrowse />} />
+          <Route path="/hawker-centres" element={<HawkerCentresBrowse />} />
           <Route path="/hawker-centres/:id" element={<HawkerPage />} />
           <Route path="/stalls/:id" element={<StallPage />} />
           <Route path="/stalls/:id/photos" element={<StallPhotos />} />
-          <Route path="/stalls" element={<StallsBrowse />} />
-          <Route path="/dashboard" element={<StallOwnerDashboard />} />
-          <Route path="/menu-management" element={<MenuManagement />} />
-          <Route path="/hawker-centres" element={<HawkerCentresBrowse />} />
           <Route path="/menu-item/:itemId" element={<Product />} />
-          <Route path="/admin" element={<AdminHome />} />
-          <Route path="/admin/users" element={<UserAccount />} />
-          <Route path="/admin/users/:id" element={<UserUpdate />} />
-          <Route path="/admin/stalls" element={<Stall />} />
-          <Route path="/admin/stalls/:id" element={<StallUpdate />} />
-          <Route path="/admin/stalls/create-stall" element={<StallCreate />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/cart" element={<CartPage />} />
-          <Route path="/checkout" element={<CheckoutPage />} />
-          <Route path="/checkout/success" element={<CheckoutSuccess />} />
-          <Route path="/nets-qr" element={<NetsQrSamplePage />} />
+
+          {/* Protected routes - requires any logged-in user */}
+          <Route
+            path="/home"
+            element={
+              <ProtectedRoute>
+                <Home />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/cart"
+            element={
+              <ProtectedRoute>
+                <CartPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/checkout"
+            element={
+              <ProtectedRoute>
+                <CheckoutPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/checkout/success"
+            element={
+              <ProtectedRoute>
+                <CheckoutSuccess />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/nets-qr"
+            element={
+              <ProtectedRoute>
+                <NetsQrSamplePage />
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/nets-qr/success"
-            element={<TxnNetsSuccessStatusPage />}
+            element={
+              <ProtectedRoute>
+                <TxnNetsSuccessStatusPage />
+              </ProtectedRoute>
+            }
           />
-          <Route path="/nets-qr/fail" element={<TxnNetsFailStatusPage />} />
-          <Route path="/upload" element={<UploadPage />} />
-          <Route path="/redeem" element={<RedeemPage />} />
+
+          <Route
+            path="/nets-qr/fail"
+            element={
+              <ProtectedRoute>
+                <TxnNetsFailStatusPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/upload"
+            element={
+              <ProtectedRoute>
+                <UploadPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/redeem"
+            element={
+              <ProtectedRoute>
+                <RedeemPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Stall Owner only routes */}
+          <Route
+            path="/dashboard"
+            element={
+              <RoleProtectedRoute allowedRoles={["stall_owner"]}>
+                <StallOwnerDashboard />
+              </RoleProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/menu-management"
+            element={
+              <RoleProtectedRoute allowedRoles={["stall_owner"]}>
+                <MenuManagement />
+              </RoleProtectedRoute>
+            }
+          />
+
+          {/* Admin only routes */}
+          <Route
+            path="/admin"
+            element={
+              <RoleProtectedRoute allowedRoles={["admin"]}>
+                <AdminHome />
+              </RoleProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/users"
+            element={
+              <RoleProtectedRoute allowedRoles={["admin"]}>
+                <UserAccount />
+              </RoleProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/users/:id"
+            element={
+              <RoleProtectedRoute allowedRoles={["admin"]}>
+                <UserUpdate />
+              </RoleProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/stalls"
+            element={
+              <RoleProtectedRoute allowedRoles={["admin"]}>
+                <Stall />
+              </RoleProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/stalls/:id"
+            element={
+              <RoleProtectedRoute allowedRoles={["admin"]}>
+                <StallUpdate />
+              </RoleProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/stalls/create-stall"
+            element={
+              <RoleProtectedRoute allowedRoles={["admin"]}>
+                <StallCreate />
+              </RoleProtectedRoute>
+            }
+          />
         </Route>
       </Routes>
     </CartProvider>

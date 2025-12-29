@@ -364,13 +364,6 @@ function ProfilePage() {
       <div className="profile-reviews-container">
         <div className="profile-section-title section-header-content">
           <h3 className="profile-section-title">My Reviews</h3>
-          <button
-            className="btn btn-orange"
-            style={{ marginLeft: "auto" }}
-            onClick={() => navigate("/upload")}
-          >
-            Add Review
-          </button>
         </div>
         {reviews.length > 0 ? (
           <div className="review-list">
