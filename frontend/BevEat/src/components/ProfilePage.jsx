@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Coins, Star, ShoppingBag, Store, Bell } from "lucide-react";
+import { toast } from "react-toastify";
 import OrderDetailsModal from "./OrderDetailsModel";
 import "../ProfilePage.css";
 
@@ -44,7 +45,7 @@ function ProfilePage() {
       const token = getToken();
 
       if (!token) {
-        alert("Please log in to view your profile.");
+        toast.warning("Please log in to view your profile.");
         navigate("/login");
         return;
       }
@@ -137,12 +138,13 @@ function ProfilePage() {
           err.message === "Session expired" ||
           err.message === "Failed to fetch profile"
         ) {
-          alert("Your session has expired. Please log in again.");
+          toast.error("Your session has expired. Please log in again.");
           localStorage.removeItem("token");
           sessionStorage.removeItem("token");
           navigate("/login");
         } else {
           setError(err.message);
+          toast.error("Error loading profile: " + err.message);
         }
       } finally {
         setLoading(false);
@@ -174,7 +176,7 @@ function ProfilePage() {
       setOrderDetails(details);
     } catch (err) {
       console.error("Error fetching order details:", err);
-      alert("Failed to load order details");
+      toast.error("Failed to load order details");
       setSelectedOrder(null);
     } finally {
       setLoadingOrderDetails(false);

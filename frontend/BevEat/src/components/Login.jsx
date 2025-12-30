@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import "../Login.css";
 
 function Login() {
@@ -30,7 +31,8 @@ function Login() {
           sessionStorage.setItem("token", data.token);
           sessionStorage.setItem("role", data.role);
         }
-        alert("Login successful! Role: " + data.role);
+
+        toast.success("Login successful! Welcome back!");
 
         // Role-based redirect
         if (data.role === "admin" || data.role === "Admin") {
@@ -42,9 +44,11 @@ function Login() {
         }
       } else {
         setError(data.error || "Login failed");
+        toast.error(data.error || "Login failed");
       }
     } catch (err) {
       setError("Server error");
+      toast.error("Server error. Please try again.");
     }
   }
 

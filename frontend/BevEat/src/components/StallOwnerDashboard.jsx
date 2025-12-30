@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
 import "../StallOwnerDashboard.css";
 
 function StallOwnerDashboard() {
@@ -34,6 +35,7 @@ function StallOwnerDashboard() {
     } catch (err) {
       console.error(err);
       setError(err.message);
+      toast.error("Failed to load notifications");
     } finally {
       setLoading(false);
     }
@@ -82,12 +84,12 @@ function StallOwnerDashboard() {
         throw new Error("Failed to approve notification");
       }
 
-      alert("Image updated successfully!");
+      toast.success("Image updated successfully!");
       await fetchNotifications();
       await fetchStats();
     } catch (err) {
       console.error(err);
-      alert("Error: " + err.message);
+      toast.error("Error: " + err.message);
     } finally {
       setProcessingId(null);
     }
@@ -114,12 +116,12 @@ function StallOwnerDashboard() {
         throw new Error("Failed to dismiss notification");
       }
 
-      alert("Notification dismissed");
+      toast.success("Notification dismissed");
       await fetchNotifications();
       await fetchStats();
     } catch (err) {
       console.error(err);
-      alert("Error: " + err.message);
+      toast.error("Error: " + err.message);
     } finally {
       setProcessingId(null);
     }
@@ -151,12 +153,12 @@ function StallOwnerDashboard() {
         throw new Error(data.error || "Failed to revert notification");
       }
 
-      alert("Image reverted to original successfully!");
+      toast.success("Image reverted to original successfully!");
       await fetchNotifications();
       await fetchStats();
     } catch (err) {
       console.error(err);
-      alert("Error: " + err.message);
+      toast.error("Error: " + err.message);
     } finally {
       setProcessingId(null);
     }

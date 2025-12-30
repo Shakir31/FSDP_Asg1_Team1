@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import "../RedeemPage.css";
 
 export default function RedeemPage() {
@@ -50,6 +51,7 @@ export default function RedeemPage() {
       }
     } catch (err) {
       console.error("Error fetching vouchers:", err);
+      toast.error("Failed to load vouchers");
     } finally {
       setLoading(false);
     }
@@ -65,13 +67,13 @@ export default function RedeemPage() {
   const handleRedeem = async (voucher) => {
     const token = getToken();
     if (!token) {
-      alert("Please login to redeem vouchers.");
+      toast.warning("Please login to redeem vouchers.");
       navigate("/login");
       return;
     }
 
     if (userCoins < voucher.cost) {
-      alert("Insufficient coins!");
+      toast.error("Insufficient coins!");
       return;
     }
 
@@ -96,16 +98,16 @@ export default function RedeemPage() {
       const data = await res.json();
 
       if (res.ok) {
-        alert("Voucher redeemed successfully!");
+        toast.success("Voucher redeemed successfully!");
         // Refresh coins and vouchers after redemption
         await fetchCoins();
         await fetchVouchers();
       } else {
-        alert(`Redemption failed: ${data.error || "Unknown error"}`);
+        toast.error(`Redemption failed: ${data.error || "Unknown error"}`);
       }
     } catch (err) {
       console.error("Redemption error:", err);
-      alert(`Error: ${err.message}`);
+      toast.error(`Error: ${err.message}`);
     } finally {
       setLoadingId(null);
     }

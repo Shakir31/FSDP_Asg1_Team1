@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Edit2, Trash2, ArrowLeft } from "lucide-react";
+import { toast } from "react-toastify";
 import "../MenuManagement.css";
 
 function MenuManagement() {
@@ -11,7 +12,7 @@ function MenuManagement() {
 
   // Modal states
   const [showModal, setShowModal] = useState(false);
-  const [modalMode, setModalMode] = useState("create"); // "create" or "edit"
+  const [modalMode, setModalMode] = useState("create");
   const [editingItem, setEditingItem] = useState(null);
 
   // Form states
@@ -64,6 +65,7 @@ function MenuManagement() {
     } catch (err) {
       console.error(err);
       setError(err.message);
+      toast.error("Failed to load your stalls");
     } finally {
       setLoading(false);
     }
@@ -86,6 +88,7 @@ function MenuManagement() {
     } catch (err) {
       console.error(err);
       setError(err.message);
+      toast.error("Failed to load menu items");
     } finally {
       setLoading(false);
     }
@@ -169,7 +172,7 @@ function MenuManagement() {
       const data = await response.json();
       return data.imageUrl;
     } catch (err) {
-      alert("Image upload error: " + err.message);
+      toast.error("Image upload failed: " + err.message);
       throw err;
     } finally {
       setUploading(false);
@@ -181,12 +184,14 @@ function MenuManagement() {
 
     // Validation
     if (!formData.name || !formData.price || !formData.category) {
-      alert("Please fill in all required fields (Name, Price, Category)");
+      toast.warning(
+        "Please fill in all required fields (Name, Price, Category)"
+      );
       return;
     }
 
     if (parseFloat(formData.price) <= 0) {
-      alert("Price must be greater than 0");
+      toast.warning("Price must be greater than 0");
       return;
     }
 
@@ -222,7 +227,7 @@ function MenuManagement() {
 
         if (!response.ok) throw new Error("Failed to create menu item");
 
-        alert("Menu item created successfully!");
+        toast.success("Menu item created successfully!");
       } else {
         const response = await fetch(
           `http://localhost:3000/menu-management/menuitems/${editingItem.menuitemid}`,
@@ -238,14 +243,14 @@ function MenuManagement() {
 
         if (!response.ok) throw new Error("Failed to update menu item");
 
-        alert("Menu item updated successfully!");
+        toast.success("Menu item updated successfully!");
       }
 
       closeModal();
       fetchMenuItems(selectedStall.stallid);
     } catch (err) {
       console.error(err);
-      alert("Error: " + err.message);
+      toast.error("Error: " + err.message);
     } finally {
       setUploading(false);
     }
@@ -267,11 +272,11 @@ function MenuManagement() {
 
       if (!response.ok) throw new Error("Failed to delete menu item");
 
-      alert("Menu item deleted successfully!");
+      toast.success("Menu item deleted successfully!");
       fetchMenuItems(selectedStall.stallid);
     } catch (err) {
       console.error(err);
-      alert("Error: " + err.message);
+      toast.error("Error: " + err.message);
     }
   }
 

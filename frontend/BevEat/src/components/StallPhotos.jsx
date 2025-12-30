@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import SocialPostCard from "./SocialPostCard";
 import "../StallPhotos.css";
 
@@ -14,7 +15,7 @@ function StallPhotos() {
   async function handleUpvote(imageId, currentlyUpvoted) {
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("You must be logged in to upvote images.");
+      toast.warning("You must be logged in to upvote images.");
       return;
     }
 
@@ -45,10 +46,10 @@ function StallPhotos() {
           )
         );
       } else {
-        alert(data.error || "Action failed.");
+        toast.error(data.error || "Action failed.");
       }
     } catch (err) {
-      alert("Error: " + err.message);
+      toast.error("Error: " + err.message);
     }
   }
 
@@ -82,6 +83,7 @@ function StallPhotos() {
         setStallName(stallData.stallname);
       } catch (err) {
         setError(err.message);
+        toast.error("Failed to load stall photos");
       } finally {
         setLoading(false);
       }

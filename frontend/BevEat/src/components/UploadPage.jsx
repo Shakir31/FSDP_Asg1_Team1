@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Star, ArrowLeft, Check } from "lucide-react";
+import { toast } from "react-toastify";
 import "../UploadPage.css";
 
 export default function UploadPage() {
@@ -11,7 +12,6 @@ export default function UploadPage() {
   const urlMenuItemId = searchParams.get("menuItemId");
   const isFromOrder = urlStallId && urlMenuItemId;
 
-  // Step management: 1 = Confirm Item, 2 = Upload Image, 3 = Write Review
   const [currentStep, setCurrentStep] = useState(1);
 
   const [stalls, setStalls] = useState([]);
@@ -21,7 +21,6 @@ export default function UploadPage() {
     urlMenuItemId || ""
   );
 
-  // Item details for display
   const [selectedStall, setSelectedStall] = useState(null);
   const [selectedMenuItem, setSelectedMenuItem] = useState(null);
 
@@ -36,7 +35,6 @@ export default function UploadPage() {
   const token =
     localStorage.getItem("token") || sessionStorage.getItem("token");
 
-  // Fetch stalls on mount
   useEffect(() => {
     async function fetchStalls() {
       try {
@@ -47,19 +45,17 @@ export default function UploadPage() {
         const data = await res.json();
         setStalls(data);
 
-        // If from order, find the stall details
         if (isFromOrder && urlStallId) {
           const stall = data.find((s) => s.stallid === parseInt(urlStallId));
           setSelectedStall(stall);
         }
       } catch (err) {
-        alert("Error loading stalls: " + err.message);
+        toast.error("Error loading stalls: " + err.message);
       }
     }
     fetchStalls();
   }, [token, isFromOrder, urlStallId]);
 
-  // Fetch menu items when stall is selected
   useEffect(() => {
     async function fetchMenuItems() {
       if (!selectedStallId) {
@@ -76,7 +72,6 @@ export default function UploadPage() {
         const data = await res.json();
         setMenuItems(data);
 
-        // If from order, find the menu item details
         if (isFromOrder && urlMenuItemId) {
           const item = data.find(
             (m) => m.menuitemid === parseInt(urlMenuItemId)
@@ -84,31 +79,31 @@ export default function UploadPage() {
           setSelectedMenuItem(item);
         }
       } catch (err) {
-        alert("Error loading menu items: " + err.message);
+        toast.error("Error loading menu items: " + err.message);
       }
     }
     fetchMenuItems();
   }, [selectedStallId, token, isFromOrder, urlMenuItemId]);
 
-  // Step 1: Confirm item selection
   function handleConfirmItem() {
     if (!selectedStallId || !selectedMenuItemId) {
-      alert("Please select a stall and menu item");
+      toast.warning("Please select a stall and menu item");
       return;
     }
     setCurrentStep(2);
   }
 
-  // Step 2: Handle file selection
   function onFileChange(e) {
     const f = Array.from(e.target.files || []);
     setFiles(f);
     setPreviewUrls(f.map((file) => URL.createObjectURL(file)));
   }
 
-  // Step 2: Upload and verify image
   async function handleImageUpload() {
-    if (!files.length) return alert("Please choose at least one photo");
+    if (!files.length) {
+      toast.warning("Please choose at least one photo");
+      return;
+    }
 
     setLoading(true);
     try {
@@ -129,19 +124,18 @@ export default function UploadPage() {
 
       const data = await res.json();
       setUploadedImageId(data.image.imageid);
-      alert("Image verified successfully! Now write your review.");
+      toast.success("Image verified successfully! Now write your review.");
       setCurrentStep(3);
     } catch (err) {
-      alert("Upload error: " + err.message);
+      toast.error("Upload error: " + err.message);
     } finally {
       setLoading(false);
     }
   }
 
-  // Step 3: Submit review
   async function handleSubmitReview() {
     if (!review.trim()) {
-      alert("Please write a review");
+      toast.warning("Please write a review");
       return;
     }
 
@@ -166,18 +160,15 @@ export default function UploadPage() {
         throw new Error(errText || "Review submission failed");
       }
 
-      alert("Review submitted successfully!");
-
-      // Navigate back to profile
+      toast.success("Review submitted successfully!");
       navigate("/profile");
     } catch (err) {
-      alert("Review submission error: " + err.message);
+      toast.error("Review submission error: " + err.message);
     } finally {
       setLoading(false);
     }
   }
 
-  // Reset all state
   function handleReset() {
     setFiles([]);
     setPreviewUrls([]);
@@ -203,7 +194,6 @@ export default function UploadPage() {
 
   return (
     <div className="upload-container">
-      {/* Back button if from order */}
       {isFromOrder && (
         <button className="back-button" onClick={() => navigate("/profile")}>
           <ArrowLeft size={20} />
@@ -215,7 +205,6 @@ export default function UploadPage() {
         {isFromOrder ? "Review Your Order" : "Upload Photos & Review"}
       </h2>
 
-      {/* Progress Bar */}
       <div className="progress-container">
         {steps.map((step, index) => (
           <React.Fragment key={step.number}>
@@ -249,11 +238,9 @@ export default function UploadPage() {
       </div>
 
       <div className="upload-form">
-        {/* STEP 1: Confirm Item */}
         {currentStep === 1 && (
           <div className="step-content">
             {isFromOrder ? (
-              // Show item details if from order
               <div className="item-confirmation">
                 <h3>You are reviewing:</h3>
                 {selectedMenuItem && selectedStall && (
@@ -292,7 +279,6 @@ export default function UploadPage() {
                 </button>
               </div>
             ) : (
-              // Show dropdowns if not from order
               <div className="item-selection">
                 <label htmlFor="stallSelect">Select Stall:</label>
                 <select
@@ -351,7 +337,6 @@ export default function UploadPage() {
           </div>
         )}
 
-        {/* STEP 2: Upload Image */}
         {currentStep === 2 && (
           <div className="step-content">
             <h3>Upload a photo of your food</h3>
@@ -437,7 +422,6 @@ export default function UploadPage() {
           </div>
         )}
 
-        {/* STEP 3: Write Review */}
         {currentStep === 3 && (
           <div className="step-content">
             <h3>How was your experience?</h3>

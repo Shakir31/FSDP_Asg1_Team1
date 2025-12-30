@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useCart } from "./Cartcontext";
+import { toast } from "react-toastify";
 import SocialPostCard from "./SocialPostCard";
 import "../Product.css";
 import hero from "../assets/hero.png";
@@ -21,7 +22,7 @@ function Product() {
     const token =
       localStorage.getItem("token") || sessionStorage.getItem("token");
     if (!token) {
-      alert("Please log in to upvote.");
+      toast.warning("Please log in to upvote.");
       return;
     }
 
@@ -52,10 +53,10 @@ function Product() {
           )
         );
       } else {
-        alert(data.error || "Failed to upvote");
+        toast.error(data.error || "Failed to upvote");
       }
     } catch (err) {
-      alert("Error: " + err.message);
+      toast.error("Error: " + err.message);
     }
   }
 
@@ -125,7 +126,10 @@ function Product() {
     };
 
     addItem(cartItem);
-    alert(`${item.name} added to cart!`);
+    toast.success(`${item.name} added to cart!`, {
+      position: "bottom-right",
+      autoClose: 2000,
+    });
   };
 
   if (loading) {

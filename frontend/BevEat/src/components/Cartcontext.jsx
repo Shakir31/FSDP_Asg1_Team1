@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { toast } from "react-toastify";
 import "../Cart.css";
 
 export const CartContext = createContext(null);
@@ -156,7 +157,7 @@ export function CartPage() {
   const handleCheckout = async () => {
     if (items.length === 0) return;
     if (!paymentMethod) {
-      alert("Please select a payment method.");
+      toast.warning("Please select a payment method.");
       return;
     }
 
@@ -198,6 +199,8 @@ export function CartPage() {
       // Refresh vouchers list (voucher will be removed from list)
       await fetchVouchers();
 
+      toast.success("Order placed successfully!");
+
       // Navigate based on payment method
       if (paymentMethod === "nets") {
         navigate("/nets-qr", { state: { totalAmount: total, order: data } });
@@ -206,7 +209,7 @@ export function CartPage() {
       }
     } catch (err) {
       console.error("Checkout error:", err);
-      alert("Failed to place order. Please try again.");
+      toast.error("Failed to place order. Please try again.");
     } finally {
       setPlacing(false);
     }
@@ -392,7 +395,7 @@ export function CartPage() {
                         {v.description} - Save{" "}
                         {v.discounttype === "percentage"
                           ? `${v.discountamount}%`
-                          : `${v.discountamount.toFixed(2)}`}
+                          : `$${v.discountamount.toFixed(2)}`}
                       </div>
                       <div
                         style={{ fontSize: 12, color: "#999", marginTop: 4 }}
