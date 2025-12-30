@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import "../Cart.css";
 
 export const CartContext = createContext(null);
@@ -11,19 +11,44 @@ export function CartProvider({ children }) {
     return saved ? JSON.parse(saved) : [];
   });
 
-  const [vouchers, setVouchers] = useState([
-    { id: "v1", code: "DISC1", description: "Save $1.00", amountOff: 1.0 },
-  ]);
-
+  const [vouchers, setVouchers] = useState([]);
   const [appliedVoucherId, setAppliedVoucherId] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("cash");
+  const [loadingVouchers, setLoadingVouchers] = useState(false);
 
   useEffect(() => {
     localStorage.setItem("cartItems", JSON.stringify(items));
   }, [items]);
 
   const [userCoins, setUserCoins] = useState(0);
-  const [availableVouchers, setAvailableVouchers] = useState([]);
+
+  // Fetch user vouchers
+  const fetchVouchers = async () => {
+    const token =
+      localStorage.getItem("token") || sessionStorage.getItem("token");
+    if (!token) return;
+
+    setLoadingVouchers(true);
+    try {
+      const response = await fetch("http://localhost:3000/vouchers/user", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setVouchers(data);
+      }
+    } catch (error) {
+      console.error("Error fetching vouchers:", error);
+    } finally {
+      setLoadingVouchers(false);
+    }
+  };
+
+  // Fetch vouchers on mount
+  useEffect(() => {
+    fetchVouchers();
+  }, []);
 
   const refreshCoins = async () => {
     const token =
@@ -80,8 +105,9 @@ export function CartProvider({ children }) {
         paymentMethod,
         setPaymentMethod,
         userCoins,
-        availableVouchers,
         refreshCoins,
+        loadingVouchers,
+        fetchVouchers,
       }}
     >
       {children}
@@ -108,14 +134,23 @@ export function CartPage() {
     setAppliedVoucherId,
     paymentMethod,
     setPaymentMethod,
+    loadingVouchers,
+    fetchVouchers,
   } = useCart();
 
   const [placing, setPlacing] = useState(false);
 
   const subtotal = calcSubtotal(items);
   const appliedVoucher =
-    vouchers.find((v) => v.id === appliedVoucherId) || null;
-  const discount = appliedVoucher ? appliedVoucher.amountOff || 0 : 0;
+    vouchers.find((v) => v.uservoucherid === appliedVoucherId) || null;
+
+  // Calculate discount based on voucher type
+  const discount = appliedVoucher
+    ? appliedVoucher.discounttype === "percentage"
+      ? subtotal * (appliedVoucher.discountamount / 100)
+      : appliedVoucher.discountamount
+    : 0;
+
   const total = Math.max(0, subtotal - discount);
 
   const handleCheckout = async () => {
@@ -133,6 +168,7 @@ export function CartPage() {
         price: Number(Number(it.price || 0).toFixed(2)),
       })),
       totalAmount: Number(Number(total || 0).toFixed(2)),
+      userVoucherId: appliedVoucherId || null,
     };
 
     setPlacing(true);
@@ -155,9 +191,12 @@ export function CartPage() {
 
       const data = await response.json();
 
-      // Clear cart
+      // Clear cart and voucher selection
       setItems([]);
       setAppliedVoucherId(null);
+
+      // Refresh vouchers list (voucher will be removed from list)
+      await fetchVouchers();
 
       // Navigate based on payment method
       if (paymentMethod === "nets") {
@@ -291,10 +330,11 @@ export function CartPage() {
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
-                    color: "var(--muted)",
+                    color: "#22c55e",
+                    fontWeight: 600,
                   }}
                 >
-                  <div>Voucher ({appliedVoucher.code})</div>
+                  <div>Voucher ({appliedVoucher.name})</div>
                   <div>-SGD {discount.toFixed(2)}</div>
                 </div>
               )}
@@ -325,42 +365,43 @@ export function CartPage() {
           <div className="card voucher-card" style={{ marginTop: 12 }}>
             <h3 style={{ marginTop: 0, color: "var(--orange)" }}>Vouchers</h3>
 
-            {vouchers.length === 0 ? (
-              <div className="cart-empty">You have no vouchers.</div>
+            {loadingVouchers ? (
+              <div className="cart-empty">Loading vouchers...</div>
+            ) : vouchers.length === 0 ? (
+              <div className="cart-empty">
+                No vouchers available. Redeem some on the Redeem page!
+              </div>
             ) : (
               <div style={{ marginTop: 8 }}>
                 {vouchers.map((v) => (
-                  <label key={v.id} className="voucher-row">
+                  <label key={v.uservoucherid} className="voucher-row">
                     <input
                       type="checkbox"
-                      checked={appliedVoucherId === v.id}
+                      checked={appliedVoucherId === v.uservoucherid}
                       onChange={() =>
                         setAppliedVoucherId(
-                          appliedVoucherId === v.id ? null : v.id
+                          appliedVoucherId === v.uservoucherid
+                            ? null
+                            : v.uservoucherid
                         )
                       }
                     />
                     <div>
-                      <div style={{ fontWeight: 700 }}>{v.code}</div>
+                      <div style={{ fontWeight: 700 }}>{v.name}</div>
                       <div style={{ fontSize: 13, color: "var(--muted)" }}>
-                        {v.description}
+                        {v.description} - Save{" "}
+                        {v.discounttype === "percentage"
+                          ? `${v.discountamount}%`
+                          : `${v.discountamount.toFixed(2)}`}
+                      </div>
+                      <div
+                        style={{ fontSize: 12, color: "#999", marginTop: 4 }}
+                      >
+                        Expires: {new Date(v.expirydate).toLocaleDateString()}
                       </div>
                     </div>
                   </label>
                 ))}
-
-                <div style={{ marginTop: 10 }}>
-                  <button
-                    className="btn btn-orange"
-                    onClick={() => {
-                      if (!appliedVoucherId) return;
-                      alert("Voucher applied");
-                    }}
-                    style={{ width: "100%" }}
-                  >
-                    Redeem Selected
-                  </button>
-                </div>
               </div>
             )}
           </div>

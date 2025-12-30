@@ -192,6 +192,13 @@ app.get(
   voucherController.getUserVouchers
 );
 
+app.post(
+  "/vouchers/use",
+  authenticateToken,
+  authorizeRoles("customer"),
+  voucherController.useVoucher
+);
+
 //review
 app.post(
   "/reviews",

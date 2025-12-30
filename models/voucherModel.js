@@ -5,7 +5,7 @@ async function getAllVouchers() {
     const { data, error } = await supabase
       .from("vouchers")
       .select(
-        "voucherid, name, description, coincost, quantityavailable, expirydate"
+        "voucherid, name, description, coincost, discountamount, discounttype, quantityavailable, expirydate"
       )
       .gt("quantityavailable", 0)
       .gt("expirydate", new Date().toISOString());
@@ -86,12 +86,15 @@ async function getUserRedeemedVouchers(userId) {
       .select(
         `
         uservoucherid,
+        voucherid,
         redeemedat,
         vouchers (
           name,
           description,
           coincost,
-          expirydate
+          discountamount,
+          expirydate,
+          discounttype
         )
       `
       )
@@ -100,12 +103,15 @@ async function getUserRedeemedVouchers(userId) {
 
     if (error) throw error;
 
-    // Reshape the data to match your original format
+    // Reshape the data to match expected format
     const formattedData = data.map((uv) => ({
       uservoucherid: uv.uservoucherid,
+      voucherid: uv.voucherid,
       name: uv.vouchers.name,
       description: uv.vouchers.description,
       coincost: uv.vouchers.coincost,
+      discountamount: uv.vouchers.discountamount,
+      discounttype: uv.vouchers.discounttype,
       expirydate: uv.vouchers.expirydate,
       redeemedat: uv.redeemedat,
     }));
@@ -116,4 +122,24 @@ async function getUserRedeemedVouchers(userId) {
   }
 }
 
-module.exports = { getAllVouchers, redeemVoucher, getUserRedeemedVouchers };
+async function useVoucher(userVoucherId) {
+  try {
+    const { error } = await supabase
+      .from("uservouchers")
+      .delete()
+      .eq("uservoucherid", userVoucherId);
+
+    if (error) throw error;
+
+    return { message: "Voucher used successfully" };
+  } catch (error) {
+    throw error;
+  }
+}
+
+module.exports = {
+  getAllVouchers,
+  redeemVoucher,
+  getUserRedeemedVouchers,
+  useVoucher,
+};
