@@ -29,6 +29,7 @@ import MenuManagement from "./components/MenuManagement";
 import LandingPage from "./components/LandingPage";
 import ForbiddenPage from "./components/ForbiddenPage";
 import AdminDashboard from "./components/AdminDashboard";
+import AddStallPage from "./components/AddStallPage";
 import {
   ProtectedRoute,
   RoleProtectedRoute,
@@ -200,6 +201,15 @@ function App() {
             }
           />
         </Route>
+
+        <Route
+          path="/admin/add-stall"
+          element={
+            <RoleProtectedRoute allowedRoles={["admin"]}>
+              <AddStallPage />
+            </RoleProtectedRoute>
+          }
+        />
       </Routes>
     </CartProvider>
   );

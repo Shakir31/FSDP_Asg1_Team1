@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Users,
   Store,
@@ -11,6 +12,8 @@ import {
   Plus,
   Eye,
   Save,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import "../AdminDashboard.css";
 import { toast } from "react-toastify";
@@ -18,6 +21,7 @@ import { toast } from "react-toastify";
 const API_URL = "http://localhost:3000";
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
   const [users, setUsers] = useState([]);
   const [stalls, setStalls] = useState([]);
@@ -31,6 +35,9 @@ const AdminDashboard = () => {
   const [showEditStallModal, setShowEditStallModal] = useState(false);
   const [editUserData, setEditUserData] = useState({});
   const [editStallData, setEditStallData] = useState({});
+  const [currentUserPage, setCurrentUserPage] = useState(1);
+  const [currentStallPage, setCurrentStallPage] = useState(1);
+  const itemsPerPage = 10;
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalStalls: 0,
@@ -47,15 +54,42 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     if (activeTab === "overview") {
-      // Fetch both users and stalls for stats
-      fetchUsers();
-      fetchStalls();
+      fetchBothForStats();
     } else if (activeTab === "users") {
-      fetchUsers();
+      if (users.length === 0) {
+        fetchUsers();
+      }
     } else if (activeTab === "stalls") {
-      fetchStalls();
+      if (stalls.length === 0) {
+        fetchStalls();
+      }
     }
   }, [activeTab]);
+
+  const fetchBothForStats = async () => {
+    setLoading(true);
+    try {
+      const [usersResponse, stallsResponse] = await Promise.all([
+        fetch(`${API_URL}/admin/users`, { headers: getAuthHeaders() }),
+        fetch(`${API_URL}/admin/stalls`, { headers: getAuthHeaders() }),
+      ]);
+
+      if (!usersResponse.ok) throw new Error("Failed to fetch users");
+      if (!stallsResponse.ok) throw new Error("Failed to fetch stalls");
+
+      const usersData = await usersResponse.json();
+      const stallsData = await stallsResponse.json();
+
+      setUsers(usersData);
+      setStalls(stallsData);
+      calculateStats(usersData, stallsData);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      toast.error("Failed to fetch data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -249,6 +283,88 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleAddStall = async () => {
+    try {
+      // Validate required fields
+      if (!newStallData.stallname || !newStallData.category) {
+        toast.error("Stall name and category are required");
+        return;
+      }
+
+      let stallImageUrl = newStallData.stall_image;
+
+      // Upload image if file is selected
+      if (stallImageFile) {
+        setUploadingImage(true);
+        const formData = new FormData();
+        formData.append("stallImage", stallImageFile);
+
+        try {
+          const uploadResponse = await fetch(`${API_URL}/stalls/upload-image`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+            body: formData,
+          });
+
+          if (!uploadResponse.ok) {
+            throw new Error("Failed to upload image");
+          }
+
+          const uploadData = await uploadResponse.json();
+          stallImageUrl = uploadData.imageUrl;
+        } catch (uploadError) {
+          console.error("Error uploading image:", uploadError);
+          toast.error("Failed to upload image");
+          setUploadingImage(false);
+          return;
+        } finally {
+          setUploadingImage(false);
+        }
+      }
+
+      const addPayload = {
+        stallname: newStallData.stallname,
+        description: newStallData.description || null,
+        category: newStallData.category,
+        stall_image: stallImageUrl || null,
+        hawker_centre_id: newStallData.hawker_centre_id || null,
+        owner_id: newStallData.owner_id
+          ? parseInt(newStallData.owner_id, 10)
+          : null,
+      };
+
+      const response = await fetch(`${API_URL}/stalls`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(addPayload),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to add stall");
+      }
+
+      toast.success("Stall added successfully");
+      setShowAddStallModal(false);
+      // Reset form
+      setNewStallData({
+        stallname: "",
+        description: "",
+        category: "",
+        stall_image: "",
+        hawker_centre_id: "",
+        owner_id: "",
+      });
+      setStallImageFile(null);
+      fetchStalls();
+    } catch (error) {
+      console.error("Error adding stall:", error);
+      toast.error("Failed to add stall: " + error.message);
+    }
+  };
+
   const deleteUser = async (userId) => {
     if (
       !window.confirm(
@@ -304,6 +420,29 @@ const AdminDashboard = () => {
       stall.stallname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       stall.category?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Pagination logic
+  const totalUserPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const totalStallPages = Math.ceil(filteredStalls.length / itemsPerPage);
+
+  const paginatedUsers = filteredUsers.slice(
+    (currentUserPage - 1) * itemsPerPage,
+    currentUserPage * itemsPerPage
+  );
+
+  const paginatedStalls = filteredStalls.slice(
+    (currentStallPage - 1) * itemsPerPage,
+    currentStallPage * itemsPerPage
+  );
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentUserPage(1);
+  }, [searchTerm, activeTab]);
+
+  useEffect(() => {
+    setCurrentStallPage(1);
+  }, [searchTerm, activeTab]);
 
   return (
     <div className="admin-dashboard">
@@ -383,56 +522,67 @@ const AdminDashboard = () => {
               {loading ? (
                 <div className="loading-state">Loading users...</div>
               ) : (
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Name</th>
-                      <th>Email</th>
-                      <th>Role</th>
-                      <th className="text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredUsers.map((user) => (
-                      <tr key={user.userid}>
-                        <td>{user.userid}</td>
-                        <td className="font-medium">{user.name}</td>
-                        <td className="text-gray">{user.email}</td>
-                        <td>
-                          <span className={`role-badge role-${user.role}`}>
-                            {user.role}
-                          </span>
-                        </td>
-                        <td className="text-right">
-                          <div className="action-buttons">
-                            <button
-                              onClick={() => viewUserDetails(user.userid)}
-                              className="action-btn btn-view"
-                              title="View Details"
-                            >
-                              <Eye className="action-icon" />
-                            </button>
-                            <button
-                              onClick={() => openEditUserModal(user.userid)}
-                              className="action-btn btn-edit"
-                              title="Edit User"
-                            >
-                              <Edit2 className="action-icon" />
-                            </button>
-                            <button
-                              onClick={() => deleteUser(user.userid)}
-                              className="action-btn btn-delete"
-                              title="Delete User"
-                            >
-                              <Trash2 className="action-icon" />
-                            </button>
-                          </div>
-                        </td>
+                <>
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th className="text-right">Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {paginatedUsers.map((user) => (
+                        <tr key={user.userid}>
+                          <td>{user.userid}</td>
+                          <td className="font-medium">{user.name}</td>
+                          <td className="text-gray">{user.email}</td>
+                          <td>
+                            <span className={`role-badge role-${user.role}`}>
+                              {user.role}
+                            </span>
+                          </td>
+                          <td className="text-right">
+                            <div className="action-buttons">
+                              <button
+                                onClick={() => viewUserDetails(user.userid)}
+                                className="action-btn btn-view"
+                                title="View Details"
+                              >
+                                <Eye className="action-icon" />
+                              </button>
+                              <button
+                                onClick={() => openEditUserModal(user.userid)}
+                                className="action-btn btn-edit"
+                                title="Edit User"
+                              >
+                                <Edit2 className="action-icon" />
+                              </button>
+                              <button
+                                onClick={() => deleteUser(user.userid)}
+                                className="action-btn btn-delete"
+                                title="Delete User"
+                              >
+                                <Trash2 className="action-icon" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {totalUserPages > 1 && (
+                    <Pagination
+                      currentPage={currentUserPage}
+                      totalPages={totalUserPages}
+                      onPageChange={setCurrentUserPage}
+                      totalItems={filteredUsers.length}
+                      itemsPerPage={itemsPerPage}
+                    />
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -443,15 +593,24 @@ const AdminDashboard = () => {
             <div className="data-card-header">
               <div className="header-content">
                 <h2 className="card-title">Stall Management</h2>
-                <div className="search-container">
-                  <Search className="search-icon" />
-                  <input
-                    type="text"
-                    placeholder="Search stalls..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="search-input"
-                  />
+                <div className="header-actions">
+                  <div className="search-container">
+                    <Search className="search-icon" />
+                    <input
+                      type="text"
+                      placeholder="Search stalls..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="search-input"
+                    />
+                  </div>
+                  <button
+                    onClick={() => navigate("/admin/add-stall")}
+                    className="btn-add-stall"
+                  >
+                    <Plus className="btn-icon" />
+                    Add Stall
+                  </button>
                 </div>
               </div>
             </div>
@@ -459,56 +618,71 @@ const AdminDashboard = () => {
               {loading ? (
                 <div className="loading-state">Loading stalls...</div>
               ) : (
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Stall Name</th>
-                      <th>Category</th>
-                      <th>Owner ID</th>
-                      <th className="text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredStalls.map((stall) => (
-                      <tr key={stall.stallid}>
-                        <td>{stall.stallid}</td>
-                        <td className="font-medium">{stall.stallname}</td>
-                        <td>
-                          <span className="category-badge">
-                            {stall.category}
-                          </span>
-                        </td>
-                        <td className="text-gray">{stall.owner_id || "N/A"}</td>
-                        <td className="text-right">
-                          <div className="action-buttons">
-                            <button
-                              onClick={() => viewStallDetails(stall.stallid)}
-                              className="action-btn btn-view"
-                              title="View Details"
-                            >
-                              <Eye className="action-icon" />
-                            </button>
-                            <button
-                              onClick={() => openEditStallModal(stall.stallid)}
-                              className="action-btn btn-edit"
-                              title="Edit Stall"
-                            >
-                              <Edit2 className="action-icon" />
-                            </button>
-                            <button
-                              onClick={() => deleteStall(stall.stallid)}
-                              className="action-btn btn-delete"
-                              title="Delete Stall"
-                            >
-                              <Trash2 className="action-icon" />
-                            </button>
-                          </div>
-                        </td>
+                <>
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Stall Name</th>
+                        <th>Category</th>
+                        <th>Owner ID</th>
+                        <th className="text-right">Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {paginatedStalls.map((stall) => (
+                        <tr key={stall.stallid}>
+                          <td>{stall.stallid}</td>
+                          <td className="font-medium">{stall.stallname}</td>
+                          <td>
+                            <span className="category-badge">
+                              {stall.category}
+                            </span>
+                          </td>
+                          <td className="text-gray">
+                            {stall.owner_id || "N/A"}
+                          </td>
+                          <td className="text-right">
+                            <div className="action-buttons">
+                              <button
+                                onClick={() => viewStallDetails(stall.stallid)}
+                                className="action-btn btn-view"
+                                title="View Details"
+                              >
+                                <Eye className="action-icon" />
+                              </button>
+                              <button
+                                onClick={() =>
+                                  openEditStallModal(stall.stallid)
+                                }
+                                className="action-btn btn-edit"
+                                title="Edit Stall"
+                              >
+                                <Edit2 className="action-icon" />
+                              </button>
+                              <button
+                                onClick={() => deleteStall(stall.stallid)}
+                                className="action-btn btn-delete"
+                                title="Delete Stall"
+                              >
+                                <Trash2 className="action-icon" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {totalStallPages > 1 && (
+                    <Pagination
+                      currentPage={currentStallPage}
+                      totalPages={totalStallPages}
+                      onPageChange={setCurrentStallPage}
+                      totalItems={filteredStalls.length}
+                      itemsPerPage={itemsPerPage}
+                    />
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -747,6 +921,56 @@ const StatCard = ({ icon, title, value, color }) => (
     </div>
   </div>
 );
+
+const Pagination = ({
+  currentPage,
+  totalPages,
+  onPageChange,
+  totalItems,
+  itemsPerPage,
+}) => {
+  const startItem = (currentPage - 1) * itemsPerPage + 1;
+  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+
+  return (
+    <div className="pagination">
+      <div className="pagination-info">
+        Showing {startItem} to {endItem} of {totalItems} entries
+      </div>
+      <div className="pagination-controls">
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="pagination-btn"
+        >
+          <ChevronLeft className="pagination-icon" />
+          Previous
+        </button>
+        <div className="pagination-pages">
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <button
+              key={page}
+              onClick={() => onPageChange(page)}
+              className={`pagination-page ${
+                currentPage === page ? "active" : ""
+              }`}
+            >
+              {page}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="pagination-btn"
+        >
+          Next
+          <ChevronRight className="pagination-icon" />
+        </button>
+      </div>
+    </div>
+  );
+};
 
 const Modal = ({ onClose, title, children }) => (
   <div className="modal-overlay">

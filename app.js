@@ -93,13 +93,21 @@ app.put(
   stallController.updateStall
 );
 
-// DELETE STALL - NEW ROUTE TO ADD
+// DELETE STALL
 app.delete(
   "/admin/stalls/:id",
   authenticateToken,
   authorizeRoles("admin"),
   stallController.deleteStall
 );
+
+app.post(
+  "/stalls/upload-image",
+  authenticateToken,
+  authorizeRoles("admin"),
+  stallController.uploadStallImage
+);
+
 // app.put("/admin/stalls/:id", authenticateToken, authorizeRoles("admin"), (req, res) => {
 //   res.status(501).json({ error: 'Not implemented' });
 // });

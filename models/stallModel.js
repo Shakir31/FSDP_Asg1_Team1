@@ -1,23 +1,55 @@
 const supabase = require("../supabaseClient");
 
-async function createStall(stallName, description, hawker_centre, category) {
+async function createStall({
+  stallname,
+  description,
+  hawker_centre_id,
+  category,
+  stall_image,
+  owner_id,
+}) {
   try {
+    const insertData = {
+      stallname,
+      category,
+    };
+
+    // Add optional fields if provided
+    if (
+      description !== undefined &&
+      description !== null &&
+      description !== ""
+    ) {
+      insertData.description = description;
+    }
+    if (
+      hawker_centre_id !== undefined &&
+      hawker_centre_id !== null &&
+      hawker_centre_id !== ""
+    ) {
+      insertData.hawker_centre_id = hawker_centre_id;
+    }
+    if (
+      stall_image !== undefined &&
+      stall_image !== null &&
+      stall_image !== ""
+    ) {
+      insertData.stall_image = stall_image;
+    }
+    if (owner_id !== undefined && owner_id !== null && owner_id !== "") {
+      insertData.owner_id = parseInt(owner_id, 10);
+    }
+
     const { data, error } = await supabase
       .from("stalls")
-      .insert([
-        {
-          stallname: stallName,
-          description: description,
-          hawker_centre: hawker_centre,
-          category: category,
-        },
-      ])
+      .insert([insertData])
       .select()
       .single();
 
     if (error) throw error;
     return data;
   } catch (error) {
+    console.error("DB createStall error:", error);
     throw error;
   }
 }
@@ -29,6 +61,7 @@ async function getAllStalls() {
     if (error) throw error;
     return data;
   } catch (error) {
+    console.error("DB getAllStalls error:", error);
     throw error;
   }
 }
@@ -60,6 +93,7 @@ async function createMenuItem(
     if (error) throw error;
     return data;
   } catch (error) {
+    console.error("DB createMenuItem error:", error);
     throw error;
   }
 }
@@ -74,6 +108,7 @@ async function getMenuByStall(stallId) {
     if (error) throw error;
     return data;
   } catch (error) {
+    console.error("DB getMenuByStall error:", error);
     throw error;
   }
 }
@@ -87,6 +122,7 @@ async function updateMenuItemPhoto(menuItemId, imageUrl) {
 
     if (error) throw error;
   } catch (error) {
+    console.error("DB updateMenuItemPhoto error:", error);
     throw error;
   }
 }
@@ -101,6 +137,7 @@ async function getStallsByCategory(category) {
     if (error) throw error;
     return data;
   } catch (error) {
+    console.error("DB getStallsByCategory error:", error);
     throw error;
   }
 }
@@ -115,6 +152,7 @@ async function getStallsByHawkerCentre(hawkerCentre) {
     if (error) throw error;
     return data;
   } catch (error) {
+    console.error("DB getStallsByHawkerCentre error:", error);
     throw error;
   }
 }
@@ -130,6 +168,7 @@ async function getStallById(stallId) {
     if (error && error.code !== "PGRST116") throw error;
     return data;
   } catch (error) {
+    console.error("DB getStallById error:", error);
     throw error;
   }
 }
@@ -145,6 +184,7 @@ async function getMenuItemById(menuItemId) {
     if (error && error.code !== "PGRST116") throw error;
     return data;
   } catch (error) {
+    console.error("DB getMenuItemById error:", error);
     throw error;
   }
 }
@@ -222,6 +262,7 @@ async function getImagesByStall(stallId, currentUserId = null) {
 
     return enrichedData;
   } catch (error) {
+    console.error("DB getImagesByStall error:", error);
     throw error;
   }
 }
