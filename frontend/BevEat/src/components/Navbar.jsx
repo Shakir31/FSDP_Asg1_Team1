@@ -21,10 +21,12 @@ function Navbar() {
     localStorage.removeItem("role");
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("role");
-    window.location.href = "/login";
+    window.location.href = "/";
   };
 
   const isStallOwner = userRole === "stall_owner";
+  const isAdmin = userRole == "admin";
+  const isCustomer = userRole == "customer";
 
   return (
     <nav className="navbar">
@@ -56,8 +58,19 @@ function Navbar() {
         </>
       )}
 
+      {/* Show Dashboard for admin */}
+      {isAdmin && (
+        <>
+          <div className="navbar-item">
+            <Link to="/admin" className="navbar-link">
+              Dashboard
+            </Link>
+          </div>
+        </>
+      )}
+
       {/* Show Redeem for regular users */}
-      {!isStallOwner && (
+      {isCustomer && (
         <div className="navbar-item">
           <Link to="/redeem" className="navbar-link">
             Redeem
@@ -66,7 +79,7 @@ function Navbar() {
       )}
 
       {/* Only show Cart for regular users */}
-      {!isStallOwner && (
+      {isCustomer && (
         <div className="navbar-item">
           <Link to="/cart" className="icon-link cart-wrapper">
             <ShoppingCart size={28} />

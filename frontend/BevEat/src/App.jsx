@@ -28,6 +28,7 @@ import StallOwnerDashboard from "./components/StallOwnerDashboard";
 import MenuManagement from "./components/MenuManagement";
 import LandingPage from "./components/LandingPage";
 import ForbiddenPage from "./components/ForbiddenPage";
+import AdminDashboard from "./components/AdminDashboard";
 import {
   ProtectedRoute,
   RoleProtectedRoute,
@@ -189,56 +190,12 @@ function App() {
           />
 
           {/* Admin only routes */}
+
           <Route
             path="/admin"
             element={
               <RoleProtectedRoute allowedRoles={["admin"]}>
-                <AdminHome />
-              </RoleProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/admin/users"
-            element={
-              <RoleProtectedRoute allowedRoles={["admin"]}>
-                <UserAccount />
-              </RoleProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/admin/users/:id"
-            element={
-              <RoleProtectedRoute allowedRoles={["admin"]}>
-                <UserUpdate />
-              </RoleProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/admin/stalls"
-            element={
-              <RoleProtectedRoute allowedRoles={["admin"]}>
-                <Stall />
-              </RoleProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/admin/stalls/:id"
-            element={
-              <RoleProtectedRoute allowedRoles={["admin"]}>
-                <StallUpdate />
-              </RoleProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/admin/stalls/create-stall"
-            element={
-              <RoleProtectedRoute allowedRoles={["admin"]}>
-                <StallCreate />
+                <AdminDashboard />
               </RoleProtectedRoute>
             }
           />

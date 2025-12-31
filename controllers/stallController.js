@@ -138,6 +138,105 @@ async function getStallImages(req, res) {
   }
 }
 
+// Update stall (admin only)
+async function updateStall(req, res) {
+  try {
+    const id = parseInt(req.params.id, 10);
+
+    // Validate ID
+    if (isNaN(id) || id <= 0) {
+      return res.status(400).json({ error: "Invalid stall ID" });
+    }
+
+    const {
+      stallname,
+      description,
+      category,
+      stall_image,
+      hawker_centre_id,
+      owner_id,
+    } = req.body;
+
+    // Validate at least one field is provided
+    if (
+      !stallname &&
+      !description &&
+      !category &&
+      !stall_image &&
+      !hawker_centre_id &&
+      owner_id === undefined
+    ) {
+      return res
+        .status(400)
+        .json({ error: "At least one field must be provided to update" });
+    }
+
+    // Check if stall exists
+    const existingStall = await stallModel.getStallById(id);
+    if (!existingStall) {
+      return res.status(404).json({ error: "Stall not found" });
+    }
+
+    // Validate owner_id if provided
+    if (owner_id !== undefined && owner_id !== null) {
+      const ownerIdInt = parseInt(owner_id, 10);
+      if (isNaN(ownerIdInt) || ownerIdInt <= 0) {
+        return res.status(400).json({ error: "Invalid owner ID" });
+      }
+    }
+
+    const updated = await stallModel.updateStallById(id, {
+      stallname,
+      description,
+      category,
+      stall_image,
+      hawker_centre_id,
+      owner_id:
+        owner_id !== undefined
+          ? owner_id
+            ? parseInt(owner_id, 10)
+            : null
+          : undefined,
+    });
+
+    res.json({
+      message: "Stall updated successfully",
+      stall: updated,
+    });
+  } catch (error) {
+    console.error("Update stall error:", error);
+    res.status(500).json({ error: "Failed to update stall" });
+  }
+}
+
+// Delete stall (admin only)
+async function deleteStall(req, res) {
+  try {
+    const id = parseInt(req.params.id, 10);
+
+    // Validate ID
+    if (isNaN(id) || id <= 0) {
+      return res.status(400).json({ error: "Invalid stall ID" });
+    }
+
+    // Check if stall exists
+    const stall = await stallModel.getStallById(id);
+    if (!stall) {
+      return res.status(404).json({ error: "Stall not found" });
+    }
+
+    await stallModel.deleteStallById(id);
+
+    res.json({
+      message: "Stall deleted successfully",
+      deleted: true,
+    });
+  } catch (error) {
+    console.error("Delete stall error:", error);
+    res.status(500).json({ error: "Failed to delete stall" });
+  }
+}
+
 module.exports = {
   createStall,
   getAllStalls,
@@ -149,4 +248,6 @@ module.exports = {
   getStallById,
   getMenuItemById,
   getStallImages,
+  updateStall,
+  deleteStall,
 };

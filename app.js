@@ -46,38 +46,30 @@ app.post("/register", authController.registerUser);
 app.post("/login", authController.loginUser);
 app.get("/users/profile", authenticateToken, authController.getUserProfile);
 
-// Helper function to ensure handler is implemented
-function ensureHandler(handler, name) {
-  if (typeof handler === "function") return handler;
-  return (req, res) => {
-    res.status(501).json({ error: `Handler not implemented: ${name}` });
-  };
-}
-
 //admin: users list
 app.get(
   "/admin/users",
   authenticateToken,
-  ensureHandler(authorizeRoles("admin"), 'authorizeRoles("admin")'),
-  ensureHandler(authController.listUsers, "authController.listUsers")
+  authorizeRoles("admin"),
+  authController.listUsers
 );
 app.get(
   "/admin/users/:id",
   authenticateToken,
-  ensureHandler(authorizeRoles("admin"), 'authorizeRoles("admin")'),
-  ensureHandler(authController.getUser, "authController.getUser")
+  authorizeRoles("admin"),
+  authController.getUser
 );
 app.put(
   "/admin/users/:id",
   authenticateToken,
-  ensureHandler(authorizeRoles("admin"), 'authorizeRoles("admin")'),
-  ensureHandler(authController.updateUser, "authController.updateUser")
+  authorizeRoles("admin"),
+  authController.updateUser
 );
 app.delete(
   "/admin/users/:id",
   authenticateToken,
-  ensureHandler(authorizeRoles("admin"), 'authorizeRoles("admin")'),
-  ensureHandler(authController.deleteUser, "authController.deleteUser")
+  authorizeRoles("admin"),
+  authController.deleteUser
 );
 
 //admin: stalls list
@@ -92,6 +84,21 @@ app.get(
   authenticateToken,
   authorizeRoles("admin"),
   stallController.getStallById
+);
+
+app.put(
+  "/admin/stalls/:id",
+  authenticateToken,
+  authorizeRoles("admin"),
+  stallController.updateStall
+);
+
+// DELETE STALL - NEW ROUTE TO ADD
+app.delete(
+  "/admin/stalls/:id",
+  authenticateToken,
+  authorizeRoles("admin"),
+  stallController.deleteStall
 );
 // app.put("/admin/stalls/:id", authenticateToken, authorizeRoles("admin"), (req, res) => {
 //   res.status(501).json({ error: 'Not implemented' });

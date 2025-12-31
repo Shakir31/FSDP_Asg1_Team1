@@ -226,6 +226,56 @@ async function getImagesByStall(stallId, currentUserId = null) {
   }
 }
 
+async function updateStallById(
+  id,
+  { stallname, description, category, stall_image, hawker_centre_id, owner_id }
+) {
+  try {
+    const updateData = {};
+
+    // Only include fields that are provided
+    if (stallname !== undefined && stallname !== null)
+      updateData.stallname = stallname;
+    if (description !== undefined) updateData.description = description; // Allow null for clearing
+    if (category !== undefined && category !== null)
+      updateData.category = category;
+    if (stall_image !== undefined) updateData.stall_image = stall_image; // Allow null for clearing
+    if (hawker_centre_id !== undefined)
+      updateData.hawker_centre_id = hawker_centre_id; // Allow null
+    if (owner_id !== undefined) updateData.owner_id = owner_id; // Allow null for unassigning
+
+    // Return early if no fields to update
+    if (Object.keys(updateData).length === 0) {
+      throw new Error("No fields to update");
+    }
+
+    const { data, error } = await supabase
+      .from("stalls")
+      .update(updateData)
+      .eq("stallid", id)
+      .select("*")
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("DB updateStallById error:", error);
+    throw error;
+  }
+}
+
+async function deleteStallById(id) {
+  try {
+    const { error } = await supabase.from("stalls").delete().eq("stallid", id);
+
+    if (error) throw error;
+    return { deleted: true };
+  } catch (error) {
+    console.error("DB deleteStallById error:", error);
+    throw error;
+  }
+}
+
 module.exports = {
   createStall,
   getAllStalls,
@@ -237,4 +287,6 @@ module.exports = {
   getStallById,
   getMenuItemById,
   getImagesByStall,
+  updateStallById,
+  deleteStallById,
 };
