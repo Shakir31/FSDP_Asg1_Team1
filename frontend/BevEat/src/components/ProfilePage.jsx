@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Coins, Star, ShoppingBag, Store, Bell } from "lucide-react";
+import {
+  User,
+  Coins,
+  Star,
+  ShoppingBag,
+  Store,
+  Bell,
+  Shield,
+  Users,
+  TrendingUp,
+} from "lucide-react";
 import { toast } from "react-toastify";
 import OrderDetailsModal from "./OrderDetailsModel";
 import "../ProfilePage.css";
@@ -28,6 +38,7 @@ function ProfilePage() {
   const [orders, setOrders] = useState([]);
   const [stalls, setStalls] = useState([]);
   const [notificationStats, setNotificationStats] = useState(null);
+  const [adminStats, setAdminStats] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [orderDetails, setOrderDetails] = useState(null);
   const [loadingOrderDetails, setLoadingOrderDetails] = useState(false);
@@ -71,7 +82,42 @@ function ProfilePage() {
         setUser(profileData);
 
         // Fetch different data based on role
-        if (profileData.role === "stall_owner") {
+        if (profileData.role === "admin") {
+          // Fetch admin specific data
+          const [coinsResponse, usersResponse, stallsResponse] =
+            await Promise.all([
+              fetch("http://localhost:3000/coins/balance", {
+                headers: { Authorization: `Bearer ${token}` },
+              }),
+              fetch("http://localhost:3000/admin/users", {
+                headers: { Authorization: `Bearer ${token}` },
+              }),
+              fetch("http://localhost:3000/admin/stalls", {
+                headers: { Authorization: `Bearer ${token}` },
+              }),
+            ]);
+
+          if (!coinsResponse.ok) throw new Error("Failed to fetch coins");
+
+          const coinsData = await coinsResponse.json();
+          setCoins(coinsData.coins);
+
+          // Calculate admin stats
+          if (usersResponse.ok && stallsResponse.ok) {
+            const usersData = await usersResponse.json();
+            const stallsData = await stallsResponse.json();
+
+            setAdminStats({
+              totalUsers: usersData.length,
+              totalStalls: stallsData.length,
+              stallOwners: usersData.filter((u) => u.role === "stall_owner")
+                .length,
+              regularUsers: usersData.filter(
+                (u) => u.role === "user" || u.role === "customer"
+              ).length,
+            });
+          }
+        } else if (profileData.role === "stall_owner") {
           // Fetch stall owner specific data
           const [coinsResponse, stallsResponse, notifStatsResponse] =
             await Promise.all([
@@ -209,6 +255,105 @@ function ProfilePage() {
       </div>
     );
   if (!user) return null;
+
+  // Render for Admins
+  if (user.role === "admin") {
+    return (
+      <div className="profile-wrapper">
+        <div className="profile-container">
+          <div className="profile-picture-container admin-picture">
+            <Shield size={80} color="#dc2626" />
+          </div>
+          <h2 className="profile-name">{user.name}</h2>
+          <div className="profile-role-badge admin-badge">Administrator</div>
+          <div className="profile-coins">
+            <Coins size={24} color="#ff7622" />
+            <span>{coins} Coins</span>
+          </div>
+        </div>
+
+        {/* Admin Stats Section */}
+        {adminStats && (
+          <div className="profile-reviews-container profile-section">
+            <div className="profile-section-title section-header-content">
+              <TrendingUp size={20} />
+              <span>System Overview</span>
+            </div>
+            <div className="admin-stats-grid">
+              <div className="admin-stat-card">
+                <div className="admin-stat-icon users-icon">
+                  <Users size={32} />
+                </div>
+                <div className="admin-stat-content">
+                  <div className="admin-stat-number">
+                    {adminStats.totalUsers}
+                  </div>
+                  <div className="admin-stat-label">Total Users</div>
+                </div>
+              </div>
+              <div className="admin-stat-card">
+                <div className="admin-stat-icon stalls-icon">
+                  <Store size={32} />
+                </div>
+                <div className="admin-stat-content">
+                  <div className="admin-stat-number">
+                    {adminStats.totalStalls}
+                  </div>
+                  <div className="admin-stat-label">Total Stalls</div>
+                </div>
+              </div>
+              <div className="admin-stat-card">
+                <div className="admin-stat-icon owners-icon">
+                  <User size={32} />
+                </div>
+                <div className="admin-stat-content">
+                  <div className="admin-stat-number">
+                    {adminStats.stallOwners}
+                  </div>
+                  <div className="admin-stat-label">Stall Owners</div>
+                </div>
+              </div>
+              <div className="admin-stat-card">
+                <div className="admin-stat-icon customers-icon">
+                  <ShoppingBag size={32} />
+                </div>
+                <div className="admin-stat-content">
+                  <div className="admin-stat-number">
+                    {adminStats.regularUsers}
+                  </div>
+                  <div className="admin-stat-label">Customers</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Admin Quick Actions */}
+        <div className="profile-reviews-container profile-section">
+          <div className="profile-section-title section-header-content">
+            <Shield size={20} />
+            <span>Admin Actions</span>
+          </div>
+          <div className="admin-actions-grid">
+            <button
+              className="admin-action-btn"
+              onClick={() => navigate("/admin")}
+            >
+              <Users size={20} />
+              <span>Manage Users & Stalls</span>
+            </button>
+            <button
+              className="admin-action-btn"
+              onClick={() => navigate("/admin/add-stall")}
+            >
+              <Store size={20} />
+              <span>Add New Stall</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Render for Stall Owners
   if (user.role === "stall_owner") {
