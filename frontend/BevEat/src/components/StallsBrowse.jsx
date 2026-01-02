@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "../Home.css";
+import "../BrowsePages.css";
 
 function StallsBrowse() {
   const [allStalls, setAllStalls] = useState([]);
@@ -78,20 +79,13 @@ function StallsBrowse() {
         </div>
 
         {/* Search Bar */}
-        <div style={{ marginBottom: "20px" }}>
+        <div className="browse-search-container">
           <input
             type="text"
             placeholder="Search stalls by name or description..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "12px 16px",
-              fontSize: "1rem",
-              border: "1px solid #ddd",
-              borderRadius: "8px",
-              outline: "none",
-            }}
+            className="browse-search-input"
           />
         </div>
 
@@ -101,22 +95,18 @@ function StallsBrowse() {
             <button
               key={category}
               onClick={() => handleCategoryClick(category)}
-              style={{
-                backgroundColor:
-                  selectedCategory === category ? "#ff7622" : "#f0f0f0",
-                color: selectedCategory === category ? "white" : "#333",
-              }}
+              className={selectedCategory === category ? "active" : ""}
             >
               {category}
             </button>
           ))}
         </div>
 
-        {loading && <p>Loading stalls...</p>}
-        {error && <p style={{ color: "red" }}>Error: {error}</p>}
+        {loading && <p className="browse-loading">Loading stalls...</p>}
+        {error && <p className="browse-error">Error: {error}</p>}
 
         {!loading && !error && filteredStalls.length === 0 && (
-          <p style={{ textAlign: "center", color: "#666", marginTop: "40px" }}>
+          <p className="browse-no-results">
             No stalls found matching your criteria.
           </p>
         )}
@@ -145,15 +135,7 @@ function StallsBrowse() {
                   <h3>{stall.stallname}</h3>
                   <p>{stall.description}</p>
                   {stall.category && (
-                    <p
-                      style={{
-                        color: "#ff7622",
-                        fontWeight: "500",
-                        fontSize: "0.85rem",
-                      }}
-                    >
-                      {stall.category}
-                    </p>
+                    <p className="card-badge">{stall.category}</p>
                   )}
                 </div>
               </Link>

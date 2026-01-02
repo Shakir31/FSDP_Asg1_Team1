@@ -19,7 +19,8 @@
 }
 
 /* Sections General */
-.stalls, .hawker {
+.stalls,
+.hawker {
   padding: 30px 40px;
   max-width: 1200px;
   margin: 0 auto;
@@ -82,6 +83,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 20px;
+  margin-top: 2rem;
 }
 
 .card-link {
@@ -91,18 +93,19 @@
 
 .card {
   background: white;
-  border-radius: 10px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  border-radius: 12px;
   overflow: hidden;
-  transition: transform 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
   height: 100%;
+  box-sizing: border-box;
 }
 
 .card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .card img {
