@@ -506,15 +506,24 @@ const AdminDashboard = () => {
             <div className="data-card-header">
               <div className="header-content">
                 <h2 className="card-title">User Management</h2>
-                <div className="search-container">
-                  <Search className="search-icon" />
-                  <input
-                    type="text"
-                    placeholder="Search users..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="search-input"
-                  />
+                <div className="header-actions">
+                  <div className="search-container">
+                    <Search className="search-icon" />
+                    <input
+                      type="text"
+                      placeholder="Search users..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="search-input"
+                    />
+                  </div>
+                  <button
+                    onClick={() => navigate("/admin/add-user")}
+                    className="btn-add-user"
+                  >
+                    <Plus className="btn-icon" />
+                    Add User
+                  </button>
                 </div>
               </div>
             </div>

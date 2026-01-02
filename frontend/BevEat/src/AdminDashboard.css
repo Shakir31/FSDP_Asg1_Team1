@@ -220,12 +220,19 @@
   font-size: 0.875rem;
   min-width: 250px;
   transition: all 0.2s;
+  background-color: #ffffff;
+  color: #111827;
+}
+
+.search-input::placeholder {
+  color: #9ca3af;
 }
 
 .search-input:focus {
   outline: none;
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  background-color: #ffffff;
 }
 
 /* Table */
@@ -681,7 +688,8 @@
 }
 
 /* Add Stall Button */
-.btn-add-stall {
+.btn-add-stall,
+.btn-add-user {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -697,7 +705,8 @@
   white-space: nowrap;
 }
 
-.btn-add-stall:hover {
+.btn-add-stall:hover,
+.btn-add-user:hover {
   background: linear-gradient(135deg, #047857 0%, #065f46 100%);
   transform: translateY(-1px);
   box-shadow: 0 4px 6px rgba(5, 150, 105, 0.2);

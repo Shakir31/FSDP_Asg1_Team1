@@ -6,12 +6,6 @@ import Login from "./components/Login";
 import Signup from "./components/Signup";
 import StallPage from "./components/StallPage";
 import MainLayout from "./components/MainLayout";
-import AdminHome from "./components/Admin";
-import UserAccount from "./components/UserAccount";
-import UserUpdate from "./components/UserUpdate";
-import Stall from "./components/Stall";
-import StallUpdate from "./components/StallUpdate";
-import StallCreate from "./components/StallCreate";
 import Product from "./components/Product";
 import StallPhotos from "./components/StallPhotos";
 import StallsBrowse from "./components/StallsBrowse";
@@ -30,6 +24,7 @@ import LandingPage from "./components/LandingPage";
 import ForbiddenPage from "./components/ForbiddenPage";
 import AdminDashboard from "./components/AdminDashboard";
 import AddStallPage from "./components/AddStallPage";
+import AddUserPage from "./components/AddUserPage";
 import {
   ProtectedRoute,
   RoleProtectedRoute,
@@ -207,6 +202,15 @@ function App() {
           element={
             <RoleProtectedRoute allowedRoles={["admin"]}>
               <AddStallPage />
+            </RoleProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/add-user"
+          element={
+            <RoleProtectedRoute allowedRoles={["admin"]}>
+              <AddUserPage />
             </RoleProtectedRoute>
           }
         />
