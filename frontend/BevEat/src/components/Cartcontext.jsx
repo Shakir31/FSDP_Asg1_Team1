@@ -16,18 +16,33 @@ export function CartProvider({ children }) {
   const [appliedVoucherId, setAppliedVoucherId] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [loadingVouchers, setLoadingVouchers] = useState(false);
+  const [userCoins, setUserCoins] = useState(0);
 
   useEffect(() => {
     localStorage.setItem("cartItems", JSON.stringify(items));
   }, [items]);
 
-  const [userCoins, setUserCoins] = useState(0);
+  // Get user role from storage
+  const getUserRole = () => {
+    return localStorage.getItem("role") || sessionStorage.getItem("role");
+  };
 
-  // Fetch user vouchers
+  // Fetch user vouchers (only for customers)
   const fetchVouchers = async () => {
+    const role = getUserRole();
+
+    // Only fetch vouchers if user is a customer
+    if (role !== "customer") {
+      setVouchers([]);
+      return;
+    }
+
     const token =
       localStorage.getItem("token") || sessionStorage.getItem("token");
-    if (!token) return;
+    if (!token) {
+      setVouchers([]);
+      return;
+    }
 
     setLoadingVouchers(true);
     try {
@@ -38,17 +53,42 @@ export function CartProvider({ children }) {
       if (response.ok) {
         const data = await response.json();
         setVouchers(data);
+      } else {
+        setVouchers([]);
       }
     } catch (error) {
       console.error("Error fetching vouchers:", error);
+      setVouchers([]);
     } finally {
       setLoadingVouchers(false);
     }
   };
 
-  // Fetch vouchers on mount
+  // Fetch vouchers when token changes or component mounts (only for customers)
   useEffect(() => {
-    fetchVouchers();
+    const role = getUserRole();
+    const token =
+      localStorage.getItem("token") || sessionStorage.getItem("token");
+
+    if (token && role === "customer") {
+      fetchVouchers();
+    }
+  }, []);
+
+  // ADDED: Also fetch vouchers whenever the window gains focus (only for customers)
+  useEffect(() => {
+    const handleFocus = () => {
+      const role = getUserRole();
+      const token =
+        localStorage.getItem("token") || sessionStorage.getItem("token");
+
+      if (token && role === "customer") {
+        fetchVouchers();
+      }
+    };
+
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
   }, []);
 
   const refreshCoins = async () => {
@@ -140,6 +180,11 @@ export function CartPage() {
   } = useCart();
 
   const [placing, setPlacing] = useState(false);
+
+  // ADDED: Fetch vouchers when CartPage mounts to ensure fresh data
+  useEffect(() => {
+    fetchVouchers();
+  }, []);
 
   const subtotal = calcSubtotal(items);
   const appliedVoucher =
