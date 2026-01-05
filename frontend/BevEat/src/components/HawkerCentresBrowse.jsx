@@ -8,8 +8,14 @@ function HawkerCentresBrowse() {
   const [filteredHawkerCentres, setFilteredHawkerCentres] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Search & Filter State
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("All");
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
 
   const statuses = ["All", "Existing", "Upcoming"];
 
@@ -33,11 +39,8 @@ function HawkerCentresBrowse() {
     fetchHawkerCentres();
   }, []);
 
+  // Filter Logic
   useEffect(() => {
-    filterHawkerCentres();
-  }, [searchTerm, selectedStatus, allHawkerCentres]);
-
-  const filterHawkerCentres = () => {
     let filtered = [...allHawkerCentres];
 
     // Filter by status
@@ -62,10 +65,46 @@ function HawkerCentresBrowse() {
     }
 
     setFilteredHawkerCentres(filtered);
-  };
+    setCurrentPage(1); // Reset to page 1 on filter change
+  }, [searchTerm, selectedStatus, allHawkerCentres]);
+
+  // Pagination Logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentHawkerCentres = filteredHawkerCentres.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredHawkerCentres.length / itemsPerPage);
 
   const handleStatusClick = (status) => {
     setSelectedStatus(status);
+  };
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  // Helper to generate page numbers (1 2 3 ... 10)
+  const getPageNumbers = () => {
+    const pageNumbers = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pageNumbers.push(i);
+    } else {
+      if (currentPage <= 4) {
+        for (let i = 1; i <= 5; i++) pageNumbers.push(i);
+        pageNumbers.push("...");
+        pageNumbers.push(totalPages);
+      } else if (currentPage >= totalPages - 3) {
+        pageNumbers.push(1);
+        pageNumbers.push("...");
+        for (let i = totalPages - 4; i <= totalPages; i++) pageNumbers.push(i);
+      } else {
+        pageNumbers.push(1);
+        pageNumbers.push("...");
+        pageNumbers.push(currentPage - 1);
+        pageNumbers.push(currentPage);
+        pageNumbers.push(currentPage + 1);
+        pageNumbers.push("...");
+        pageNumbers.push(totalPages);
+      }
+    }
+    return pageNumbers;
   };
 
   return (
@@ -108,10 +147,11 @@ function HawkerCentresBrowse() {
           </p>
         )}
 
+        {/* Grid displaying current page items */}
         <div className="card-grid">
           {!loading &&
             !error &&
-            filteredHawkerCentres.map((hawker) => (
+            currentHawkerCentres.map((hawker) => (
               <Link
                 to={`/hawker-centres/${hawker.id}`}
                 className="card-link"
@@ -140,6 +180,63 @@ function HawkerCentresBrowse() {
               </Link>
             ))}
         </div>
+
+        {/* Pagination Controls */}
+        {!loading && !error && filteredHawkerCentres.length > itemsPerPage && (
+          <div className="pagination" style={{ marginTop: "20px", display: "flex", justifyContent: "center", gap: "8px" }}>
+            <button
+              onClick={() => paginate(currentPage - 1)}
+              disabled={currentPage === 1}
+              style={{
+                padding: "8px 12px",
+                cursor: currentPage === 1 ? "not-allowed" : "pointer",
+                border: "1px solid #ddd",
+                borderRadius: "4px",
+                backgroundColor: "#fff",
+                color: "black",
+              }}
+            >
+              Prev
+            </button>
+
+            {getPageNumbers().map((number, index) =>
+              number === "..." ? (
+                <span key={`ellipsis-${index}`} style={{ padding: "8px 12px", alignSelf: "center" }}>...</span>
+              ) : (
+                <button
+                  key={number}
+                  onClick={() => paginate(number)}
+                  style={{
+                    padding: "8px 12px",
+                    cursor: "pointer",
+                    backgroundColor: currentPage === number ? "#007bff" : "#fff",
+                    color: currentPage === number ? "white" : "black",
+                    border: "1px solid #ddd",
+                    borderRadius: "4px",
+
+                  }}
+                >
+                  {number}
+                </button>
+              )
+            )}
+
+            <button
+              onClick={() => paginate(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              style={{
+                padding: "8px 12px",
+                cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+                border: "1px solid #ddd",
+                borderRadius: "4px",
+                backgroundColor: "#fff",
+                color: "black",
+              }}
+            >
+              Next
+            </button>
+          </div>
+        )}
       </section>
     </div>
   );
