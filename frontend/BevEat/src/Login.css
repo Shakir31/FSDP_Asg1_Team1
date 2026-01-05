@@ -42,10 +42,18 @@ html {
   padding: 10px;
   margin-bottom: 15px;
   border: 1px solid #ccc;
+  transition: all 0.2s;
   border-radius: 5px;
   font-size: 14px;
   background-color: white;
   color: #121223;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: #ff7622;
+  box-shadow: 0 0 0 3px rgba(255, 118, 34, 0.05);
+  background-color: #ffffff;
 }
 
 .options {

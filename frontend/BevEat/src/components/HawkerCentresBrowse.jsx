@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "../Home.css";
+import "../BrowsePages.css";
 
 function HawkerCentresBrowse() {
   const [allHawkerCentres, setAllHawkerCentres] = useState([]);
@@ -75,20 +76,13 @@ function HawkerCentresBrowse() {
         </div>
 
         {/* Search Bar */}
-        <div style={{ marginBottom: "20px" }}>
+        <div className="browse-search-container">
           <input
             type="text"
             placeholder="Search by name, address, or postal code..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "12px 16px",
-              fontSize: "1rem",
-              border: "1px solid #ddd",
-              borderRadius: "8px",
-              outline: "none",
-            }}
+            className="browse-search-input"
           />
         </div>
 
@@ -98,22 +92,18 @@ function HawkerCentresBrowse() {
             <button
               key={status}
               onClick={() => handleStatusClick(status)}
-              style={{
-                backgroundColor:
-                  selectedStatus === status ? "#ff7622" : "#f0f0f0",
-                color: selectedStatus === status ? "white" : "#333",
-              }}
+              className={selectedStatus === status ? "active" : ""}
             >
               {status}
             </button>
           ))}
         </div>
 
-        {loading && <p>Loading hawker centres...</p>}
-        {error && <p style={{ color: "red" }}>Error: {error}</p>}
+        {loading && <p className="browse-loading">Loading hawker centres...</p>}
+        {error && <p className="browse-error">Error: {error}</p>}
 
         {!loading && !error && filteredHawkerCentres.length === 0 && (
-          <p style={{ textAlign: "center", color: "#666", marginTop: "40px" }}>
+          <p className="browse-no-results">
             No hawker centres found matching your criteria.
           </p>
         )}
@@ -142,13 +132,7 @@ function HawkerCentresBrowse() {
                   <h3>{hawker.name}</h3>
                   <p>{hawker.address}</p>
                   {hawker.no_of_cooked_food_stalls && (
-                    <p
-                      style={{
-                        color: "#ff7622",
-                        fontWeight: "500",
-                        fontSize: "0.85rem",
-                      }}
-                    >
+                    <p className="card-badge">
                       {hawker.no_of_cooked_food_stalls} stalls
                     </p>
                   )}

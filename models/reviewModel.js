@@ -23,15 +23,25 @@ async function createReview(menuItemId, userId, rating, reviewText, imageId) {
   }
 }
 
-async function getReviewsByMenuItem(menuItemId) {
+async function getReviewsByMenuItem(menuItemId, currentUserId = null) {
   try {
     const { data, error } = await supabase
       .from("reviews")
       .select(
         `
-        *,
+        reviewid,
+        menuitemid,
+        userid,
+        rating,
+        reviewtext,
+        imageid,
+        createdat,
         images (
-          imageurl
+          imageurl,
+          uploadedat
+        ),
+        menuitems (
+          name
         )
       `
       )
@@ -40,14 +50,56 @@ async function getReviewsByMenuItem(menuItemId) {
 
     if (error) throw error;
 
-    // Reshape to include imageurl at top level
-    const formattedData = data.map((review) => ({
-      ...review,
-      imageurl: review.images?.imageurl || null,
-      images: undefined, // Remove nested object
-    }));
+    // For each review, fetch additional data needed for SocialPostCard
+    const enrichedData = await Promise.all(
+      data.map(async (review) => {
+        // Get username from userid
+        const { data: user } = await supabase
+          .from("users")
+          .select("name, email")
+          .eq("userid", review.userid)
+          .maybeSingle();
 
-    return formattedData;
+        // Get upvote count for the image
+        let upvoteCount = 0;
+        let userHasUpvoted = false;
+
+        if (review.imageid) {
+          const { count } = await supabase
+            .from("imagevotes")
+            .select("*", { count: "exact", head: true })
+            .eq("imageid", review.imageid);
+
+          upvoteCount = count || 0;
+
+          // Check if current user has upvoted
+          if (currentUserId) {
+            const { data: userVote } = await supabase
+              .from("imagevotes")
+              .select("voteid")
+              .eq("imageid", review.imageid)
+              .eq("userid", currentUserId)
+              .maybeSingle();
+            userHasUpvoted = !!userVote;
+          }
+        }
+
+        return {
+          reviewid: review.reviewid,
+          imageid: review.imageid,
+          imageurl: review.images?.imageurl || null,
+          username: user?.name || user?.email?.split("@")[0] || "Anonymous",
+          uploadedat: review.images?.uploadedat || review.createdat,
+          menuitemname: review.menuitems?.name || "Unknown Item",
+          reviewtext: review.reviewtext,
+          rating: review.rating,
+          upvote_count: upvoteCount,
+          user_has_upvoted: userHasUpvoted,
+        };
+      })
+    );
+
+    return enrichedData;
   } catch (error) {
     throw error;
   }

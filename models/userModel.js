@@ -1,5 +1,7 @@
 const supabase = require("../supabaseClient");
 
+// ===== KEEP THESE AS-IS (YOUR WORKING FUNCTIONS) =====
+
 async function createUser(name, email, passwordHash, role) {
   try {
     const { data, error } = await supabase
@@ -40,15 +42,17 @@ async function getUserByEmail(email) {
   }
 }
 
+// ===== ADMIN FUNCTIONS (REDONE) =====
+
 async function getAllUsers() {
   try {
     const { data, error } = await supabase
       .from("users")
-      .select("userid, name, email")
+      .select("userid, name, email, role, coins, createdat")
       .order("userid", { ascending: true });
 
     if (error) throw error;
-    return data;
+    return data || [];
   } catch (error) {
     console.error("DB getAllUsers error", error);
     throw error;
@@ -59,7 +63,7 @@ async function getUserById(userId) {
   try {
     const { data, error } = await supabase
       .from("users")
-      .select("userid, name, email, coins, role")
+      .select("userid, name, email, coins, role, createdat")
       .eq("userid", userId)
       .single();
 
@@ -71,18 +75,37 @@ async function getUserById(userId) {
   }
 }
 
-async function updateUserById(id, { Name, Email, Password }) {
+async function updateUserById(id, { name, email, password, role, coins }) {
   try {
     const updateData = {};
-    if (Name) updateData.name = Name;
-    if (Email) updateData.email = Email;
-    if (Password) updateData.passwordhash = Password;
+
+    // Only add fields that are actually provided (not null/undefined)
+    if (name !== undefined && name !== null) {
+      updateData.name = name;
+    }
+    if (email !== undefined && email !== null) {
+      updateData.email = email;
+    }
+    if (password !== undefined && password !== null) {
+      updateData.passwordhash = password;
+    }
+    if (role !== undefined && role !== null) {
+      updateData.role = role;
+    }
+    if (coins !== undefined && coins !== null) {
+      updateData.coins = coins;
+    }
+
+    // If no fields to update, return early
+    if (Object.keys(updateData).length === 0) {
+      throw new Error("No fields provided to update");
+    }
 
     const { data, error } = await supabase
       .from("users")
       .update(updateData)
       .eq("userid", id)
-      .select("userid, name, email")
+      .select("userid, name, email, role, coins, createdat")
       .single();
 
     if (error) throw error;

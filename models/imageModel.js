@@ -26,26 +26,36 @@ async function voteImage(userId, imageId) {
     // Check if user already voted
     const { data: existingVote, error: checkError } = await supabase
       .from("imagevotes")
-      .select("*")
+      .select("voteid")
       .eq("userid", userId)
       .eq("imageid", imageId)
-      .single();
+      .maybeSingle();
 
-    if (checkError && checkError.code !== "PGRST116") throw checkError;
+    if (checkError) throw checkError;
 
     if (existingVote) {
-      throw new Error("Already voted");
+      // User has already upvoted - remove the upvote (toggle off)
+      const { error: deleteError } = await supabase
+        .from("imagevotes")
+        .delete()
+        .eq("voteid", existingVote.voteid);
+
+      if (deleteError) throw deleteError;
+
+      return { upvoted: false, message: "Upvote removed" };
+    } else {
+      // User hasn't upvoted yet - add the upvote (toggle on)
+      const { error: insertError } = await supabase.from("imagevotes").insert([
+        {
+          imageid: imageId,
+          userid: userId,
+        },
+      ]);
+
+      if (insertError) throw insertError;
+
+      return { upvoted: true, message: "Image upvoted" };
     }
-
-    // Insert the vote
-    const { error: insertError } = await supabase.from("imagevotes").insert([
-      {
-        imageid: imageId,
-        userid: userId,
-      },
-    ]);
-
-    if (insertError) throw insertError;
   } catch (error) {
     throw error;
   }

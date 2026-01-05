@@ -34,7 +34,7 @@ async function createOrder(userId, items, totalAmount) {
 
     if (itemsError) throw itemsError;
 
-    return { OrderID: orderId };
+    return { orderid: orderId };
   } catch (error) {
     console.error("Create order error", error);
     throw error;
@@ -56,6 +56,67 @@ async function getOrdersByUser(userId) {
   }
 }
 
+async function getOrderDetailsWithItems(orderId, userId) {
+  try {
+    // First, verify the order belongs to the user
+    const { data: orderData, error: orderError } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("orderid", orderId)
+      .eq("userid", userId)
+      .single();
+
+    if (orderError) {
+      if (orderError.code === "PGRST116") return null; // Not found
+      throw orderError;
+    }
+
+    // Fetch order items with menu item details
+    const { data: itemsData, error: itemsError } = await supabase
+      .from("orderitems")
+      .select(
+        `
+        orderitemid,
+        quantity,
+        price,
+        menuitems (
+          menuitemid,
+          name,
+          description,
+          mainimageurl,
+          stallid,
+          stalls (
+            stallid,
+            stallname
+          )
+        )
+      `
+      )
+      .eq("orderid", orderId);
+
+    if (itemsError) throw itemsError;
+
+    return {
+      ...orderData,
+      items: itemsData.map((item) => ({
+        orderitemid: item.orderitemid,
+        menuitemid: item.menuitems.menuitemid,
+        name: item.menuitems.name,
+        description: item.menuitems.description,
+        mainimageurl: item.menuitems.mainimageurl,
+        stallid: item.menuitems.stallid,
+        stallname: item.menuitems.stalls.stallname,
+        quantity: item.quantity,
+        price: item.price,
+        subtotal: item.quantity * item.price,
+      })),
+    };
+  } catch (error) {
+    console.error("Get order details error", error);
+    throw error;
+  }
+}
+
 async function updatePaymentStatus(orderId, paymentStatus) {
   try {
     const { error } = await supabase
@@ -69,4 +130,9 @@ async function updatePaymentStatus(orderId, paymentStatus) {
   }
 }
 
-module.exports = { createOrder, getOrdersByUser, updatePaymentStatus };
+module.exports = {
+  createOrder,
+  getOrdersByUser,
+  getOrderDetailsWithItems,
+  updatePaymentStatus,
+};

@@ -1,0 +1,147 @@
+/* SocialPostCard.css */
+
+.social-post {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s;
+}
+
+.social-post:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Post Header */
+.post-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  gap: 12px;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff7622, #ff9a56);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.post-user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.post-username {
+  font-weight: 600;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.post-time {
+  font-size: 0.8rem;
+  color: #999;
+  margin-top: 2px;
+}
+
+/* Rating stars on top right */
+.post-rating {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.star-rating {
+  display: flex;
+  gap: 2px;
+}
+
+/* Post Image */
+.post-image-container {
+  width: 100%;
+  background: #f9f9f9;
+}
+
+.post-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  max-height: 600px;
+  object-fit: cover;
+}
+
+/* Post Actions */
+.post-actions {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.upvote-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: #666;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.upvote-btn:hover {
+  background: #fff5f0;
+  color: #ff7622;
+}
+
+.upvote-btn.upvoted {
+  color: #ff7622;
+}
+
+.upvote-btn svg {
+  transition: transform 0.2s;
+}
+
+.upvote-btn:active svg {
+  transform: scale(1.2);
+}
+
+/* Post Content */
+.post-content {
+  padding: 12px 16px 16px;
+}
+
+.post-menu-item {
+  font-size: 0.95rem;
+  color: #333;
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+.post-menu-item strong {
+  font-weight: 600;
+}
+
+.post-review {
+  font-size: 0.9rem;
+  color: #555;
+  line-height: 1.6;
+  margin-top: 8px;
+  padding: 12px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  border-left: 3px solid #ff7622;
+}
+
+.post-review em {
+  font-style: italic;
+  color: #666;
+}

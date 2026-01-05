@@ -17,6 +17,7 @@ body,
   display: flex;
   justify-content: center; /* horizontal center */
   align-items: center; /* vertical center */
+  background-color: #121223;
 }
 
 /* Signup form container */

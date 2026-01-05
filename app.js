@@ -14,6 +14,8 @@ const imageController = require("./controllers/imageController");
 const coinController = require("./controllers/coinController");
 const voucherController = require("./controllers/voucherController");
 const reviewController = require("./controllers/reviewController");
+const notificationController = require("./controllers/notificationController");
+const menuManagementController = require("./controllers/menuManagementController");
 
 const { validateReview } = require("./middlewares/reviewValidation");
 const { validateMenuItem } = require("./middlewares/menuItemValidation");
@@ -21,6 +23,7 @@ const { validateImageUpload } = require("./middlewares/imageValidation");
 
 const {
   authenticateToken,
+  optionalAuth,
   authorizeRoles,
 } = require("./middlewares/authMiddleware");
 const app = express();
@@ -31,43 +34,42 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+const cron = require("node-cron");
+
+// Run daily at 2am
+cron.schedule("0 2 * * *", () => {
+  require("./detectPopularPhotos");
+});
+
 //auth endpoints
 app.post("/register", authController.registerUser);
 app.post("/login", authController.loginUser);
 app.get("/users/profile", authenticateToken, authController.getUserProfile);
 
-// Helper function to ensure handler is implemented
-function ensureHandler(handler, name) {
-  if (typeof handler === "function") return handler;
-  return (req, res) => {
-    res.status(501).json({ error: `Handler not implemented: ${name}` });
-  };
-}
-
 //admin: users list
 app.get(
   "/admin/users",
   authenticateToken,
-  ensureHandler(authorizeRoles("admin"), 'authorizeRoles("admin")'),
-  ensureHandler(authController.listUsers, "authController.listUsers")
+  authorizeRoles("admin"),
+  authController.listUsers
 );
 app.get(
   "/admin/users/:id",
   authenticateToken,
-  ensureHandler(authorizeRoles("admin"), 'authorizeRoles("admin")'),
-  ensureHandler(authController.getUser, "authController.getUser")
+  authorizeRoles("admin"),
+  authController.getUser
 );
 app.put(
   "/admin/users/:id",
   authenticateToken,
-  ensureHandler(authorizeRoles("admin"), 'authorizeRoles("admin")'),
-  ensureHandler(authController.updateUser, "authController.updateUser")
+  authorizeRoles("admin"),
+  authController.updateUser
 );
 app.delete(
   "/admin/users/:id",
   authenticateToken,
-  ensureHandler(authorizeRoles("admin"), 'authorizeRoles("admin")'),
-  ensureHandler(authController.deleteUser, "authController.deleteUser")
+  authorizeRoles("admin"),
+  authController.deleteUser
 );
 
 //admin: stalls list
@@ -83,6 +85,29 @@ app.get(
   authorizeRoles("admin"),
   stallController.getStallById
 );
+
+app.put(
+  "/admin/stalls/:id",
+  authenticateToken,
+  authorizeRoles("admin"),
+  stallController.updateStall
+);
+
+// DELETE STALL
+app.delete(
+  "/admin/stalls/:id",
+  authenticateToken,
+  authorizeRoles("admin"),
+  stallController.deleteStall
+);
+
+app.post(
+  "/stalls/upload-image",
+  authenticateToken,
+  authorizeRoles("admin"),
+  stallController.uploadStallImage
+);
+
 // app.put("/admin/stalls/:id", authenticateToken, authorizeRoles("admin"), (req, res) => {
 //   res.status(501).json({ error: 'Not implemented' });
 // });
@@ -94,7 +119,7 @@ app.get(
 app.get("/stalls", stallController.getAllStalls);
 app.get("/stalls/category", stallController.getStallsByCategory);
 app.get("/stalls/hawker-centre", stallController.getStallsByHawkerCentre);
-app.get("/stalls/:id/photos", stallController.getStallImages);
+app.get("/stalls/:id/photos", optionalAuth, stallController.getStallImages);
 app.get("/stalls/:id", stallController.getStallById);
 app.get("/menu-item/:itemId", stallController.getMenuItemById);
 app.post(
@@ -147,6 +172,9 @@ app.put(
   orderController.updatePaymentStatus
 );
 
+// Add this to your order routes section
+app.get("/orders/:orderId", authenticateToken, orderController.getOrderDetails);
+
 //image upload and voting
 app.post(
   "/images/upload",
@@ -179,6 +207,13 @@ app.get(
   voucherController.getUserVouchers
 );
 
+app.post(
+  "/vouchers/use",
+  authenticateToken,
+  authorizeRoles("customer"),
+  voucherController.useVoucher
+);
+
 //review
 app.post(
   "/reviews",
@@ -187,7 +222,11 @@ app.post(
   authorizeRoles("customer"),
   reviewController.createReview
 );
-app.get("/reviews/menuitem/:menuItemId", reviewController.getReviewsByMenuItem);
+app.get(
+  "/reviews/menuitem/:menuItemId",
+  optionalAuth,
+  reviewController.getReviewsByMenuItem
+);
 app.get("/reviews/stall/:stallId", reviewController.getReviewsByStall);
 app.get("/reviews/user", authenticateToken, reviewController.getReviewsByUser);
 
@@ -199,6 +238,84 @@ app.get("/reviews/user", authenticateToken, reviewController.getReviewsByUser);
 
 // // image upload route (ensure validateImageUpload matches frontend)
 // app.post("/images/upload", authenticateToken, validateImageUpload, imageController.uploadImage);
+
+app.get(
+  "/notifications",
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  notificationController.getMyNotifications
+);
+
+app.get(
+  "/notifications/stats",
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  notificationController.getNotificationStats
+);
+
+app.get(
+  "/notifications/:id",
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  notificationController.getNotificationById
+);
+
+app.post(
+  "/notifications/:id/approve",
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  notificationController.approveNotification
+);
+
+app.post(
+  "/notifications/:id/dismiss",
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  notificationController.dismissNotification
+);
+
+app.post(
+  "/notifications/:id/revert",
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  notificationController.revertNotification
+);
+
+//menu management(for stall owners)
+app.get(
+  "/menu-management/my-stalls",
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  menuManagementController.getMyStalls
+);
+
+app.post(
+  "/menu-management/menuitems",
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  menuManagementController.createMenuItem
+);
+
+app.put(
+  "/menu-management/menuitems/:menuItemId",
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  menuManagementController.updateMenuItem
+);
+
+app.delete(
+  "/menu-management/menuitems/:menuItemId",
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  menuManagementController.deleteMenuItem
+);
+
+app.post(
+  "/menu-management/upload-image",
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  menuManagementController.uploadMenuItemImage
+);
 
 //start server
 app.listen(port, () => {

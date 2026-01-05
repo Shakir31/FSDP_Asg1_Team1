@@ -42,4 +42,27 @@ async function getUserVouchers(req, res) {
   }
 }
 
-module.exports = { getAllVouchers, redeemVoucher, getUserVouchers };
+async function useVoucher(req, res) {
+  try {
+    const userId = parseInt(req.user.userId, 10);
+    if (isNaN(userId))
+      return res.status(400).json({ error: "Invalid user ID" });
+
+    const { userVoucherId } = req.body;
+    if (!userVoucherId)
+      return res.status(400).json({ error: "User voucher ID required" });
+
+    const result = await voucherModel.useVoucher(userVoucherId);
+    res.json(result);
+  } catch (error) {
+    console.error("Error using voucher", error);
+    res.status(500).json({ error: "Failed to use voucher" });
+  }
+}
+
+module.exports = {
+  getAllVouchers,
+  redeemVoucher,
+  getUserVouchers,
+  useVoucher,
+};
