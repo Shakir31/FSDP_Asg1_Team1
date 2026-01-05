@@ -11,7 +11,7 @@ function StallsBrowse() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
-  const stallsPerPage = 10;
+  const stallsPerPage = 8;
 
   const categories = [
     "All",
