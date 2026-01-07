@@ -172,7 +172,6 @@ app.put(
   orderController.updatePaymentStatus
 );
 
-// Add this to your order routes section
 app.get("/orders/:orderId", authenticateToken, orderController.getOrderDetails);
 
 //image upload and voting
