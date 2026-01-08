@@ -9,6 +9,36 @@ export default class TxnNetsSuccessStatusLayout extends Component {
     this.orderId = urlParams.get("orderId");
   }
 
+  async componentDidMount() {
+    // Update payment status to "Paid" when success page loads
+    if (this.orderId) {
+      try {
+        const token =
+          localStorage.getItem("token") || sessionStorage.getItem("token");
+
+        const response = await fetch("http://localhost:3000/orders/payment", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            orderId: parseInt(this.orderId, 10),
+            paymentStatus: "Paid",
+          }),
+        });
+
+        if (!response.ok) {
+          console.error("Failed to update payment status");
+        } else {
+          console.log("Payment status updated to Paid");
+        }
+      } catch (error) {
+        console.error("Error updating payment status:", error);
+      }
+    }
+  }
+
   render() {
     return (
       <div style={{ margin: "50px" }}>
