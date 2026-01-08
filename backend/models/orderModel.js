@@ -130,9 +130,24 @@ async function updatePaymentStatus(orderId, paymentStatus) {
   }
 }
 
+async function updateOrderStatus(orderId, orderStatus) {
+  try {
+    const { error } = await supabase
+      .from("orders")
+      .update({ orderstatus: orderStatus })
+      .eq("orderid", orderId);
+
+    if (error) throw error;
+  } catch (error) {
+    console.error("Update order status error", error);
+    throw error;
+  }
+}
+
 module.exports = {
   createOrder,
   getOrdersByUser,
   getOrderDetailsWithItems,
   updatePaymentStatus,
+  updateOrderStatus,
 };

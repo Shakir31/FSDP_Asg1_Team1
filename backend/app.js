@@ -172,6 +172,12 @@ app.put(
   orderController.updatePaymentStatus
 );
 
+app.put(
+  "/orders/:orderId/status",
+  authenticateToken,
+  orderController.updateOrderStatus
+);
+
 app.get("/orders/:orderId", authenticateToken, orderController.getOrderDetails);
 
 //image upload and voting

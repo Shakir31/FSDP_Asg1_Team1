@@ -53,6 +53,30 @@ function ProfilePage() {
 
   const navigate = useNavigate();
 
+  const refreshOrders = async () => {
+    const token =
+      localStorage.getItem("token") || sessionStorage.getItem("token");
+
+    try {
+      const ordersResponse = await fetch(
+        "http://localhost:3000/orders/history",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (ordersResponse.ok) {
+        const ordersData = await ordersResponse.json();
+        ordersData.sort(
+          (a, b) => new Date(b.orderdate) - new Date(a.orderdate)
+        );
+        setOrders(ordersData);
+      }
+    } catch (error) {
+      console.error("Error refreshing orders:", error);
+    }
+  };
+
   useEffect(() => {
     const getToken = () => {
       return localStorage.getItem("token") || sessionStorage.getItem("token");
@@ -179,11 +203,15 @@ function ProfilePage() {
           const coinsData = await coinsResponse.json();
           const reviewsData = await reviewsResponse.json();
           // Sort reviews by date descending
-          reviewsData.sort((a, b) => new Date(b.createdat) - new Date(a.createdat));
-          
+          reviewsData.sort(
+            (a, b) => new Date(b.createdat) - new Date(a.createdat)
+          );
+
           const ordersData = await ordersResponse.json();
           // Sort orders by date descending
-          ordersData.sort((a, b) => new Date(b.orderdate) - new Date(a.orderdate));
+          ordersData.sort(
+            (a, b) => new Date(b.orderdate) - new Date(a.orderdate)
+          );
 
           setCoins(coinsData.coins);
           setReviews(reviewsData);
@@ -212,7 +240,7 @@ function ProfilePage() {
   }, [navigate]);
 
   // --- Pagination Logic ---
-  
+
   // 1. Orders
   const indexOfLastOrder = currentOrderPage * itemsPerPage;
   const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
@@ -263,7 +291,15 @@ function ProfilePage() {
     if (totalPages <= 1) return null;
 
     return (
-      <div className="pagination" style={{ marginTop: "20px", display: "flex", justifyContent: "center", gap: "8px" }}>
+      <div
+        className="pagination"
+        style={{
+          marginTop: "20px",
+          display: "flex",
+          justifyContent: "center",
+          gap: "8px",
+        }}
+      >
         <button
           onClick={() => paginate(currentPage - 1)}
           disabled={currentPage === 1}
@@ -282,7 +318,16 @@ function ProfilePage() {
 
         {getPageNumbers(currentPage, totalPages).map((number, index) =>
           number === "..." ? (
-            <span key={`ellipsis-${index}`} style={{ padding: "6px 10px", alignSelf: "center", fontSize: "0.9rem" }}>...</span>
+            <span
+              key={`ellipsis-${index}`}
+              style={{
+                padding: "6px 10px",
+                alignSelf: "center",
+                fontSize: "0.9rem",
+              }}
+            >
+              ...
+            </span>
           ) : (
             <button
               key={number}
@@ -294,7 +339,7 @@ function ProfilePage() {
                 color: currentPage === number ? "white" : "black",
                 border: "1px solid #ddd",
                 borderRadius: "4px",
-                fontSize: "0.9rem"
+                fontSize: "0.9rem",
               }}
             >
               {number}
@@ -536,7 +581,9 @@ function ProfilePage() {
                 {currentStalls.map((stall) => (
                   <div key={stall.stallid} className="review-card">
                     <div className="review-card-header">
-                      <span className="review-item-name">{stall.stallname}</span>
+                      <span className="review-item-name">
+                        {stall.stallname}
+                      </span>
                       <span className="review-date">{stall.category}</span>
                     </div>
                     <div className="review-card-body">
@@ -553,7 +600,11 @@ function ProfilePage() {
                 ))}
               </div>
               {/* Pagination for Stalls */}
-              {renderPagination(currentStallPage, totalStallPages, setCurrentStallPage)}
+              {renderPagination(
+                currentStallPage,
+                totalStallPages,
+                setCurrentStallPage
+              )}
             </>
           ) : (
             <p className="empty-message">No stalls assigned yet.</p>
@@ -622,14 +673,20 @@ function ProfilePage() {
 
                     <div className="order-row payment-row">
                       <span className="order-label">Payment:</span>
-                      <span className="payment-text">{order.paymentstatus}</span>
+                      <span className="payment-text">
+                        {order.paymentstatus}
+                      </span>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
             {/* Pagination for Orders */}
-            {renderPagination(currentOrderPage, totalOrderPages, setCurrentOrderPage)}
+            {renderPagination(
+              currentOrderPage,
+              totalOrderPages,
+              setCurrentOrderPage
+            )}
           </>
         ) : (
           <p className="empty-message">No orders yet.</p>
@@ -669,7 +726,11 @@ function ProfilePage() {
               ))}
             </div>
             {/* Pagination for Reviews */}
-            {renderPagination(currentReviewPage, totalReviewPages, setCurrentReviewPage)}
+            {renderPagination(
+              currentReviewPage,
+              totalReviewPages,
+              setCurrentReviewPage
+            )}
           </>
         ) : (
           <p className="empty-message">No reviews made</p>
@@ -683,6 +744,7 @@ function ProfilePage() {
           orderDetails={orderDetails}
           loading={loadingOrderDetails}
           onClose={closeOrderDetails}
+          onOrderUpdated={refreshOrders}
         />
       )}
     </div>
