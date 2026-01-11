@@ -18,8 +18,12 @@ function StallsBrowse() {
     "Chinese",
     "Malay",
     "Indian",
-    "Peranakan",
-    "Hakka",
+    "Western",
+    "Japanese",
+    "Thai",
+    "Korean",
+    "Vietnamese",
+    "Fusion",
   ];
 
   useEffect(() => {
@@ -84,7 +88,7 @@ function StallsBrowse() {
   // Helper to generate the array of page numbers to show
   const getPageNumbers = () => {
     const pageNumbers = [];
-    
+
     // If 7 or fewer pages, show all of them (no dots needed)
     if (totalPages <= 7) {
       for (let i = 1; i <= totalPages; i++) {
