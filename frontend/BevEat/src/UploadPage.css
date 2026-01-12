@@ -17,6 +17,7 @@
   border-radius: 10px;
   box-shadow: var(--shadow);
   border: 1px solid var(--border);
+  box-sizing: border-box; /* FIX: Prevent overflow */
 }
 
 .title {
@@ -30,6 +31,15 @@
   gap: 12px;
 }
 
+/* Upload Options Container - NEW */
+.upload-options {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%; /* FIX: Constrain width */
+  box-sizing: border-box;
+}
+
 .file-drop {
   display: block;
   border: 2px dashed rgba(255, 122, 24, 0.18);
@@ -40,6 +50,8 @@
   transition: border-color 0.18s ease, background 0.18s ease,
     transform 0.06s ease;
   text-decoration: none;
+  width: 100%; /* FIX: Full width */
+  box-sizing: border-box;
 }
 
 .file-drop:hover {
@@ -56,7 +68,10 @@
   display: flex;
   gap: 12px;
   align-items: center;
+  width: 100%;
+  box-sizing: border-box;
 }
+
 .upload-icon {
   flex-shrink: 0;
   opacity: 0.98;
@@ -64,15 +79,69 @@
   padding: 8px;
   border-radius: 8px;
 }
+
 .file-drop-text {
   color: #333;
   font-weight: 600;
+  word-wrap: break-word;
+  flex: 1;
 }
+
 .file-hint {
   color: var(--muted);
   font-weight: 400;
   font-size: 12px;
   margin-top: 6px;
+}
+
+/* Upload Divider - NEW */
+.upload-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #999;
+  font-size: 14px;
+  margin: 8px 0;
+}
+
+.upload-divider::before,
+.upload-divider::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.upload-divider span {
+  padding: 0 16px;
+  font-weight: 600;
+}
+
+/* Camera Button - NEW */
+.btn-camera {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 18px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.btn-camera:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-camera:active {
+  transform: translateY(0);
 }
 
 .preview-grid {
@@ -110,8 +179,9 @@
   font-size: 14px;
   outline: none;
   background: #fff;
-
   color: #0b0b0b;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .review::placeholder {
@@ -204,18 +274,6 @@
   transform: scale(1.15);
 }
 
-/* Responsive */
-@media (max-width: 640px) {
-  .upload-container {
-    padding: 16px;
-    margin: 12px;
-  }
-  .preview-item {
-    width: 96px;
-    height: 72px;
-  }
-}
-
 /* Back Button */
 .back-button {
   display: flex;
@@ -301,6 +359,8 @@
 /* Step Content */
 .step-content {
   animation: fadeIn 0.3s ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 @keyframes fadeIn {
@@ -409,6 +469,8 @@
   background-color: white;
   cursor: pointer;
   transition: border-color 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .item-selection select:hover {
@@ -538,8 +600,174 @@
   cursor: not-allowed;
 }
 
+/* Webcam Modal - NEW */
+.webcam-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.2s ease;
+}
+
+.webcam-modal {
+  background: white;
+  border-radius: 16px;
+  max-width: 720px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.webcam-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 2px solid #e0e0e0;
+  background: #f8f9fa;
+  flex-shrink: 0;
+}
+
+.webcam-header h3 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #121223;
+}
+
+.webcam-close {
+  background: #f0f0f0;
+  border: none;
+  font-size: 28px;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.webcam-close:hover {
+  background: #e0e0e0;
+  color: #121223;
+}
+
+.webcam-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  position: relative;
+  min-height: 300px;
+  max-height: calc(90vh - 180px);
+  overflow: hidden;
+}
+
+.webcam-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transform: scaleX(-1); /* Mirror the video */
+}
+
+.webcam-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  transform: scaleX(-1); /* Mirror the preview to match video */
+}
+
+.webcam-actions {
+  padding: 24px;
+  display: flex;
+  gap: 12px;
+  border-top: 2px solid #e0e0e0;
+  background: #f8f9fa;
+  flex-shrink: 0;
+}
+
+.webcam-actions .btn {
+  flex: 1;
+  font-size: 16px;
+  padding: 16px 24px;
+  justify-content: center;
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+}
+
+.webcam-actions .btn-orange {
+  background: linear-gradient(135deg, #ff7622 0%, #e66915 100%);
+}
+
 /* Responsive Design */
 @media (max-width: 640px) {
+  .webcam-modal {
+    max-height: 100vh;
+    height: 100vh;
+    border-radius: 0;
+    max-width: 100%;
+  }
+
+  .webcam-header {
+    padding: 16px 20px;
+  }
+
+  .webcam-header h3 {
+    font-size: 18px;
+  }
+
+  .webcam-close {
+    width: 36px;
+    height: 36px;
+    font-size: 24px;
+  }
+
+  .webcam-content {
+    min-height: 0;
+  }
+
+  .webcam-actions {
+    padding: 16px;
+  }
+
+  .webcam-actions .btn {
+    font-size: 14px;
+    padding: 14px 20px;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .upload-container {
+    padding: 16px;
+    margin: 12px;
+  }
+
+  .preview-item {
+    width: 96px;
+    height: 72px;
+  }
+
   .progress-container {
     padding: 0 10px;
   }

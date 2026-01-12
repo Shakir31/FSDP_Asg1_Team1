@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Star, ArrowLeft, Check } from "lucide-react";
+import { Star, ArrowLeft, Check, Camera } from "lucide-react";
 import { toast } from "react-toastify";
 import "../UploadPage.css";
 
@@ -31,6 +31,11 @@ export default function UploadPage() {
 
   const [loading, setLoading] = useState(false);
   const [uploadedImageId, setUploadedImageId] = useState(null);
+
+  // Webcam states
+  const [showWebcam, setShowWebcam] = useState(false);
+  const [stream, setStream] = useState(null);
+  const [capturedPhoto, setCapturedPhoto] = useState(null);
 
   const token =
     localStorage.getItem("token") || sessionStorage.getItem("token");
@@ -97,6 +102,84 @@ export default function UploadPage() {
     const f = Array.from(e.target.files || []);
     setFiles(f);
     setPreviewUrls(f.map((file) => URL.createObjectURL(file)));
+  }
+
+  // Handle camera capture
+  async function handleCameraCapture() {
+    // Check if on mobile
+    const isMobile =
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      );
+
+    if (isMobile) {
+      // Mobile: Use native camera
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+      input.capture = "environment";
+      input.onchange = (e) => {
+        const f = Array.from(e.target.files || []);
+        setFiles(f);
+        setPreviewUrls(f.map((file) => URL.createObjectURL(file)));
+      };
+      input.click();
+    } else {
+      // Desktop: Open webcam modal
+      try {
+        const mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "user" },
+        });
+        setStream(mediaStream);
+        setShowWebcam(true);
+      } catch (err) {
+        toast.error("Could not access camera: " + err.message);
+      }
+    }
+  }
+
+  // Capture photo from webcam
+  function captureFromWebcam() {
+    const video = document.getElementById("webcam-video");
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0);
+
+    canvas.toBlob(
+      (blob) => {
+        const file = new File([blob], "webcam-photo.jpg", {
+          type: "image/jpeg",
+        });
+        const url = URL.createObjectURL(blob);
+        setCapturedPhoto(url);
+        setFiles([file]);
+        setPreviewUrls([url]);
+      },
+      "image/jpeg",
+      0.95
+    );
+  }
+
+  // Use captured photo
+  function useWebcamPhoto() {
+    closeWebcam();
+  }
+
+  // Retake photo
+  function retakeWebcamPhoto() {
+    setCapturedPhoto(null);
+  }
+
+  // Close webcam
+  function closeWebcam() {
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop());
+      setStream(null);
+    }
+    setShowWebcam(false);
+    setCapturedPhoto(null);
   }
 
   async function handleImageUpload() {
@@ -341,59 +424,70 @@ export default function UploadPage() {
           <div className="step-content">
             <h3>Upload a photo of your food</h3>
 
-            <label className="file-drop" htmlFor="fileInput">
-              <input
-                id="fileInput"
-                type="file"
-                accept="image/*"
-                onChange={onFileChange}
-                className="file-input"
-                aria-label="Upload images"
-              />
-              <div className="file-drop-content">
-                <svg
-                  width="48"
-                  height="48"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  className="upload-icon"
-                  aria-hidden
-                >
-                  <path
-                    d="M12 3v12"
-                    stroke="#fff"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M8 7l4-4 4 4"
-                    stroke="#fff"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <rect
-                    x="3"
-                    y="9"
-                    width="18"
-                    height="11"
-                    rx="2"
-                    stroke="#fff"
-                    strokeWidth="1.2"
+            <div className="upload-options">
+              <label className="file-drop" htmlFor="fileInput">
+                <input
+                  id="fileInput"
+                  type="file"
+                  accept="image/*"
+                  onChange={onFileChange}
+                  className="file-input"
+                  aria-label="Upload images"
+                />
+                <div className="file-drop-content">
+                  <svg
+                    width="48"
+                    height="48"
+                    viewBox="0 0 24 24"
                     fill="none"
-                  />
-                </svg>
-                <div className="file-drop-text">
-                  Drag & drop an image here or click to select
-                  <div className="file-hint">
-                    {files.length
-                      ? `${files.length} file(s) selected`
-                      : "PNG, JPG, up to 10MB"}
+                    className="upload-icon"
+                    aria-hidden
+                  >
+                    <path
+                      d="M12 3v12"
+                      stroke="#fff"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M8 7l4-4 4 4"
+                      stroke="#fff"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <rect
+                      x="3"
+                      y="9"
+                      width="18"
+                      height="11"
+                      rx="2"
+                      stroke="#fff"
+                      strokeWidth="1.2"
+                      fill="none"
+                    />
+                  </svg>
+                  <div className="file-drop-text">
+                    Drag & drop an image here or click to select
+                    <div className="file-hint">
+                      {files.length
+                        ? `${files.length} file(s) selected`
+                        : "PNG, JPG, up to 10MB"}
+                    </div>
                   </div>
                 </div>
+              </label>
+
+              <div className="upload-divider">
+                <span>OR</span>
               </div>
-            </label>
+
+              <button className="btn-camera" onClick={handleCameraCapture}>
+                <Camera size={24} />
+                <span>Take Photo</span>
+              </button>
+            </div>
 
             <div className="preview-grid" aria-live="polite">
               {previewUrls.map((url, i) => (
@@ -480,6 +574,59 @@ export default function UploadPage() {
           </div>
         )}
       </div>
+
+      {/* Webcam Modal */}
+      {showWebcam && (
+        <div className="webcam-modal-overlay" onClick={closeWebcam}>
+          <div className="webcam-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="webcam-header">
+              <h3>{capturedPhoto ? "Photo Preview" : "Take Photo"}</h3>
+              <button className="webcam-close" onClick={closeWebcam}>
+                ×
+              </button>
+            </div>
+
+            <div className="webcam-content">
+              {!capturedPhoto ? (
+                <video
+                  id="webcam-video"
+                  autoPlay
+                  playsInline
+                  ref={(video) => {
+                    if (video && stream) {
+                      video.srcObject = stream;
+                    }
+                  }}
+                  className="webcam-video"
+                />
+              ) : (
+                <img
+                  src={capturedPhoto}
+                  alt="Captured"
+                  className="webcam-preview"
+                />
+              )}
+            </div>
+
+            <div className="webcam-actions">
+              {!capturedPhoto ? (
+                <button className="btn btn-orange" onClick={captureFromWebcam}>
+                  📸 Capture Photo
+                </button>
+              ) : (
+                <>
+                  <button className="btn btn-ghost" onClick={retakeWebcamPhoto}>
+                    Retake
+                  </button>
+                  <button className="btn btn-orange" onClick={useWebcamPhoto}>
+                    Use Photo
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

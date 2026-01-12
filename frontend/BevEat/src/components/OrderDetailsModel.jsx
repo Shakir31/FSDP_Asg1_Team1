@@ -1,16 +1,86 @@
-import React from "react";
-import { X } from "lucide-react";
+import React, { useState } from "react";
+import { X, Package, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import "../OrderDetailsModal.css";
 
-function OrderDetailsModal({ order, orderDetails, loading, onClose }) {
+function OrderDetailsModal({
+  order,
+  orderDetails,
+  loading,
+  onClose,
+  onOrderUpdated,
+}) {
   const navigate = useNavigate();
+  const [markingAsCollected, setMarkingAsCollected] = useState(false);
 
   if (!order) return null;
 
   const handleAddReview = (stallId, menuItemId) => {
     navigate(`/upload?stallId=${stallId}&menuItemId=${menuItemId}`);
     onClose();
+  };
+
+  const handleMarkAsCollected = async () => {
+    const token =
+      localStorage.getItem("token") || sessionStorage.getItem("token");
+
+    setMarkingAsCollected(true);
+
+    try {
+      // Update order status to Completed
+      const statusResponse = await fetch(
+        `http://localhost:3000/orders/${order.orderid}/status`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            orderStatus: "Completed",
+          }),
+        }
+      );
+
+      if (!statusResponse.ok) {
+        throw new Error("Failed to update order status");
+      }
+
+      // Update payment status to Paid
+      const paymentResponse = await fetch(
+        `http://localhost:3000/orders/payment`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            orderId: order.orderid,
+            paymentStatus: "Paid",
+          }),
+        }
+      );
+
+      if (!paymentResponse.ok) {
+        throw new Error("Failed to update payment status");
+      }
+
+      toast.success("Order marked as collected!");
+
+      // Call parent to refresh order list
+      if (onOrderUpdated) {
+        onOrderUpdated();
+      }
+
+      onClose();
+    } catch (error) {
+      console.error("Error updating order:", error);
+      toast.error("Failed to mark order as collected");
+    } finally {
+      setMarkingAsCollected(false);
+    }
   };
 
   const getStatusClass = (status) => {
@@ -48,6 +118,18 @@ function OrderDetailsModal({ order, orderDetails, loading, onClose }) {
               <span
                 className={`status-badge ${getStatusClass(order.orderstatus)}`}
               >
+                {order.orderstatus === "Completed" && (
+                  <CheckCircle
+                    size={16}
+                    style={{ marginRight: 4, display: "inline" }}
+                  />
+                )}
+                {order.orderstatus === "Pending" && (
+                  <Package
+                    size={16}
+                    style={{ marginRight: 4, display: "inline" }}
+                  />
+                )}
                 {order.orderstatus}
               </span>
             </div>
@@ -100,14 +182,16 @@ function OrderDetailsModal({ order, orderDetails, loading, onClose }) {
                         </div>
                       </div>
                     </div>
-                    <button
-                      className="btn-add-review"
-                      onClick={() =>
-                        handleAddReview(item.stallid, item.menuitemid)
-                      }
-                    >
-                      Add Review
-                    </button>
+                    {order.orderstatus === "Completed" && (
+                      <button
+                        className="btn-add-review"
+                        onClick={() =>
+                          handleAddReview(item.stallid, item.menuitemid)
+                        }
+                      >
+                        Add Review
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -115,6 +199,19 @@ function OrderDetailsModal({ order, orderDetails, loading, onClose }) {
               <p className="empty-message">No items found</p>
             )}
           </div>
+
+          {/* Mark as Collected Button - Only show for Pending orders */}
+          {order.orderstatus === "Pending" && (
+            <div className="modal-actions">
+              <button
+                className="btn-mark-collected"
+                onClick={handleMarkAsCollected}
+                disabled={markingAsCollected}
+              >
+                {markingAsCollected ? "Updating..." : "Mark as Collected"}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
