@@ -36,7 +36,7 @@ function Login() {
 
         // Role-based redirect
         if (data.role === "admin" || data.role === "Admin") {
-          window.location.href = "/admin";
+          navigate("/admin");
         } else if (data.role === "stall_owner") {
           navigate("/dashboard");
         } else {
