@@ -96,7 +96,7 @@ function StallPage() {
           {error && <p className="hero-error">Error: {error}</p>}
           {stall && (
             <div className="hero-content">
-              <button onClick={() => navigate(`/home`)} className="back-button">
+              <button onClick={() => navigate(`/home`)} className="back-button" style={{background: "white"}}>
                 &larr; Back to Home
               </button>
               <h1 className="hero-title">{stall.stallname}</h1>
