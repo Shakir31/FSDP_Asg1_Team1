@@ -83,9 +83,48 @@ async function updatePaymentStatus(req, res) {
   }
 }
 
+async function updateOrderStatus(req, res) {
+  try {
+    const userId = req.user.userId;
+    const orderId = parseInt(req.params.orderId, 10);
+    const { orderStatus } = req.body;
+
+    if (isNaN(orderId)) {
+      return res.status(400).json({ error: "Invalid order ID" });
+    }
+
+    if (!orderStatus) {
+      return res.status(400).json({ error: "Order status is required" });
+    }
+
+    // Verify order belongs to user before updating
+    const orderDetails = await orderModel.getOrderDetailsWithItems(
+      orderId,
+      userId
+    );
+
+    if (!orderDetails) {
+      return res.status(404).json({ error: "Order not found or unauthorized" });
+    }
+
+    // Update the order status
+    await orderModel.updateOrderStatus(orderId, orderStatus);
+
+    res.json({
+      message: "Order status updated successfully",
+      orderId,
+      newStatus: orderStatus,
+    });
+  } catch (error) {
+    console.error("Update order status error", error);
+    res.status(500).json({ error: "Error updating order status" });
+  }
+}
+
 module.exports = {
   placeOrder,
   getOrderHistory,
   getOrderDetails,
   updatePaymentStatus,
+  updateOrderStatus,
 };
