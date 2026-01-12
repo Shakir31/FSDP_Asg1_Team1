@@ -93,7 +93,7 @@ export default function LandingPage() {
 
           <div className="landing-page__hero-stats">
             <div className="landing-page__stat-item">
-              <div className="landing-page__stat-number">858+</div>
+              <div className="landing-page__stat-number">450+</div>
               <div className="landing-page__stat-label">Hawker Stalls</div>
             </div>
             <div className="landing-page__stat-divider" />
