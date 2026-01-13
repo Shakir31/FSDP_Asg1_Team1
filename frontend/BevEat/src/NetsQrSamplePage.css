@@ -1,0 +1,59 @@
+:root {
+  --app-bg: #ffffff;
+  --app-color: #111;
+}
+
+/* ensure page visible */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  background: var(--app-bg) !important;
+  color: var(--app-color) !important;
+}
+
+/* top-level app container */
+.netsQrPaymentGatewayWebpage {
+  position: relative !important;
+  background: transparent !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 100vh !important;
+  z-index: 1 !important;
+}
+
+/* QR box */
+.netsQrTxnFailStatus,
+.netsQrTxnSuccessStatus,
+.netsQrMain {
+  background: #fff !important;
+  color: #111 !important;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  max-width: 720px;
+  width: 95%;
+  text-align: center;
+  z-index: 2 !important;
+}
+
+/* ensure images visible */
+.netsQrTxnFailStatus img,
+.netsQrMain img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+.nets-qr-container { padding: 20px; max-width: 720px; margin: 0 auto; }
+.nets-form-row { margin: 10px 0; display:flex; flex-direction:column; }
+.nets-form-row label { font-weight:600; margin-bottom:6px; }
+.nets-form-row input { padding:8px; font-size:14px; }
+.nets-actions { margin-top:12px; }
+.nets-qr-area { margin-top:20px; text-align:center; }
+.nets-qr-display { display:flex; gap:20px; align-items:center; justify-content:center; flex-wrap:wrap; }
+.nets-qr-img { max-width:260px; width:100%; height:auto; border:1px solid #ddd; padding:8px; background:#fff; }
+.nets-qr-meta { max-width:320px; text-align:left; }
+.instruction { color: #555; }
+.error { color: red; }

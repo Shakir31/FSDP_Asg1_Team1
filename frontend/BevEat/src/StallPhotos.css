@@ -1,0 +1,75 @@
+.photo-page-wrapper {
+  background-color: #f4f4f5;
+  min-height: calc(100vh - 108px); /* Full height minus navbar */
+  padding: 2rem;
+}
+
+.photo-page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.photo-header {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.photo-title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #121223;
+  margin: 0;
+}
+
+/* Re-using the back button style from Product.css */
+.back-button {
+  background: none;
+  border: none;
+  color: #ff7622;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  transition: color 0.2s;
+}
+
+.back-button:hover {
+  color: #121223;
+}
+
+.social-feed {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+}
+
+/* Loading, Error, No Photos states */
+.loading-text,
+.error-text,
+.no-photos-text {
+  text-align: center;
+  padding: 40px 20px;
+  background: white;
+  border-radius: 8px;
+  color: #666;
+  grid-column: 1 / -1; /* Span full width in grid */
+}
+
+.error-text {
+  color: #e74c3c;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .social-feed {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .social-post {
+    border-radius: 8px;
+  }
+}

@@ -1,0 +1,86 @@
+.hawker-map-wrapper{
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hawker-map-card{
+  width: min(1100px, 100%);
+  margin: 0 auto;
+  padding: 14px;
+  border: 1px solid #e8e8e8;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.hawker-map-container{
+  width: 100%;
+  height: 460px;          
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.hawker-map-actions{
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.hawker-btn{
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  background: #fff;
+  cursor: pointer;
+}
+
+.hawker-hint{
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.hawker-map-error{
+  padding: 10px 12px;
+  border: 1px solid #f2c1c1;
+  border-radius: 10px;
+  background: #fff4f4;
+  color: #b00020;
+}
+
+.hawker-info-window {
+  max-width: 260px;
+  padding: 14px;
+}
+
+.hawker-info-title {
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.hawker-info-img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #eee;
+}
+
+.hawker-info-noimg {
+  font-size: 13px;
+  opacity: 0.75;
+}
+
+.gm-style-iw {
+  padding: 0 !important;
+}
+
+.gm-style-iw-d {
+  overflow: hidden !important;
+  padding: 0 !important;
+}
+
+.gm-ui-hover-effect {
+  display: none !important;
+}

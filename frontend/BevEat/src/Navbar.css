@@ -1,0 +1,186 @@
+.navbar {
+  height: 108px;
+  background-color: #ffffff;
+  color: #121223;
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid #e2e8f0;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.navbar-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-image {
+  width: 100px;
+  height: 98px;
+  object-fit: cover;
+}
+
+.navbar-link {
+  text-decoration: none;
+  color: #121223;
+  font-size: 1.1rem;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+.navbar-link:hover {
+  color: #ff7622;
+}
+
+.search-container {
+  position: relative;
+}
+
+.search-container input {
+  height: 40px;
+  width: 250px;
+  padding: 0 1rem 0 3.5rem;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  font-size: 14px;
+}
+
+.search-container .search-button {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #999;
+}
+
+.icon-link {
+  color: #121223;
+  transition: color 0.2s;
+}
+
+.icon-link:hover {
+  color: #ff7622;
+}
+
+.cart-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cart-badge {
+  position: absolute;
+  top: -5px;    /* Adjusts vertical position */
+  right: -8px;  /* Adjusts horizontal position */
+  background-color: #ff7622; /* Your brand orange color */
+  color: white;
+  font-size: 11px;
+  font-weight: bold;
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffffff; /* Adds a small white border for contrast */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* 1. Container for the icon and menu */
+.profile-icon-container {
+  position: relative;
+  height: auto; /* Ensures it doesn't stretch the full navbar height */
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* 2. The invisible trigger area (optional, for padding) */
+.profile-trigger {
+  padding: 10px 0; /* Adds a little hit area without stretching */
+}
+
+/* 3. The Dropdown Menu Box */
+.profile-dropdown {
+  display: none; /* Hidden by default */
+  position: absolute;
+  top: 100%; /* Pushes it below the icon */
+  right: -10px; /* Aligns it nicely with the icon */
+  background-color: #ffffff;
+  min-width: 150px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  z-index: 1100;
+  flex-direction: column;
+  
+  /* CRITICAL: Allows the arrow to stick out the top */
+  overflow: visible; 
+}
+
+/* 4. The "Arrow" / Triangle Icon */
+.profile-dropdown::before {
+  content: '';
+  position: absolute;
+  top: -6px; /* Moves it up to bridge the gap */
+  right: 18px; /* Aligns with the user icon center */
+  width: 12px;
+  height: 12px;
+  background-color: #ffffff;
+  
+  /* Create the triangle shape using borders */
+  border-top: 1px solid #e2e8f0;
+  border-left: 1px solid #e2e8f0;
+  transform: rotate(45deg);
+}
+
+/* 5. Show dropdown on hover */
+.profile-icon-container:hover .profile-dropdown {
+  display: flex;
+}
+
+/* 6. Menu Item Styles */
+.dropdown-item {
+  padding: 12px 20px;
+  text-decoration: none;
+  color: #333;
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s, background-color 0.2s;
+}
+
+.dropdown-item:hover {
+  background-color: #fff0e6;
+  color: #ff7622;
+}
+
+/* Optional: Add a separator line above Logout if desired */
+.logout-btn {
+  border-top: 1px solid #f0f0f0;
+}
+
+/* Fix rounding for first and last items so they match the box */
+.dropdown-item:first-child {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+.dropdown-item:last-child {
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
