@@ -16,6 +16,7 @@ const voucherController = require("./controllers/voucherController");
 const reviewController = require("./controllers/reviewController");
 const notificationController = require("./controllers/notificationController");
 const menuManagementController = require("./controllers/menuManagementController");
+const reactionController = require("./controllers/reactionController");
 
 const { validateReview } = require("./middlewares/reviewValidation");
 const { validateMenuItem } = require("./middlewares/menuItemValidation");
@@ -188,6 +189,7 @@ app.post(
   imageController.uploadImage
 );
 app.post("/images/upvote", authenticateToken, imageController.upvoteImage);
+app.get("/images/:imageId/reviewid", imageController.getReviewId);
 
 //coin gamification endpoints
 app.get("/coins/balance", authenticateToken, coinController.getUserCoins);
@@ -320,6 +322,18 @@ app.post(
   authenticateToken,
   authorizeRoles("stall_owner"),
   menuManagementController.uploadMenuItemImage
+);
+
+//reaction endpoints
+app.post(
+  "/reviews/:reviewId/react",
+  authenticateToken,
+  reactionController.toggleReaction
+);
+app.get(
+  "/reviews/:reviewId/reactions",
+  optionalAuth,
+  reactionController.getReactions
 );
 
 //start server

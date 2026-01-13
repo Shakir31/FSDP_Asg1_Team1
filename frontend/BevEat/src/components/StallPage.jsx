@@ -108,7 +108,7 @@ function StallPage() {
                 <strong>Category:</strong> {stall.category}
               </p>
               <Link to={`/stalls/${id}/photos`} className="hero-photos-button">
-                View Photos
+                View Reviews
               </Link>
             </div>
           )}

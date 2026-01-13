@@ -138,4 +138,15 @@ async function upvoteImage(req, res) {
   }
 }
 
-module.exports = { uploadImage, upvoteImage };
+async function getReviewId(req, res) {
+  try {
+    const { imageId } = req.params;
+    const reviewId = await imageModel.getReviewIdFromImageId(imageId);
+    res.json({ reviewid: reviewId });
+  } catch (error) {
+    console.error("Get reviewId error:", error);
+    res.status(500).json({ error: "Error getting reviewId" });
+  }
+}
+
+module.exports = { uploadImage, upvoteImage, getReviewId };
