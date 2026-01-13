@@ -719,6 +719,49 @@
   background: linear-gradient(135deg, #ff7622 0%, #e66915 100%);
 }
 
+/* Verification Success Section */
+.verification-success {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background-color: #f0fdf4;
+  border: 2px solid #86efac;
+  border-radius: 12px;
+}
+
+.success-message {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  color: #166534;
+}
+
+.success-icon {
+  flex-shrink: 0;
+  color: #22c55e;
+}
+
+.success-message p {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* Disable upload controls when verified */
+.file-drop:has(input:disabled) {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.file-drop input:disabled + .file-drop-content {
+  pointer-events: none;
+}
+
+.btn-camera:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* Responsive Design */
 @media (max-width: 640px) {
   .webcam-modal {
