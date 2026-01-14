@@ -17,6 +17,7 @@ const reviewController = require("./controllers/reviewController");
 const notificationController = require("./controllers/notificationController");
 const menuManagementController = require("./controllers/menuManagementController");
 const reactionController = require("./controllers/reactionController");
+const recommendationController = require("./controllers/recommendationController");
 
 const { validateReview } = require("./middlewares/reviewValidation");
 const { validateMenuItem } = require("./middlewares/menuItemValidation");
@@ -334,6 +335,22 @@ app.get(
   "/reviews/:reviewId/reactions",
   optionalAuth,
   reactionController.getReactions
+);
+
+//recommendations
+app.get(
+  "/recommendations",
+  authenticateToken,
+  recommendationController.getRecommendations
+);
+app.get(
+  "/recommendations/popular",
+  recommendationController.getPopularRecommendations
+);
+app.post(
+  "/recommendations/refresh",
+  authenticateToken,
+  recommendationController.refreshRecommendations
 );
 
 //start server

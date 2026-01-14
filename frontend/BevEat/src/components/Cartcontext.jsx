@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
+import RecommendationsSection from "./RecommendationsSection";
 import "../Cart.css";
 
 export const CartContext = createContext(null);
@@ -317,6 +318,17 @@ export function CartPage() {
                 })}
             </div>
           </div>
+
+          {/* ✨ RECOMMENDATIONS SECTION - ADDED HERE ✨ */}
+          {items.length > 0 && (
+            <div className="cart-recommendations">
+              <h3 className="recommendations-header">Add More to Your Order</h3>
+              <p className="recommendations-subheader">
+                Customers who ordered these items also enjoyed
+              </p>
+              <RecommendationsSection limit={3} showTitle={false} />
+            </div>
+          )}
         </div>
 
         {/* RIGHT: Payment and vouchers */}
