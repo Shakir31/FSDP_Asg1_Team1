@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Star, ArrowLeft, Check, Camera } from "lucide-react";
 import { toast } from "react-toastify";
+import PhotoCustomizer from "./PhotoCustomizer";
 import "../UploadPage.css";
 
 export default function UploadPage() {
@@ -31,6 +32,11 @@ export default function UploadPage() {
 
   const [loading, setLoading] = useState(false);
   const [uploadedImageId, setUploadedImageId] = useState(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState(null);
+
+  // Photo customizer states
+  const [showCustomizer, setShowCustomizer] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
 
   // Webcam states
   const [showWebcam, setShowWebcam] = useState(false);
@@ -102,6 +108,7 @@ export default function UploadPage() {
     const f = Array.from(e.target.files || []);
     setFiles(f);
     setPreviewUrls(f.map((file) => URL.createObjectURL(file)));
+    setIsVerified(false); // Reset verification when new file is selected
   }
 
   // Handle camera capture
@@ -122,6 +129,7 @@ export default function UploadPage() {
         const f = Array.from(e.target.files || []);
         setFiles(f);
         setPreviewUrls(f.map((file) => URL.createObjectURL(file)));
+        setIsVerified(false);
       };
       input.click();
     } else {
@@ -156,6 +164,7 @@ export default function UploadPage() {
         setCapturedPhoto(url);
         setFiles([file]);
         setPreviewUrls([url]);
+        setIsVerified(false);
       },
       "image/jpeg",
       0.95
@@ -207,13 +216,54 @@ export default function UploadPage() {
 
       const data = await res.json();
       setUploadedImageId(data.image.imageid);
-      toast.success("Image verified successfully! Now write your review.");
-      setCurrentStep(3);
+      setUploadedImageUrl(data.image.imageurl);
+      setIsVerified(true);
+      toast.success("Image verified successfully!");
     } catch (err) {
       toast.error("Upload error: " + err.message);
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleApplyFilter(cloudinaryTransformation) {
+    if (!uploadedImageId || !files.length) {
+      toast.error("No image to customize");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const fd = new FormData();
+      fd.append("imageFile", files[0]);
+      fd.append("menuItemId", selectedMenuItemId);
+      fd.append("cloudinaryTransformation", cloudinaryTransformation);
+      fd.append("imageIdToReplace", uploadedImageId);
+
+      const res = await fetch("http://localhost:3000/images/upload", {
+        method: "POST",
+        headers: { Authorization: token ? `Bearer ${token}` : "" },
+        body: fd,
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText || `Filter application failed`);
+      }
+
+      const data = await res.json();
+      setUploadedImageUrl(data.image.imageurl);
+      setShowCustomizer(false);
+      toast.success("Filter applied successfully!");
+    } catch (err) {
+      toast.error("Filter error: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleContinueToReview() {
+    setCurrentStep(3);
   }
 
   async function handleSubmitReview() {
@@ -270,6 +320,8 @@ export default function UploadPage() {
     setReview("");
     setRating(5);
     setUploadedImageId(null);
+    setUploadedImageUrl(null);
+    setIsVerified(false);
     setCurrentStep(1);
 
     if (!isFromOrder) {
@@ -445,6 +497,7 @@ export default function UploadPage() {
                   onChange={onFileChange}
                   className="file-input"
                   aria-label="Upload images"
+                  disabled={isVerified}
                 />
                 <div className="file-drop-content">
                   <svg
@@ -495,7 +548,11 @@ export default function UploadPage() {
                 <span>OR</span>
               </div>
 
-              <button className="btn-camera" onClick={handleCameraCapture}>
+              <button
+                className="btn-camera"
+                onClick={handleCameraCapture}
+                disabled={isVerified}
+              >
                 <Camera size={24} />
                 <span>Take Photo</span>
               </button>
@@ -509,22 +566,47 @@ export default function UploadPage() {
               ))}
             </div>
 
-            <div className="step-actions">
-              <button
-                className="btn btn-ghost"
-                onClick={() => setCurrentStep(1)}
-                disabled={loading}
-              >
-                Back
-              </button>
-              <button
-                className="btn btn-orange"
-                onClick={handleImageUpload}
-                disabled={loading || !files.length}
-              >
-                {loading ? "Verifying…" : "Upload & Verify"}
-              </button>
-            </div>
+            {!isVerified ? (
+              <div className="step-actions">
+                <button
+                  className="btn btn-ghost"
+                  onClick={() => setCurrentStep(1)}
+                  disabled={loading}
+                >
+                  Back
+                </button>
+                <button
+                  className="btn btn-orange"
+                  onClick={handleImageUpload}
+                  disabled={loading || !files.length}
+                >
+                  {loading ? "Verifying…" : "Upload & Verify"}
+                </button>
+              </div>
+            ) : (
+              <div className="verification-success">
+                <div className="success-message">
+                  <Check size={24} className="success-icon" />
+                  <p>Photo verified! Choose an option:</p>
+                </div>
+                <div className="step-actions">
+                  <button
+                    className="btn btn-ghost"
+                    onClick={() => setShowCustomizer(true)}
+                    disabled={loading}
+                  >
+                    🎨 Customize Photo
+                  </button>
+                  <button
+                    className="btn btn-orange"
+                    onClick={handleContinueToReview}
+                    disabled={loading}
+                  >
+                    Continue to Review
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -533,13 +615,19 @@ export default function UploadPage() {
             <h3>How was your experience?</h3>
 
             <div className="review-preview">
-              {previewUrls[0] && (
+              {uploadedImageUrl ? (
+                <img
+                  src={uploadedImageUrl}
+                  alt="Your photo"
+                  className="review-preview-image"
+                />
+              ) : previewUrls[0] ? (
                 <img
                   src={previewUrls[0]}
                   alt="Your photo"
                   className="review-preview-image"
                 />
-              )}
+              ) : null}
             </div>
 
             <div className="rating-container">
@@ -586,6 +674,15 @@ export default function UploadPage() {
           </div>
         )}
       </div>
+
+      {/* Photo Customizer Modal */}
+      {showCustomizer && uploadedImageUrl && (
+        <PhotoCustomizer
+          imageUrl={uploadedImageUrl}
+          onApply={handleApplyFilter}
+          onCancel={() => setShowCustomizer(false)}
+        />
+      )}
 
       {/* Webcam Modal */}
       {showWebcam && (

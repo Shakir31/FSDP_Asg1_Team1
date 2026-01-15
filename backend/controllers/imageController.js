@@ -26,6 +26,24 @@ const upload = multer({
   },
 }).single("imageFile");
 
+// Convert transformation string to Cloudinary effects array
+function parseTransformationString(transformationStr) {
+  if (!transformationStr) return [];
+
+  // transformationStr format: "e_brightness:10/e_contrast:15/e_saturation:30"
+  const effects = transformationStr.split("/");
+  const transformations = [];
+
+  effects.forEach((effect) => {
+    if (effect.startsWith("e_")) {
+      const [type, value] = effect.substring(2).split(":");
+      transformations.push({ effect: `${type}:${value}` });
+    }
+  });
+
+  return transformations;
+}
+
 // New: call AI microservice with imageUrl, return JSON { isFood, confidence }
 async function aiFoodImageVerification(imageUrl) {
   try {
@@ -52,12 +70,29 @@ async function uploadImage(req, res) {
 
       let menuItemId;
       let imageUrl;
+      const cloudinaryTransformation = req.body.cloudinaryTransformation || "";
+      const imageIdToReplace = req.body.imageIdToReplace;
 
       if (req.file) {
+        // Build upload options with optional transformation
+        const uploadOptions = {
+          folder: "food_app_images",
+        };
+
+        // If transformation is provided, parse and add it to upload
+        if (cloudinaryTransformation) {
+          const transformations = parseTransformationString(
+            cloudinaryTransformation
+          );
+          if (transformations.length > 0) {
+            uploadOptions.transformation = transformations;
+          }
+        }
+
         // Upload local file buffer to Cloudinary
         const uploadResult = await new Promise((resolve, reject) => {
           const stream = cloudinary.uploader.upload_stream(
-            { folder: "food_app_images" },
+            uploadOptions,
             (error, result) => {
               if (error) return reject(error);
               resolve(result);
@@ -70,7 +105,20 @@ async function uploadImage(req, res) {
         imageUrl = uploadResult.secure_url;
         menuItemId = req.body.menuItemId;
 
-        // Verify food image via your AI microservice
+        // If this is a replacement (filter applied), skip AI verification
+        if (imageIdToReplace) {
+          // Update existing image in database
+          const updatedImage = await imageModel.updateImageUrl(
+            imageIdToReplace,
+            imageUrl
+          );
+          return res.status(200).json({
+            message: "Image updated with filter",
+            image: updatedImage,
+          });
+        }
+
+        // Verify food image via your AI microservice (only for new uploads)
         const { isFood } = await aiFoodImageVerification(imageUrl);
         if (!isFood) {
           return res
@@ -138,4 +186,15 @@ async function upvoteImage(req, res) {
   }
 }
 
-module.exports = { uploadImage, upvoteImage };
+async function getReviewId(req, res) {
+  try {
+    const { imageId } = req.params;
+    const reviewId = await imageModel.getReviewIdFromImageId(imageId);
+    res.json({ reviewid: reviewId });
+  } catch (error) {
+    console.error("Get reviewId error:", error);
+    res.status(500).json({ error: "Error getting reviewId" });
+  }
+}
+
+module.exports = { uploadImage, upvoteImage, getReviewId };

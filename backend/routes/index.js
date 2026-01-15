@@ -1,0 +1,16 @@
+module.exports = {
+  authRoutes: require("./authRoutes"),
+  adminRoutes: require("./adminRoutes"),
+  stallRoutes: require("./stallRoutes"),
+  menuItemRoutes: require("./menuItemRoutes"),
+  hawkerRoutes: require("./hawkerRoutes"),
+  orderRoutes: require("./orderRoutes"),
+  imageRoutes: require("./imageRoutes"),
+  coinRoutes: require("./coinRoutes"),
+  voucherRoutes: require("./voucherRoutes"),
+  reviewRoutes: require("./reviewRoutes"),
+  notificationRoutes: require("./notificationRoutes"),
+  menuManagementRoutes: require("./menuManagementRoutes"),
+  reactionRoutes: require("./reactionRoutes"),
+  recommendationRoutes: require("./recommendationRoutes"),
+};

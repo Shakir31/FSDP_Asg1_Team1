@@ -21,6 +21,23 @@ async function insertImage(menuItemId, uploaderId, imageUrl) {
   }
 }
 
+async function updateImageUrl(imageId, newImageUrl) {
+  try {
+    const { data, error } = await supabase
+      .from("images")
+      .update({ imageurl: newImageUrl })
+      .eq("imageid", imageId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("DB updateImageUrl error:", error);
+    throw error;
+  }
+}
+
 async function voteImage(userId, imageId) {
   try {
     // Check if user already voted
@@ -61,4 +78,25 @@ async function voteImage(userId, imageId) {
   }
 }
 
-module.exports = { insertImage, voteImage };
+async function getReviewIdFromImageId(imageId) {
+  try {
+    const { data, error } = await supabase
+      .from("reviews")
+      .select("reviewid")
+      .eq("imageid", imageId)
+      .single();
+
+    if (error) throw error;
+    return data.reviewid;
+  } catch (error) {
+    console.error("DB getReviewIdFromImageId error:", error);
+    throw error;
+  }
+}
+
+module.exports = {
+  insertImage,
+  updateImageUrl,
+  voteImage,
+  getReviewIdFromImageId,
+};

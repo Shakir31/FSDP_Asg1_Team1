@@ -1,8 +1,163 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { ThumbsUp, Star } from "lucide-react";
 import "../SocialPostCard.css";
+import EmojiReactionPicker from "./EmojiReactionPicker";
+import ReactionBar from "./ReactionBar";
+import { toast } from "react-toastify";
 
 function SocialPostCard({ image, onUpvote }) {
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [pickerPosition, setPickerPosition] = useState({ x: 0, y: 0 });
+  const [reactions, setReactions] = useState({});
+  const [userReactions, setUserReactions] = useState([]);
+  const [touchTimer, setTouchTimer] = useState(null);
+  const [reviewId, setReviewId] = useState(null);
+
+  const token = localStorage.getItem("token");
+
+  // Get reviewId from imageId
+  useEffect(() => {
+    const getReviewId = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:3000/images/${image.imageid}/reviewid`
+        );
+        const data = await response.json();
+        setReviewId(data.reviewid);
+      } catch (error) {
+        console.error("Error getting reviewId:", error);
+      }
+    };
+
+    if (image.imageid) {
+      getReviewId();
+    }
+  }, [image.imageid]);
+
+  // Fetch reactions when reviewId is available
+  useEffect(() => {
+    if (reviewId) {
+      fetchReactions();
+    }
+  }, [reviewId]);
+
+  const fetchReactions = async () => {
+    if (!reviewId) return;
+
+    try {
+      const headers = {};
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(
+        `http://localhost:3000/reviews/${reviewId}/reactions`,
+        { headers }
+      );
+      const data = await response.json();
+
+      setReactions(data.reactions || {});
+      setUserReactions(data.userReactions || []);
+    } catch (error) {
+      console.error("Error fetching reactions:", error);
+    }
+  };
+
+  const handleRightClick = (e) => {
+    e.preventDefault();
+
+    if (!token) {
+      toast.warning("Please log in to react");
+      return;
+    }
+
+    if (!reviewId) {
+      toast.info("No review to react to");
+      return;
+    }
+
+    setPickerPosition({ x: e.clientX, y: e.clientY });
+    setShowEmojiPicker(true);
+  };
+
+  const handleReact = async (emoji) => {
+    if (!token) {
+      toast.warning("Please log in to react");
+      return;
+    }
+
+    if (!reviewId) {
+      toast.info("No review to react to");
+      return;
+    }
+
+    try {
+      // Optimistic update
+      const isCurrentlyReacted = userReactions.includes(emoji);
+      const newUserReactions = isCurrentlyReacted
+        ? userReactions.filter((e) => e !== emoji)
+        : [...userReactions, emoji];
+
+      const newReactions = { ...reactions };
+      if (isCurrentlyReacted) {
+        newReactions[emoji] = (newReactions[emoji] || 1) - 1;
+        if (newReactions[emoji] <= 0) delete newReactions[emoji];
+      } else {
+        newReactions[emoji] = (newReactions[emoji] || 0) + 1;
+      }
+
+      setUserReactions(newUserReactions);
+      setReactions(newReactions);
+      setShowEmojiPicker(false);
+
+      // Send to backend
+      const response = await fetch(
+        `http://localhost:3000/reviews/${reviewId}/react`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ emoji }),
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to react");
+
+      const data = await response.json();
+
+      // Update with server response
+      setReactions(data.reactions);
+      setUserReactions(data.userReactions);
+    } catch (error) {
+      console.error("Error reacting:", error);
+      toast.error("Failed to add reaction");
+      // Revert optimistic update
+      fetchReactions();
+    }
+  };
+
+  // Mobile long-press support
+  const handleTouchStart = (e) => {
+    if (!token || !reviewId) return;
+
+    const timer = setTimeout(() => {
+      const touch = e.touches[0];
+      setPickerPosition({ x: touch.clientX, y: touch.clientY });
+      setShowEmojiPicker(true);
+    }, 500); // 500ms long press
+
+    setTouchTimer(timer);
+  };
+
+  const handleTouchEnd = () => {
+    if (touchTimer) {
+      clearTimeout(touchTimer);
+      setTouchTimer(null);
+    }
+  };
+
   // Format timestamp to relative time
   const formatTimeAgo = (timestamp) => {
     const now = new Date();
@@ -37,7 +192,12 @@ function SocialPostCard({ image, onUpvote }) {
   };
 
   return (
-    <div className="social-post">
+    <div
+      className="social-post"
+      onContextMenu={handleRightClick}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       {/* Post Header */}
       <div className="post-header">
         <div className="user-avatar">
@@ -60,7 +220,7 @@ function SocialPostCard({ image, onUpvote }) {
         />
       </div>
 
-      {/* Post Actions */}
+      {/* Post Actions - Upvote + Reactions on same line */}
       <div className="post-actions">
         <button
           onClick={() => onUpvote(image.imageid, image.user_has_upvoted)}
@@ -72,6 +232,15 @@ function SocialPostCard({ image, onUpvote }) {
           />
           <span>{image.upvote_count}</span>
         </button>
+
+        {/* Reaction Bar inline */}
+        {reviewId && (
+          <ReactionBar
+            reactions={reactions}
+            userReactions={userReactions}
+            onReact={handleReact}
+          />
+        )}
       </div>
 
       {/* Post Content */}
@@ -86,6 +255,15 @@ function SocialPostCard({ image, onUpvote }) {
           </div>
         )}
       </div>
+
+      {/* Emoji Picker */}
+      {showEmojiPicker && (
+        <EmojiReactionPicker
+          position={pickerPosition}
+          onReact={handleReact}
+          onClose={() => setShowEmojiPicker(false)}
+        />
+      )}
     </div>
   );
 }

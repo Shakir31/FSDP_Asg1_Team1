@@ -133,3 +133,38 @@
   font-weight: 500;
   font-size: 0.85rem;
 }
+
+/* Recommendations Container */
+.recommendations-container {
+  padding: 3rem 1rem;
+  background: linear-gradient(135deg, #fff5f0 0%, #ffffff 100%);
+  border-top: 1px solid #ffe4d6;
+  border-bottom: 1px solid #ffe4d6;
+}
+
+/* Adjust section spacing to accommodate recommendations */
+.stalls,
+.hawker {
+  padding: 3rem 1rem;
+}
+
+/* Ensure consistent spacing between sections */
+.home-page section {
+  margin-bottom: 2rem;
+}
+
+.home-page section:last-child {
+  margin-bottom: 0;
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .recommendations-container {
+    padding: 2rem 0.5rem;
+  }
+
+  .stalls,
+  .hawker {
+    padding: 2rem 0.5rem;
+  }
+}
