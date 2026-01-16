@@ -293,7 +293,19 @@ export default function UploadPage() {
         throw new Error(errText || "Review submission failed");
       }
 
-      toast.success("Review submitted successfully!");
+      // Award coins for photo upload
+      const coinRes = await fetch("http://localhost:3000/coins/award-photo", {
+        method: "POST",
+        headers: {
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+      });
+      if (!coinRes.ok) {
+        toast.success("Review submitted! You earned 15 Coins! 🪙");
+      } else {
+        toast.success("Review submitted successfully!"); // Fallback message
+      }
+
       navigate("/profile");
     } catch (err) {
       toast.error("Review submission error: " + err.message);
