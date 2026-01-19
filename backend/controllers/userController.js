@@ -43,7 +43,7 @@ async function loginUser(req, res) {
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
-    res.json({ token, role: user.role });
+    res.json({ token, role: user.role, userId: user.userid });
   } catch (error) {
     console.error("Login error", error);
     res.status(500).json({ error: "Internal server error" });
