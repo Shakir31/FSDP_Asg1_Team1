@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useCart } from "./Cartcontext";
+import { useGroupOrder } from "./GroupOrderContext";
 import { toast } from "react-toastify";
 import SocialPostCard from "./SocialPostCard";
 import "../Product.css";
@@ -17,6 +18,7 @@ function Product() {
 
   const navigate = useNavigate();
   const { addItem } = useCart();
+  const { session, addItemToGroup } = useGroupOrder();
 
   async function handleUpvote(imageId, currentlyUpvoted) {
     const token =
@@ -117,6 +119,15 @@ function Product() {
   const handleAddToCart = () => {
     if (!item) return;
 
+    if (session) {
+      addItemToGroup(item.menuitemid, 1);
+      toast.success(`${item.name} added to group order!`, {
+        position: "bottom-right",
+        autoClose: 2000,
+      });
+      return;
+    }
+    
     const cartItem = {
       id: item.menuitemid,
       name: item.name,
