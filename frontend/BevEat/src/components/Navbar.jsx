@@ -31,8 +31,8 @@ function Navbar() {
   const handleJoinClick = async () => {
     const code = prompt("Enter Group Code:");
     if (code) {
-        const success = await joinGroupOrder(code);
-        if (success) navigate("/group-lobby");
+      const success = await joinGroupOrder(code);
+      if (success) navigate("/group-lobby");
     }
   };
 
@@ -99,25 +99,47 @@ function Navbar() {
 
       {/* Group Order Dropdown for regular users */}
       {!session ? (
-             <>
-               <div className="navbar-item">
-                 <button onClick={handleStartClick} className="navbar-link" style={{background:"none", border:"none", cursor:"pointer", fontSize:"16px"}}>
-                   Start Group
-                 </button>
-               </div>
-               <div className="navbar-item">
-                 <button onClick={handleJoinClick} className="navbar-link" style={{background:"none", border:"none", cursor:"pointer", fontSize:"16px"}}>
-                   Join Group
-                 </button>
-               </div>
-             </>
-          ) : (
-             <div className="navbar-item">
-               <Link to="/group-lobby" className="navbar-link" style={{color: "var(--orange)", fontWeight: "bold"}}>
-                 Group Lobby ({session.join_code})
-               </Link>
-             </div>
-          )}
+        <>
+          <div className="navbar-item">
+            <button
+              onClick={handleStartClick}
+              className="navbar-link"
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                fontSize: "16px",
+              }}
+            >
+              Start Group
+            </button>
+          </div>
+          <div className="navbar-item">
+            <button
+              onClick={handleJoinClick}
+              className="navbar-link"
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                fontSize: "16px",
+              }}
+            >
+              Join Group
+            </button>
+          </div>
+        </>
+      ) : (
+        <div className="navbar-item">
+          <Link
+            to="/group-lobby"
+            className="navbar-link"
+            style={{ color: "var(--orange)", fontWeight: "bold" }}
+          >
+            Group Lobby ({session.join_code})
+          </Link>
+        </div>
+      )}
 
       {/* Only show Cart for regular users */}
       {isCustomer && (

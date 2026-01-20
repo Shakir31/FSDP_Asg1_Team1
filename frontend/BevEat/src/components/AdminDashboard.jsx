@@ -20,6 +20,11 @@ import { toast } from "react-toastify";
 
 const API_URL = "http://localhost:3000";
 
+// Helper function to get token from either storage
+function getToken() {
+  return localStorage.getItem("token") || sessionStorage.getItem("token");
+}
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
@@ -45,7 +50,7 @@ const AdminDashboard = () => {
   });
 
   const getAuthHeaders = () => {
-    const token = localStorage.getItem("token");
+    const token = getToken();
     return {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
@@ -53,6 +58,13 @@ const AdminDashboard = () => {
   };
 
   useEffect(() => {
+    const token = getToken();
+    if (!token) {
+      toast.error("Please log in to continue");
+      navigate("/login");
+      return;
+    }
+
     if (activeTab === "overview") {
       fetchBothForStats();
     } else if (activeTab === "users") {
@@ -64,15 +76,34 @@ const AdminDashboard = () => {
         fetchStalls();
       }
     }
-  }, [activeTab]);
+  }, [activeTab, navigate]);
 
   const fetchBothForStats = async () => {
+    const token = getToken();
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
     setLoading(true);
     try {
       const [usersResponse, stallsResponse] = await Promise.all([
         fetch(`${API_URL}/admin/users`, { headers: getAuthHeaders() }),
         fetch(`${API_URL}/admin/stalls`, { headers: getAuthHeaders() }),
       ]);
+
+      if (
+        usersResponse.status === 403 ||
+        usersResponse.status === 401 ||
+        stallsResponse.status === 403 ||
+        stallsResponse.status === 401
+      ) {
+        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
+        toast.error("Session expired. Please log in again.");
+        navigate("/login");
+        return;
+      }
 
       if (!usersResponse.ok) throw new Error("Failed to fetch users");
       if (!stallsResponse.ok) throw new Error("Failed to fetch stalls");
@@ -92,11 +123,26 @@ const AdminDashboard = () => {
   };
 
   const fetchUsers = async () => {
+    const token = getToken();
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await fetch(`${API_URL}/admin/users`, {
         headers: getAuthHeaders(),
       });
+
+      if (response.status === 403 || response.status === 401) {
+        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
+        toast.error("Session expired. Please log in again.");
+        navigate("/login");
+        return;
+      }
+
       if (!response.ok) throw new Error("Failed to fetch users");
       const data = await response.json();
       setUsers(data);
@@ -110,11 +156,26 @@ const AdminDashboard = () => {
   };
 
   const fetchStalls = async () => {
+    const token = getToken();
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await fetch(`${API_URL}/admin/stalls`, {
         headers: getAuthHeaders(),
       });
+
+      if (response.status === 403 || response.status === 401) {
+        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
+        toast.error("Session expired. Please log in again.");
+        navigate("/login");
+        return;
+      }
+
       if (!response.ok) throw new Error("Failed to fetch stalls");
       const data = await response.json();
       setStalls(data);
@@ -137,10 +198,25 @@ const AdminDashboard = () => {
   };
 
   const viewUserDetails = async (userId) => {
+    const token = getToken();
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
     try {
       const response = await fetch(`${API_URL}/admin/users/${userId}`, {
         headers: getAuthHeaders(),
       });
+
+      if (response.status === 403 || response.status === 401) {
+        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
+        toast.error("Session expired. Please log in again.");
+        navigate("/login");
+        return;
+      }
+
       if (!response.ok) throw new Error("Failed to fetch user details");
       const data = await response.json();
       setSelectedUser(data);
@@ -152,10 +228,25 @@ const AdminDashboard = () => {
   };
 
   const viewStallDetails = async (stallId) => {
+    const token = getToken();
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
     try {
       const response = await fetch(`${API_URL}/admin/stalls/${stallId}`, {
         headers: getAuthHeaders(),
       });
+
+      if (response.status === 403 || response.status === 401) {
+        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
+        toast.error("Session expired. Please log in again.");
+        navigate("/login");
+        return;
+      }
+
       if (!response.ok) throw new Error("Failed to fetch stall details");
       const data = await response.json();
       setSelectedStall(data);
@@ -167,10 +258,25 @@ const AdminDashboard = () => {
   };
 
   const openEditUserModal = async (userId) => {
+    const token = getToken();
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
     try {
       const response = await fetch(`${API_URL}/admin/users/${userId}`, {
         headers: getAuthHeaders(),
       });
+
+      if (response.status === 403 || response.status === 401) {
+        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
+        toast.error("Session expired. Please log in again.");
+        navigate("/login");
+        return;
+      }
+
       if (!response.ok) throw new Error("Failed to fetch user details");
       const data = await response.json();
       setEditUserData({
@@ -189,10 +295,25 @@ const AdminDashboard = () => {
   };
 
   const openEditStallModal = async (stallId) => {
+    const token = getToken();
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
     try {
       const response = await fetch(`${API_URL}/admin/stalls/${stallId}`, {
         headers: getAuthHeaders(),
       });
+
+      if (response.status === 403 || response.status === 401) {
+        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
+        toast.error("Session expired. Please log in again.");
+        navigate("/login");
+        return;
+      }
+
       if (!response.ok) throw new Error("Failed to fetch stall details");
       const data = await response.json();
       setEditStallData({
@@ -212,6 +333,12 @@ const AdminDashboard = () => {
   };
 
   const handleUpdateUser = async () => {
+    const token = getToken();
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
     try {
       const updatePayload = {
         name: editUserData.name,
@@ -230,8 +357,16 @@ const AdminDashboard = () => {
           method: "PUT",
           headers: getAuthHeaders(),
           body: JSON.stringify(updatePayload),
-        }
+        },
       );
+
+      if (response.status === 403 || response.status === 401) {
+        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
+        toast.error("Session expired. Please log in again.");
+        navigate("/login");
+        return;
+      }
 
       if (!response.ok) {
         const error = await response.json();
@@ -248,6 +383,12 @@ const AdminDashboard = () => {
   };
 
   const handleUpdateStall = async () => {
+    const token = getToken();
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
     try {
       const updatePayload = {
         stallname: editStallData.stallname,
@@ -266,8 +407,16 @@ const AdminDashboard = () => {
           method: "PUT",
           headers: getAuthHeaders(),
           body: JSON.stringify(updatePayload),
-        }
+        },
       );
+
+      if (response.status === 403 || response.status === 401) {
+        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
+        toast.error("Session expired. Please log in again.");
+        navigate("/login");
+        return;
+      }
 
       if (!response.ok) {
         const error = await response.json();
@@ -284,6 +433,12 @@ const AdminDashboard = () => {
   };
 
   const handleAddStall = async () => {
+    const token = getToken();
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
     try {
       // Validate required fields
       if (!newStallData.stallname || !newStallData.category) {
@@ -303,10 +458,18 @@ const AdminDashboard = () => {
           const uploadResponse = await fetch(`${API_URL}/stalls/upload-image`, {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
+              Authorization: `Bearer ${token}`,
             },
             body: formData,
           });
+
+          if (uploadResponse.status === 403 || uploadResponse.status === 401) {
+            localStorage.removeItem("token");
+            sessionStorage.removeItem("token");
+            toast.error("Session expired. Please log in again.");
+            navigate("/login");
+            return;
+          }
 
           if (!uploadResponse.ok) {
             throw new Error("Failed to upload image");
@@ -341,6 +504,14 @@ const AdminDashboard = () => {
         body: JSON.stringify(addPayload),
       });
 
+      if (response.status === 403 || response.status === 401) {
+        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
+        toast.error("Session expired. Please log in again.");
+        navigate("/login");
+        return;
+      }
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || "Failed to add stall");
@@ -368,16 +539,32 @@ const AdminDashboard = () => {
   const deleteUser = async (userId) => {
     if (
       !window.confirm(
-        "Are you sure you want to delete this user? This action cannot be undone."
+        "Are you sure you want to delete this user? This action cannot be undone.",
       )
     ) {
       return;
     }
+
+    const token = getToken();
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
     try {
       const response = await fetch(`${API_URL}/admin/users/${userId}`, {
         method: "DELETE",
         headers: getAuthHeaders(),
       });
+
+      if (response.status === 403 || response.status === 401) {
+        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
+        toast.error("Session expired. Please log in again.");
+        navigate("/login");
+        return;
+      }
+
       if (!response.ok) throw new Error("Failed to delete user");
       toast.success("User deleted successfully");
       fetchUsers();
@@ -390,16 +577,32 @@ const AdminDashboard = () => {
   const deleteStall = async (stallId) => {
     if (
       !window.confirm(
-        "Are you sure you want to delete this stall? This action cannot be undone."
+        "Are you sure you want to delete this stall? This action cannot be undone.",
       )
     ) {
       return;
     }
+
+    const token = getToken();
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
     try {
       const response = await fetch(`${API_URL}/admin/stalls/${stallId}`, {
         method: "DELETE",
         headers: getAuthHeaders(),
       });
+
+      if (response.status === 403 || response.status === 401) {
+        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
+        toast.error("Session expired. Please log in again.");
+        navigate("/login");
+        return;
+      }
+
       if (!response.ok) throw new Error("Failed to delete stall");
       toast.success("Stall deleted successfully");
       fetchStalls();
@@ -412,13 +615,13 @@ const AdminDashboard = () => {
   const filteredUsers = users.filter(
     (user) =>
       user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email?.toLowerCase().includes(searchTerm.toLowerCase())
+      user.email?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const filteredStalls = stalls.filter(
     (stall) =>
       stall.stallname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      stall.category?.toLowerCase().includes(searchTerm.toLowerCase())
+      stall.category?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   // Pagination logic
@@ -427,12 +630,12 @@ const AdminDashboard = () => {
 
   const paginatedUsers = filteredUsers.slice(
     (currentUserPage - 1) * itemsPerPage,
-    currentUserPage * itemsPerPage
+    currentUserPage * itemsPerPage,
   );
 
   const paginatedStalls = filteredStalls.slice(
     (currentStallPage - 1) * itemsPerPage,
-    currentStallPage * itemsPerPage
+    currentStallPage * itemsPerPage,
   );
 
   // Reset to page 1 when search changes

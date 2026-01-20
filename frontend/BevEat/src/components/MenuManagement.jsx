@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Edit2, Trash2, ArrowLeft } from "lucide-react";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 import "../MenuManagement.css";
+
+// Helper function to get token from either storage
+function getToken() {
+  return localStorage.getItem("token") || sessionStorage.getItem("token");
+}
 
 function MenuManagement() {
   const [stalls, setStalls] = useState([]);
@@ -9,6 +15,8 @@ function MenuManagement() {
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const navigate = useNavigate();
 
   // Modal states
   const [showModal, setShowModal] = useState(false);
@@ -27,8 +35,6 @@ function MenuManagement() {
   const [imagePreview, setImagePreview] = useState(null);
   const [uploading, setUploading] = useState(false);
 
-  const token = localStorage.getItem("token");
-
   const categories = [
     "Chinese",
     "Malay",
@@ -40,8 +46,14 @@ function MenuManagement() {
   ];
 
   useEffect(() => {
+    const token = getToken();
+    if (!token) {
+      toast.error("Please log in to continue");
+      navigate("/login");
+      return;
+    }
     fetchMyStalls();
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     if (selectedStall) {
@@ -50,13 +62,32 @@ function MenuManagement() {
   }, [selectedStall]);
 
   async function fetchMyStalls() {
+    const token = getToken();
+
+    if (!token) {
+      setError("No authentication token found");
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch(
         "http://localhost:3000/menu-management/my-stalls",
         {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
       );
+
+      if (response.status === 403 || response.status === 401) {
+        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
+        toast.error("Session expired. Please log in again.");
+        navigate("/login");
+        return;
+      }
 
       if (!response.ok) throw new Error("Failed to fetch stalls");
 
@@ -72,14 +103,29 @@ function MenuManagement() {
   }
 
   async function fetchMenuItems(stallId) {
+    const token = getToken();
+
+    if (!token) return;
+
     try {
       setLoading(true);
       const response = await fetch(
         `http://localhost:3000/stalls/${stallId}/menu`,
         {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
       );
+
+      if (response.status === 403 || response.status === 401) {
+        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
+        toast.error("Session expired. Please log in again.");
+        navigate("/login");
+        return;
+      }
 
       if (!response.ok) throw new Error("Failed to fetch menu items");
 
@@ -153,6 +199,13 @@ function MenuManagement() {
   async function uploadImageToCloudinary() {
     if (!imageFile) return formData.mainimageurl;
 
+    const token = getToken();
+    if (!token) {
+      toast.error("Please log in again");
+      navigate("/login");
+      return;
+    }
+
     setUploading(true);
     try {
       const fd = new FormData();
@@ -164,8 +217,16 @@ function MenuManagement() {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
           body: fd,
-        }
+        },
       );
+
+      if (response.status === 403 || response.status === 401) {
+        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
+        toast.error("Session expired. Please log in again.");
+        navigate("/login");
+        return;
+      }
 
       if (!response.ok) throw new Error("Image upload failed");
 
@@ -185,13 +246,20 @@ function MenuManagement() {
     // Validation
     if (!formData.name || !formData.price || !formData.category) {
       toast.warning(
-        "Please fill in all required fields (Name, Price, Category)"
+        "Please fill in all required fields (Name, Price, Category)",
       );
       return;
     }
 
     if (parseFloat(formData.price) <= 0) {
       toast.warning("Price must be greater than 0");
+      return;
+    }
+
+    const token = getToken();
+    if (!token) {
+      toast.error("Please log in again");
+      navigate("/login");
       return;
     }
 
@@ -222,8 +290,16 @@ function MenuManagement() {
               Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify(payload),
-          }
+          },
         );
+
+        if (response.status === 403 || response.status === 401) {
+          localStorage.removeItem("token");
+          sessionStorage.removeItem("token");
+          toast.error("Session expired. Please log in again.");
+          navigate("/login");
+          return;
+        }
 
         if (!response.ok) throw new Error("Failed to create menu item");
 
@@ -238,8 +314,16 @@ function MenuManagement() {
               Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify(payload),
-          }
+          },
         );
+
+        if (response.status === 403 || response.status === 401) {
+          localStorage.removeItem("token");
+          sessionStorage.removeItem("token");
+          toast.error("Session expired. Please log in again.");
+          navigate("/login");
+          return;
+        }
 
         if (!response.ok) throw new Error("Failed to update menu item");
 
@@ -261,14 +345,32 @@ function MenuManagement() {
       return;
     }
 
+    const token = getToken();
+    if (!token) {
+      toast.error("Please log in again");
+      navigate("/login");
+      return;
+    }
+
     try {
       const response = await fetch(
         `http://localhost:3000/menu-management/menuitems/${menuItemId}`,
         {
           method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        }
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
       );
+
+      if (response.status === 403 || response.status === 401) {
+        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
+        toast.error("Session expired. Please log in again.");
+        navigate("/login");
+        return;
+      }
 
       if (!response.ok) throw new Error("Failed to delete menu item");
 
@@ -502,8 +604,8 @@ function MenuManagement() {
                   {uploading
                     ? "Uploading..."
                     : modalMode === "create"
-                    ? "Create"
-                    : "Update"}
+                      ? "Create"
+                      : "Update"}
                 </button>
               </div>
             </form>
