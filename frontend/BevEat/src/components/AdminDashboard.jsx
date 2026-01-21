@@ -977,14 +977,7 @@ const AdminDashboard = () => {
             <DetailRow label="Centre ID" value={selectedHawkerCentre.id} />
             <DetailRow label="Name" value={selectedHawkerCentre.name} />
             <DetailRow label="Address" value={selectedHawkerCentre.address} />
-            {selectedHawkerCentre.description && (
-              <div className="description-section">
-                <p className="description-label">Description</p>
-                <p className="description-text">
-                  {selectedHawkerCentre.description}
-                </p>
-              </div>
-            )}
+            <DetailRow label="Number of Cooked Food Stalls" value={selectedHawkerCentre.no_of_cooked_food_stalls || "N/A"} />
           </div>
         </Modal>
       )}
