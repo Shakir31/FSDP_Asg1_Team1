@@ -14,6 +14,7 @@ import {
   Save,
   ChevronLeft,
   ChevronRight,
+  Building2,
 } from "lucide-react";
 import "../AdminDashboard.css";
 import { toast } from "react-toastify";
@@ -25,22 +26,29 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [users, setUsers] = useState([]);
   const [stalls, setStalls] = useState([]);
+  const [hawkerCentres, setHawkerCentres] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedStall, setSelectedStall] = useState(null);
+  const [selectedHawkerCentre, setSelectedHawkerCentre] = useState(null);
   const [showUserModal, setShowUserModal] = useState(false);
   const [showStallModal, setShowStallModal] = useState(false);
+  const [showHawkerCentreModal, setShowHawkerCentreModal] = useState(false);
   const [showEditUserModal, setShowEditUserModal] = useState(false);
   const [showEditStallModal, setShowEditStallModal] = useState(false);
+  const [showEditHawkerCentreModal, setShowEditHawkerCentreModal] = useState(false);
   const [editUserData, setEditUserData] = useState({});
   const [editStallData, setEditStallData] = useState({});
+  const [editHawkerCentreData, setEditHawkerCentreData] = useState({});
   const [currentUserPage, setCurrentUserPage] = useState(1);
   const [currentStallPage, setCurrentStallPage] = useState(1);
+  const [currentHawkerCentrePage, setCurrentHawkerCentrePage] = useState(1);
   const itemsPerPage = 10;
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalStalls: 0,
+    totalHawkerCentres: 0,
     stallOwners: 0,
   });
 
@@ -63,26 +71,34 @@ const AdminDashboard = () => {
       if (stalls.length === 0) {
         fetchStalls();
       }
+    } else if (activeTab === "hawkerCentres") {
+      if (hawkerCentres.length === 0) {
+        fetchHawkerCentres();
+      }
     }
   }, [activeTab]);
 
   const fetchBothForStats = async () => {
     setLoading(true);
     try {
-      const [usersResponse, stallsResponse] = await Promise.all([
+      const [usersResponse, stallsResponse, hawkerCentresResponse] = await Promise.all([
         fetch(`${API_URL}/admin/users`, { headers: getAuthHeaders() }),
         fetch(`${API_URL}/admin/stalls`, { headers: getAuthHeaders() }),
+        fetch(`${API_URL}/hawker-centres`, { headers: getAuthHeaders() }),
       ]);
 
       if (!usersResponse.ok) throw new Error("Failed to fetch users");
       if (!stallsResponse.ok) throw new Error("Failed to fetch stalls");
+      if (!hawkerCentresResponse.ok) throw new Error("Failed to fetch hawker centres");
 
       const usersData = await usersResponse.json();
       const stallsData = await stallsResponse.json();
+      const hawkerCentresData = await hawkerCentresResponse.json();
 
       setUsers(usersData);
       setStalls(stallsData);
-      calculateStats(usersData, stallsData);
+      setHawkerCentres(hawkerCentresData);
+      calculateStats(usersData, stallsData, hawkerCentresData);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast.error("Failed to fetch data");
@@ -100,7 +116,7 @@ const AdminDashboard = () => {
       if (!response.ok) throw new Error("Failed to fetch users");
       const data = await response.json();
       setUsers(data);
-      calculateStats(data, stalls);
+      calculateStats(data, stalls, hawkerCentres);
     } catch (error) {
       console.error("Error fetching users:", error);
       toast.error("Failed to fetch users");
@@ -118,20 +134,39 @@ const AdminDashboard = () => {
       if (!response.ok) throw new Error("Failed to fetch stalls");
       const data = await response.json();
       setStalls(data);
-      calculateStats(users, data);
+      calculateStats(users, data, hawkerCentres);
     } catch (error) {
       console.error("Error fetching stalls:", error);
       toast.error("Failed to fetch stalls");
     } finally {
       setLoading(false);
     }
+  }
+
+  const fetchHawkerCentres = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/hawker-centres`, {
+        headers: getAuthHeaders(),
+      });
+      if (!response.ok) throw new Error("Failed to fetch hawker centres");
+      const data = await response.json();
+      setHawkerCentres(data);
+      calculateStats(users, stalls, data);
+    } catch (error) {
+      console.error("Error fetching hawker centres:", error);
+      toast.error("Failed to fetch hawker centres");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const calculateStats = (userData, stallData) => {
+  const calculateStats = (userData, stallData, hawkerCentresData) => {
     const stallOwners = userData.filter((u) => u.role === "stall_owner").length;
     setStats({
       totalUsers: userData.length,
       totalStalls: stallData.length,
+      totalHawkerCentres: hawkerCentresData.length,
       stallOwners,
     });
   };
@@ -163,6 +198,21 @@ const AdminDashboard = () => {
     } catch (error) {
       console.error("Error fetching stall details:", error);
       toast.error("Failed to fetch stall details");
+    }
+  };
+
+  const viewHawkerCentreDetails = async (id) => {
+    try {
+      const response = await fetch(`${API_URL}/hawker-centres/${id}`, {
+        headers: getAuthHeaders(),
+      });
+      if (!response.ok) throw new Error("Failed to fetch hawker centre details");
+      const data = await response.json();
+      setSelectedHawkerCentre(data);
+      setShowHawkerCentreModal(true);
+    } catch (error) {
+      console.error("Error fetching hawker centre details:", error);
+      toast.error("Failed to fetch hawker centre details");
     }
   };
 
@@ -210,6 +260,26 @@ const AdminDashboard = () => {
       toast.error("Failed to fetch stall details");
     }
   };
+
+  const openEditHawkerCentreModal = async (id) => {
+    try {
+      const response = await fetch(`${API_URL}/hawker-centres/${id}`, {
+        headers: getAuthHeaders(),
+      });
+      if (!response.ok) throw new Error("Failed to fetch hawker centre details");
+      const data = await response.json();
+      setEditHawkerCentreData({
+        centreid: data.id,
+        name: data.name,
+        address: data.address,
+        no_of_cooked_food_stalls: data.no_of_cooked_food_stalls,
+      });
+      setShowEditHawkerCentreModal(true);
+    } catch (error) {
+      console.error("Error fetching hawker centre details:", error);
+      toast.error("Failed to fetch hawker centre details");
+    }
+  }; 
 
   const handleUpdateUser = async () => {
     try {
@@ -280,6 +350,34 @@ const AdminDashboard = () => {
     } catch (error) {
       console.error("Error updating stall:", error);
       toast.error("Failed to update stall: " + error.message);
+    }
+  };
+
+  const handleUpdateHawkerCentre = async () => {
+    try {
+      const updatePayload = {
+        name: editHawkerCentreData.name,
+        address: editHawkerCentreData.address,
+        no_of_cooked_food_stalls: editHawkerCentreData.no_of_cooked_food_stalls,
+      };
+      const response = await fetch(
+        `${API_URL}/admin/hawker-centres/${editHawkerCentreData.id}`,
+        {
+          method: "PUT",
+          headers: getAuthHeaders(),
+          body: JSON.stringify(updatePayload),
+        }
+      );
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to update hawker centre");
+      }
+      toast.success("Hawker centre updated successfully");
+      setShowEditHawkerCentreModal(false);
+      fetchHawkerCentres();
+    } catch (error) {
+      console.error("Error updating hawker centre:", error);
+      toast.error("Failed to update hawker centre: " + error.message);
     }
   };
 
@@ -409,6 +507,28 @@ const AdminDashboard = () => {
     }
   };
 
+  const deleteHawkerCentre = async (id) => {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this hawker centre? This action cannot be undone."
+      )
+    ) {
+      return;
+    }
+    try {
+      const response = await fetch(`${API_URL}/admin/hawker-centres/${id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      });
+      if (!response.ok) throw new Error("Failed to delete hawker centre");
+      toast.success("Hawker centre deleted successfully");
+      fetchHawkerCentres();
+    } catch (error) {
+      console.error("Error deleting hawker centre:", error);
+      toast.error("Failed to delete hawker centre: " + error.message);
+    }
+  };
+
   const filteredUsers = users.filter(
     (user) =>
       user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -421,9 +541,16 @@ const AdminDashboard = () => {
       stall.category?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const filteredHawkerCentres = hawkerCentres.filter(
+    (centre) =>
+      centre.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      centre.location?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   // Pagination logic
   const totalUserPages = Math.ceil(filteredUsers.length / itemsPerPage);
   const totalStallPages = Math.ceil(filteredStalls.length / itemsPerPage);
+  const totalHawkerCentrePages = Math.ceil(filteredHawkerCentres.length / itemsPerPage);
 
   const paginatedUsers = filteredUsers.slice(
     (currentUserPage - 1) * itemsPerPage,
@@ -435,6 +562,11 @@ const AdminDashboard = () => {
     currentStallPage * itemsPerPage
   );
 
+  const paginatedHawkerCentres = filteredHawkerCentres.slice(
+    (currentHawkerCentrePage - 1) * itemsPerPage,
+    currentHawkerCentrePage * itemsPerPage
+  );
+
   // Reset to page 1 when search changes
   useEffect(() => {
     setCurrentUserPage(1);
@@ -442,6 +574,10 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     setCurrentStallPage(1);
+  }, [searchTerm, activeTab]);
+
+  useEffect(() => {
+    setCurrentHawkerCentrePage(1);
   }, [searchTerm, activeTab]);
 
   return (
@@ -452,7 +588,7 @@ const AdminDashboard = () => {
             <div>
               <h1 className="admin-title">Admin Dashboard</h1>
               <p className="admin-subtitle">
-                Manage users, stalls, and system settings
+                Manage users, stalls, hawker centres, and system settings
               </p>
             </div>
           </div>
@@ -465,7 +601,7 @@ const AdminDashboard = () => {
 
       <div className="admin-tabs-container">
         <div className="admin-tabs">
-          {["overview", "users", "stalls"].map((tab) => (
+          {["overview", "users", "stalls", "hawker centres"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -497,6 +633,12 @@ const AdminDashboard = () => {
               title="Stall Owners"
               value={stats.stallOwners}
               color="purple"
+            />
+            <StatCard
+              icon={<Building2 className="stat-icon" />}
+              title="Hawker Centres"
+              value={stats.totalHawkerCentres}
+              color="pink"
             />
           </div>
         )}
@@ -696,6 +838,99 @@ const AdminDashboard = () => {
             </div>
           </div>
         )}
+
+        {activeTab === "hawker centres" && (
+          <div className="data-card">
+            <div className="data-card-header">
+              <div className="header-content">
+                <h2 className="card-title">Hawker Centre Management</h2>
+                <div className="header-actions">
+                  <div className="search-container">
+                    <Search className="search-icon" />
+                    <input
+                      type="text"
+                      placeholder="Search hawker centres..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="search-input"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="table-container">
+              {loading ? (
+                <div className="loading-state">Loading hawker centres...</div>
+              ) : (
+                <>
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Address</th>
+                        <th>Food Stores</th>
+                        <th className="text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paginatedHawkerCentres.map((centre) => (
+                        <tr key={centre.id}>
+                          <td>{centre.id}</td>
+                          <td className="font-medium">{centre.name}</td>
+                          <td className="text-gray">{centre.address}</td>
+                          <td className="text-gray">
+                            {centre.no_of_cooked_food_stalls || "No food stores"}
+                          </td>
+                          <td className="text-right">
+                            <div className="action-buttons">
+                              <button
+                                onClick={() =>
+                                  viewHawkerCentreDetails(centre.id)
+                                }
+                                className="action-btn btn-view"
+                                title="View Details"
+                              >
+                                <Eye className="action-icon" />
+                              </button>
+                              <button
+                                onClick={() =>
+                                  openEditHawkerCentreModal(centre.id)
+                                }
+                                className="action-btn btn-edit"
+                                title="Edit Hawker Centre"
+                              >
+                                <Edit2 className="action-icon" />
+                              </button>
+                              <button
+                                onClick={() =>
+                                  deleteHawkerCentre(centre.id)
+                                }
+                                className="action-btn btn-delete"
+                                title="Delete Hawker Centre"
+                              >
+                                <Trash2 className="action-icon" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {totalHawkerCentrePages > 1 && (
+                    <Pagination
+                      currentPage={currentHawkerCentrePage}
+                      totalPages={totalHawkerCentrePages}
+                      onPageChange={setCurrentHawkerCentrePage}
+                      totalItems={filteredHawkerCentres.length}
+                      itemsPerPage={itemsPerPage}
+                    />
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* View User Modal */}
@@ -726,6 +961,28 @@ const AdminDashboard = () => {
               <div className="description-section">
                 <p className="description-label">Description</p>
                 <p className="description-text">{selectedStall.description}</p>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
+
+      {/* View Hawker Centre Modal */}
+      {showHawkerCentreModal && selectedHawkerCentre && (
+        <Modal
+          onClose={() => setShowHawkerCentreModal(false)}
+          title="Hawker Centre Details"
+        >
+          <div className="detail-rows">
+            <DetailRow label="Centre ID" value={selectedHawkerCentre.id} />
+            <DetailRow label="Name" value={selectedHawkerCentre.name} />
+            <DetailRow label="Address" value={selectedHawkerCentre.address} />
+            {selectedHawkerCentre.description && (
+              <div className="description-section">
+                <p className="description-label">Description</p>
+                <p className="description-text">
+                  {selectedHawkerCentre.description}
+                </p>
               </div>
             )}
           </div>
@@ -917,6 +1174,71 @@ const AdminDashboard = () => {
           </div>
         </Modal>
       )}
+
+      {/* Edit Hawker Centre Modal */}
+      {showEditHawkerCentreModal && (
+        <Modal
+          onClose={() => setShowEditHawkerCentreModal(false)}
+          title="Edit Hawker Centre"
+        >
+          <div className="edit-form">
+            <div className="form-group">
+              <label>Name</label>
+              <input
+                type="text"
+                value={editHawkerCentreData.name}
+                onChange={(e) =>
+                  setEditHawkerCentreData({
+                    ...editHawkerCentreData,
+                    name: e.target.value,
+                  })
+                }
+                className="form-input"
+              />
+            </div>
+            <div className="form-group">
+              <label>Address</label>
+              <input
+                type="text"
+                value={editHawkerCentreData.address}
+                onChange={(e) =>
+                  setEditHawkerCentreData({
+                    ...editHawkerCentreData,
+                    address: e.target.value,
+                  })
+                }
+                className="form-input"
+              />
+            </div>
+            <div className="form-group">
+              <label>Food Stores</label>
+              <textarea
+                value={editHawkerCentreData.no_of_cooked_food_stalls}
+                onChange={(e) =>
+                  setEditHawkerCentreData({
+                    ...editHawkerCentreData,
+                    no_of_cooked_food_stalls: e.target.value,
+                  })
+                }
+                className="form-input form-textarea"
+                rows="3"
+              />
+            </div>
+            <div className="form-actions">
+              <button
+                onClick={() => setShowEditHawkerCentreModal(false)}
+                className="btn-cancel"
+              >
+                Cancel
+              </button>
+              <button onClick={handleUpdateHawkerCentre} className="btn-save">
+                <Save className="btn-icon" />
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 };
@@ -941,6 +1263,42 @@ const Pagination = ({
   const startItem = (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
+  const getPageNumbers = () => {
+    const pages = [];
+    
+    if (totalPages <= 10) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      pages.push(1);
+      
+      if (currentPage <= 5) {
+        for (let i = 2; i <= Math.min(7, totalPages - 1); i++) {
+          pages.push(i);
+        }
+        if (totalPages > 8) pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 4) {
+        if (totalPages > 8) pages.push('...');
+        for (let i = Math.max(totalPages - 6, 2); i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        pages.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pages.push(i);
+        }
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    
+    return pages;
+  };
+
+  const pageNumbers = getPageNumbers();
+
   return (
     <div className="pagination">
       <div className="pagination-info">
@@ -956,16 +1314,20 @@ const Pagination = ({
           Previous
         </button>
         <div className="pagination-pages">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-            <button
-              key={page}
-              onClick={() => onPageChange(page)}
-              className={`pagination-page ${
-                currentPage === page ? "active" : ""
-              }`}
-            >
-              {page}
-            </button>
+          {pageNumbers.map((page, index) => (
+            page === '...' ? (
+              <span key={`ellipsis-${index}`} className="pagination-ellipsis">...</span>
+            ) : (
+              <button
+                key={page}
+                onClick={() => onPageChange(page)}
+                className={`pagination-page ${
+                  currentPage === page ? "active" : ""
+                }`}
+              >
+                {page}
+              </button>
+            )
           ))}
         </div>
         <button
