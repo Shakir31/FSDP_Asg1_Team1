@@ -6,7 +6,7 @@
 }
 
 .hawker-map-card{
-  width: min(1280px, 100%);
+  width: min(1240px, 100%);
   margin: 0 auto;
   padding: 18px;
   border: 1px solid rgba(0,0,0,0.08);
@@ -62,11 +62,11 @@
   background: #f6f6f6;    
 }
 
-.hawker-info-title {
-  max-width: 100%;
-  word-break: break-word;
-  padding-right: 44px;
-  line-height: 1.3;
+.hawker-info-title{
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+  margin-bottom: 10px;
 }
 
 .hawker-info-img {
@@ -106,6 +106,7 @@
   max-height: 78vh;
   overflow: auto;
   position: relative;
+  padding-bottom: 34px;
 }
 
 .hawker-sheet::before{
@@ -143,9 +144,10 @@
 
 /* Side panel */
 .hawker-sidepanel{
-  width: 380px;      
+  position: relative;
+  width: clamp(320px, 24vw, 420px);  
   max-width: 420px;    
-  flex: 0 0 380px;
+  flex: 0 0 clamp(320px, 24vw, 420px);
   height: 100%;
   overflow: hidden; 
   border-radius: 16px;
@@ -159,16 +161,33 @@
   color: #555;
 }
 
-.hawker-sidepanel-content{
+.hawker-sidepanel-content{  
+  padding-right: 20px;
+  position: relative;
   padding: 16px;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   height: 100%;
+  scrollbar-width: thin;
+
+  /* prevents the width shrink when scrollbar appears */
+  scrollbar-gutter: stable;
+
+  /* gives the scroll area breathing room at the bottom so the last button won’t be covered */
+  padding-bottom: 28px;
+}
+
+.hawker-img-frame,
+.hawker-info-img{
+  position: relative;
+  z-index: 1;
 }
 
 .hawker-sidepanel-close{
   position: absolute;
-  right: 10px;
-  top: 10px;
+  right: 25px;
+  top: 16px;
+  z-index: 9999;
   border: 1px solid #ddd;
   background: #fff;
   border-radius: 10px;
@@ -185,8 +204,7 @@
   display: flex;
   gap: 12px;
   align-items: stretch;
-  height: min(74vh, 720px);    
-  min-height: 560px;           
+  height: min(640px, calc(100vh - 220px));    
 }
 
 .hawker-hint{
@@ -195,6 +213,224 @@
   margin-top: 10px;
   padding-left: 4px;
 }
+
+.hawker-google{
+  margin-top: 14px;
+  padding-bottom: 8px;
+}
+
+.hawker-google-card{
+  margin-top: 14px;
+  padding: 0;          
+  border: 0;             
+  border-radius: 0;
+  background: transparent; 
+  box-shadow: none;         
+}
+
+.hawker-google-header{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.hawker-google-title{
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+  opacity: 0.8;
+  margin: 0;
+}
+
+.hawker-google-rating{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.hawker-google-star{
+  font-size: 14px;
+  transform: translateY(-0.5px);
+}
+
+.hawker-google-rating-count{
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+/* Grid rows */
+.hawker-google-grid{
+  display: grid;
+  gap: 10px;
+}
+
+.hawker-google-row{
+  display: grid;
+  grid-template-columns: 20px 1fr;
+  align-items: start;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.hawker-google-icon{
+  width: 20px;
+  display: inline-flex;
+  justify-content: center;
+  opacity: 0.9;
+  transform: translateY(1px);
+}
+
+.hawker-google-text{
+  color: rgba(0,0,0,0.78);
+}
+
+.hawker-google-link{
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.hawker-google-link:hover{
+  text-decoration: underline;
+}
+
+/* Details (opening hours) */
+.hawker-google-details{
+  border: 1px dashed rgba(0,0,0,0.14);
+  border-radius: 12px;
+  padding: 10px 10px 8px;
+  background: rgba(0,0,0,0.02);
+}
+
+.hawker-google-summary{
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: 20px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  font-size: 14px;
+  list-style: none;
+}
+
+.hawker-google-summary::-webkit-details-marker{
+  display: none;
+}
+
+.hawker-google-chevron{
+  opacity: 0.7;
+  font-size: 12px;
+}
+
+.hawker-google-hours{
+  margin-top: 8px;
+  padding-left: 28px;
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.hawker-google-hours-line{
+  display: grid;
+  grid-template-columns: 90px 1fr; /* adjust if you want more spacing */
+  gap: 14px;
+  padding: 3px 0;
+  align-items: baseline;
+}
+
+.hawker-google-hours-day{
+  font-weight: 700;
+  color: rgba(0,0,0,0.75);
+}
+
+.hawker-google-hours-time{
+  font-weight: 600;
+  color: rgba(0,0,0,0.85);
+}
+
+.hawker-google-cta{
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 20px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px dashed rgba(0,0,0,0.14);
+  background: rgba(0,0,0,0.02);
+
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  color: #2563eb;
+}
+
+.hawker-google-cta:hover{
+  background: rgba(37,99,235,0.06);
+}
+
+.hawker-google-cta-arrow{
+  font-size: 14px;
+}
+
+/* Loading / error banner */
+.hawker-google-banner{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: rgba(0,0,0,0.02);
+  margin-bottom: 10px;
+}
+
+.hawker-google-banner.is-error{
+  border-color: rgba(176,0,32,0.25);
+  background: rgba(176,0,32,0.06);
+}
+
+.hawker-google-banner-text{
+  font-size: 13px;
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+.hawker-google-spinner{
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  border: 2px solid rgba(0,0,0,0.16);
+  border-top-color: rgba(0,0,0,0.6);
+  animation: hawkerSpin 0.9s linear infinite;
+}
+
+@keyframes hawkerSpin{
+  to { transform: rotate(360deg); }
+}
+
+.hawker-google-dot{
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.35);
+}
+
+.hawker-google-dot.is-error{
+  background: rgba(176,0,32,0.7);
+}
+
 
 @media (max-width: 768px){
   .hawker-layout{
@@ -205,10 +441,5 @@
 
   .hawker-sidepanel{
     display: none; /* use bottom sheet only */
-  }
-
-  .hawker-map-card{
-    padding: 14px;
-    border-radius: 18px;
   }
 }

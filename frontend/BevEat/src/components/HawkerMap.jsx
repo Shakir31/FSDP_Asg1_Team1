@@ -19,10 +19,18 @@ export default function HawkerMap() {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
 
+  const [googleDetails, setGoogleDetails] = useState(null);
+  const [placesError, setPlacesError] = useState("");
+  const [placesLoading, setPlacesLoading] = useState(false);
+
+// Cache by hawker id so repeated clicks don’t spam the API
+  const placesCacheRef = useRef(new Map()); 
+
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+    libraries: ["places"],
   });
 
   // Detect mobile (and update on resize)
@@ -141,20 +149,182 @@ export default function HawkerMap() {
         <div className="hawker-info-noimg">No photo available</div>
       )}
 
-      {/* Directions */}
-      <div className="hawker-details-actions">
-        <a
-          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-            `${h.latitude},${h.longitude}`
-          )}`}
-          target="_blank"
-          rel="noreferrer"
-        >
-          Directions
-        </a>
+      {/* Google Places enrichment */}
+        <div className="hawker-google">
+          {(placesLoading || placesError) && (
+            <div className={`hawker-google-banner ${placesError ? "is-error" : ""}`}>
+              {placesLoading ? (
+                <span className="hawker-google-spinner" aria-hidden="true" />
+              ) : (
+                <span className="hawker-google-dot is-error" aria-hidden="true" />
+              )}
+              <span className="hawker-google-banner-text">
+                {placesLoading ? "Fetching Google details…" : placesError}
+              </span>
+            </div>
+          )}
+
+          {googleDetails && (
+            <div className="hawker-google-card">
+              <div className="hawker-google-header">
+                <div className="hawker-google-title">Google details</div>
+
+                {typeof googleDetails.rating === "number" && (
+                  <div className="hawker-google-rating">
+                    <span className="hawker-google-star" aria-hidden="true">★</span>
+                    <span className="hawker-google-rating-value">{googleDetails.rating.toFixed(1)}</span>
+                    <span className="hawker-google-rating-count">
+                      ({googleDetails.user_ratings_total?.toLocaleString?.() ?? 0})
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className="hawker-google-grid">
+                {googleDetails.opening_hours?.weekday_text && (
+                  <details className="hawker-google-details">
+                    <summary className="hawker-google-summary">
+                      <span className="hawker-google-icon" aria-hidden="true">⏰</span>
+                      <span>Opening hours</span>
+                      <span className="hawker-google-chevron" aria-hidden="true">▾</span>
+                    </summary>
+                    <div className="hawker-google-hours">
+                      {googleDetails.opening_hours.weekday_text.map((line) => {
+                        const idx = line.indexOf(":");
+                        const day = idx >= 0 ? line.slice(0, idx) : line;
+                        const time = idx >= 0 ? line.slice(idx + 1).trim() : "";
+                        return (
+                          <div key={line} className="hawker-google-hours-line">
+                            <span className="hawker-google-hours-day">{day}</span>
+                            <span className="hawker-google-hours-time">{time}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </details>
+                )}
+
+                {googleDetails.formatted_address && (
+                  <div className="hawker-google-row">
+                    <span className="hawker-google-icon" aria-hidden="true">📍</span>
+                    <span className="hawker-google-text">{googleDetails.formatted_address}</span>
+                  </div>
+                )}
+
+                {googleDetails.formatted_phone_number && (
+                  <div className="hawker-google-row">
+                    <span className="hawker-google-icon" aria-hidden="true">📞</span>
+                    <a className="hawker-google-link" href={`tel:${googleDetails.formatted_phone_number}`}>
+                      {googleDetails.formatted_phone_number}
+                    </a>
+                  </div>
+                )}
+              </div>
+
+              {googleDetails.google_maps_url && (
+                <a
+                  className="hawker-google-cta"
+                  href={googleDetails.google_maps_url}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <span className="hawker-google-icon" aria-hidden="true">🗺️</span>
+                  <span className="hawker-google-cta-label">View on Google Maps</span>
+                  <span className="hawker-google-cta-arrow" aria-hidden="true">↗</span>
+                </a>
+              )}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
   );
+
+  async function fetchGoogleDetailsForHawker(h) {
+  setPlacesError("");
+
+  // Must have map + places library loaded
+  if (!mapRef.current || !window.google?.maps?.places) {
+    setPlacesError("Places library not loaded yet.");
+    return null;
+  }
+
+  // Cache
+  if (placesCacheRef.current.has(h.id)) {
+    return placesCacheRef.current.get(h.id);
+  }
+
+  setPlacesLoading(true);
+
+  try {
+    const service = new window.google.maps.places.PlacesService(mapRef.current);
+
+    // Find Place (gets place_id)
+    const placeId = await new Promise((resolve, reject) => {
+      service.findPlaceFromQuery(
+        {
+          query: `${h.name} Singapore`,
+          fields: ["place_id", "name", "geometry"],
+          // Bias search near your hawker coordinates
+          locationBias: new window.google.maps.Circle({
+            center: { lat: h.latitude, lng: h.longitude },
+            radius: 1500,
+          }),
+        },
+        (results, status) => {
+          if (status !== window.google.maps.places.PlacesServiceStatus.OK || !results?.[0]) {
+            reject(new Error(`findPlaceFromQuery failed: ${status}`));
+            return;
+          }
+          resolve(results[0].place_id);
+        }
+      );
+    });
+
+    // Get Details (rating, hours, address, etc.)
+    const details = await new Promise((resolve, reject) => {
+      service.getDetails(
+        {
+          placeId,
+          fields: [
+            "name",
+            "rating",
+            "user_ratings_total",
+            "formatted_address",
+            "opening_hours",
+            "formatted_phone_number",
+            "url",
+          ],
+        },
+        (place, status) => {
+          if (status !== window.google.maps.places.PlacesServiceStatus.OK || !place) {
+            reject(new Error(`getDetails failed: ${status}`));
+            return;
+          }
+          resolve(place);
+        }
+      );
+    });
+
+    const cleaned = {
+      name: details.name,
+      rating: details.rating,
+      user_ratings_total: details.user_ratings_total,
+      formatted_address: details.formatted_address,
+      opening_hours: details.opening_hours,
+      formatted_phone_number: details.formatted_phone_number,
+      google_maps_url: details.url,
+    };
+
+    placesCacheRef.current.set(h.id, cleaned);
+    return cleaned;
+  } catch (e) {
+    console.error(e);
+    setPlacesError(e.message || "Failed to load Google place details.");
+    return null;
+  } finally {
+    setPlacesLoading(false);
+  }
+}
 
   return (
     <div className="hawker-map-wrapper">
@@ -209,9 +379,13 @@ export default function HawkerMap() {
                   clustererRef.current?.removeMarker(marker);
                   markerRefs.current = markerRefs.current.filter((m) => m !== marker);
                 }}
-                onClick={() => {
+                onClick={async () => {
                   setSelected(h);
+                  setGoogleDetails(null);
                   mapRef.current?.panTo({ lat: h.latitude, lng: h.longitude });
+
+                  const details = await fetchGoogleDetailsForHawker(h);
+                  setGoogleDetails(details);
                 }}
               />
             );
@@ -233,12 +407,19 @@ export default function HawkerMap() {
                 <p>Click a marker to view details here.</p>
               </div>
             ) : (
-              <div className="hawker-sidepanel-content">
-                <button className="hawker-sidepanel-close" onClick={() => setSelected(null)}>
+              <>
+                <button
+                  className="hawker-sidepanel-close"
+                  onClick={() => { setSelected(null); setGoogleDetails(null); }}
+                  aria-label="Close"
+                >
                   ✕
                 </button>
-                <DetailsContent h={selected} />
-              </div>
+
+                <div className="hawker-sidepanel-content">
+                  <DetailsContent h={selected} />
+                </div>
+              </>
             )}
           </div>
         )}
