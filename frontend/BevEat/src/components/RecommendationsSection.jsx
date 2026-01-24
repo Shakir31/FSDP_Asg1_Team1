@@ -226,7 +226,7 @@ function RecommendationsSection({ limit = 6, showTitle = true }) {
       <div className="recommendations-footer">
         <button
           className="see-all-btn"
-          onClick={() => navigate("/browse/stalls")}
+          onClick={() => navigate("/stalls")}
         >
           Explore All Stalls →
         </button>

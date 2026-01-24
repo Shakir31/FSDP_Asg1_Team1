@@ -40,6 +40,7 @@ async function addToGroupCart(req, res) {
     await groupOrderModel.addItemToGroupCart(sessionId, userId, menuItemId, quantity);
     res.json({ message: "Item added to group order" });
   } catch (error) {
+    console.error("getGroupCart error:", error);
     res.status(500).json({ error: "Failed to add item" });
   }
 }
@@ -48,6 +49,13 @@ async function addToGroupCart(req, res) {
 async function getGroupCart(req, res) {
   try {
     const { sessionId } = req.params;
+    // Check if session is active and exists
+    const session = await groupOrderModel.getSessionById(sessionId);
+
+    if (!session || session.is_active === false) {
+      return res.status(404).json({ error: "Session ended by host" });
+    }
+
     const items = await groupOrderModel.getGroupCartItems(sessionId);
     res.json({ items });
   } catch (error) {
