@@ -200,7 +200,10 @@ function Product() {
       <div className="product-content-main">
         <div className="product-layout">
           <div className="back-button-container">
-            <button onClick={() => navigate(-1)} className="back-button">
+            {/* <button onClick={() => navigate(-1)} className="back-button">
+              &larr; Back to Stall
+            </button> */}
+            <button onClick={() => navigate(`/stalls/${item.stallid}`)} className="back-button">
               &larr; Back to Stall
             </button>
           </div>

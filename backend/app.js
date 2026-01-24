@@ -32,6 +32,7 @@ const {
   reactionRoutes,
   recommendationRoutes,
   groupOrderRoutes,
+  searchRoutes,
 } = require("./routes");
 
 // Cron job - Run daily at 2am
@@ -55,6 +56,7 @@ app.use("/menu-management", menuManagementRoutes);
 app.use("/reviews", reactionRoutes);
 app.use("/recommendations", recommendationRoutes);
 app.use("/group-order", groupOrderRoutes);
+app.use("/api/search", searchRoutes);
 
 // Start server
 app.listen(port, () => {
