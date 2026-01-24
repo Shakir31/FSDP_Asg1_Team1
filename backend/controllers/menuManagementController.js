@@ -2,6 +2,7 @@
 const menuManagementModel = require("../models/menuManagementModel");
 const cloudinary = require("cloudinary").v2;
 const multer = require("multer");
+const supabase = require("../supabaseClient");
 
 // Configure multer for image uploads
 const upload = multer({
@@ -84,6 +85,27 @@ async function createMenuItem(req, res) {
       mainimageurl,
       category
     );
+
+    // fire-and-forget
+    if (menuItem && menuItem.mainimageurl) {
+      fetch('http://localhost:5000/embed-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageUrl: menuItem.mainimageurl })
+      })
+      .then(aiRes => aiRes.json())
+      .then(data => {
+        if(data.embedding) {
+          // Save the vector back to Supabase
+          supabase.from('menuitems')
+            .update({ embedding: data.embedding })
+            .eq('menuitemid', menuItem.menuitemid)
+            .then(() => console.log(`✨ Vector generated for item ${menuItem.menuitemid}`))
+            .catch(err => console.error("Vector save error:", err));
+        }
+      })
+      .catch(err => console.error("AI Service error:", err));
+    }
 
     res.status(201).json(menuItem);
   } catch (error) {

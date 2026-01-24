@@ -14,4 +14,5 @@ module.exports = {
   reactionRoutes: require("./reactionRoutes"),
   recommendationRoutes: require("./recommendationRoutes"),
   groupOrderRoutes: require("./groupOrderRoutes"),
+  searchRoutes: require("./searchRoutes"),
 };

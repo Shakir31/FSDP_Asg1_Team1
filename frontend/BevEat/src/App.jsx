@@ -26,6 +26,7 @@ import AdminDashboard from "./components/AdminDashboard";
 import AddStallPage from "./components/AddStallPage";
 import AddUserPage from "./components/AddUserPage";
 import GroupOrderLobby from "./components/GroupOrderLobby";
+import SearchResults from "./components/SearchResults";
 import {
   ProtectedRoute,
   RoleProtectedRoute,
@@ -96,6 +97,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/search-results"
+            element={
+              <ProtectedRoute>
+                <SearchResults />
               </ProtectedRoute>
             }
           />

@@ -5,6 +5,7 @@ import { useCart } from "./Cartcontext";
 import { useGroupOrder } from "./GroupOrderContext";
 import logo from "../assets/logo.png";
 import "../Navbar.css";
+import VisualSearchButton from "./VisualSearchButton";
 
 function Navbar() {
   const { items } = useCart();
@@ -140,6 +141,8 @@ function Navbar() {
           </Link>
         </div>
       )}
+
+      <VisualSearchButton />
 
       {/* Only show Cart for regular users */}
       {isCustomer && (
