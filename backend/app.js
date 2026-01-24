@@ -33,6 +33,7 @@ const {
   recommendationRoutes,
   groupOrderRoutes,
   searchRoutes,
+  missionRoutes,
 } = require("./routes");
 
 // Cron job - Run daily at 2am
@@ -57,7 +58,7 @@ app.use("/reviews", reactionRoutes);
 app.use("/recommendations", recommendationRoutes);
 app.use("/group-order", groupOrderRoutes);
 app.use("/api/search", searchRoutes);
-
+app.use("/missions", missionRoutes);
 // Start server
 app.listen(port, () => {
   console.log(`Server running on port ${port}...`);

@@ -17,27 +17,99 @@
 
 .coins { margin-bottom: 12px; color: var(--muted); }
 
-.voucher-list { display: grid; gap: 10px; }
+.redeem-header { margin-bottom: 12px; }
 
-.voucher-card {
+.coins-card {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border: 1px solid var(--border);
+  background: linear-gradient(90deg,#fffefc,#fff6e6);
+  border: 1px solid #f0d9b0;
   padding: 12px;
   border-radius: 8px;
-  background: #fff;
+  margin-bottom: 16px;
 }
 
-.voucher-title { font-weight: 700; }
-.voucher-desc { color: var(--muted); font-size: 13px; margin-top:6px; }
+.coins-left { display:flex; flex-direction: column; }
+.coins-label { font-size: 13px; color: #555; }
+.coins-value { font-size: 22px; font-weight:700; color:#3b3b3b; }
 
-.voucher-meta { display:flex; gap:12px; align-items:center; }
+.voucher-list { display:flex; flex-direction: column; gap:10px; margin-top:12px; }
+.voucher-card {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:12px;
+  border-radius:8px;
+  border:1px solid #eee;
+  background:#fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.voucher-left { max-width:70%; }
+.voucher-title { font-weight:600; margin-bottom:6px; }
+.voucher-desc { color:#555; font-size:13px; margin-bottom:6px; }
+.voucher-expiry { font-size:12px; color:#999; }
 
-.voucher-cost { font-weight:700; color:#333; }
+.voucher-meta { display:flex; align-items:center; gap:10px; }
+.voucher-cost { font-weight:700; color:#ff7a00; }
 
-.btn { padding:8px 12px; border-radius:8px; border:none; cursor:pointer; }
-.btn-orange { background: linear-gradient(180deg, var(--orange) 0%, var(--orange-dark) 100%); color:#fff; }
+.section-divider { margin:20px 0; border:0; height:1px; background:#eee; }
 
-/* small */
-.no-vouchers { color: var(--muted); padding:12px; text-align:center; }
+.missions-section { margin-top:8px; }
+.missions-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.mission-card {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px;
+  border-radius:8px;
+  border:1px solid #e6e6e6;
+  background:#fafafa;
+  margin-bottom:8px;
+}
+.mission-claimed { opacity:0.6; background:#f3fff3; }
+.mission-info { max-width:68%; }
+.mission-title { font-weight:600; }
+.mission-desc { color:#666; font-size:13px; margin-top:4px; }
+.mission-meta { display:flex; gap:10px; align-items:center; }
+.mission-reward { font-weight:700; color:#2b8a3e; }
+
+.btn { padding:8px 10px; border-radius:6px; cursor:pointer; border:none; transition: transform .06s ease; }
+.btn:active { transform: translateY(1px); }
+
+/* primary button */
+.btn-primary { background:#1976d2; color:white; }
+
+/* orange CTA used for redeem & claim to match theme */
+.btn-orange {
+  background: linear-gradient(180deg,#ff8a1a,#ff7000);
+  color: #fff;
+  font-weight:600;
+  border-radius:8px;
+  padding:8px 12px;
+  box-shadow: 0 6px 14px rgba(255,122,0,0.12);
+}
+.btn-orange:hover:not(:disabled) { filter:brightness(0.98); transform: translateY(-1px); }
+
+/* disabled look for already claimed */
+.btn-disabled, .btn:disabled {
+  opacity:0.6;
+  cursor: default;
+  background: #f0f0f0;
+  color:#666;
+  box-shadow:none;
+  border: 1px solid #e6e6e6;
+}
+
+/* outline fallback kept for other places */
+.btn-outline { background:#fff; border:1px solid #ccc; color:#333; }
+
+/* mission card when claimed */
+.mission-claimed {
+  opacity: 0.85;
+  background: linear-gradient(90deg,#f6fff6,#ffffff);
+  border-color:#e6f6ea;
+}
+
+/* small spacing tweaks */
+.mission-meta .btn { min-width:88px; }
