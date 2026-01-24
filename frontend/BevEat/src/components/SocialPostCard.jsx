@@ -5,6 +5,11 @@ import EmojiReactionPicker from "./EmojiReactionPicker";
 import ReactionBar from "./ReactionBar";
 import { toast } from "react-toastify";
 
+// Helper function to get token from either storage
+function getToken() {
+  return localStorage.getItem("token") || sessionStorage.getItem("token");
+}
+
 function SocialPostCard({ image, onUpvote }) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [pickerPosition, setPickerPosition] = useState({ x: 0, y: 0 });
@@ -13,14 +18,12 @@ function SocialPostCard({ image, onUpvote }) {
   const [touchTimer, setTouchTimer] = useState(null);
   const [reviewId, setReviewId] = useState(null);
 
-  const token = localStorage.getItem("token");
-
   // Get reviewId from imageId
   useEffect(() => {
     const getReviewId = async () => {
       try {
         const response = await fetch(
-          `http://localhost:3000/images/${image.imageid}/reviewid`
+          `http://localhost:3000/images/${image.imageid}/reviewid`,
         );
         const data = await response.json();
         setReviewId(data.reviewid);
@@ -44,6 +47,8 @@ function SocialPostCard({ image, onUpvote }) {
   const fetchReactions = async () => {
     if (!reviewId) return;
 
+    const token = getToken();
+
     try {
       const headers = {};
       if (token) {
@@ -52,7 +57,7 @@ function SocialPostCard({ image, onUpvote }) {
 
       const response = await fetch(
         `http://localhost:3000/reviews/${reviewId}/reactions`,
-        { headers }
+        { headers },
       );
       const data = await response.json();
 
@@ -65,6 +70,8 @@ function SocialPostCard({ image, onUpvote }) {
 
   const handleRightClick = (e) => {
     e.preventDefault();
+
+    const token = getToken();
 
     if (!token) {
       toast.warning("Please log in to react");
@@ -81,6 +88,8 @@ function SocialPostCard({ image, onUpvote }) {
   };
 
   const handleReact = async (emoji) => {
+    const token = getToken();
+
     if (!token) {
       toast.warning("Please log in to react");
       return;
@@ -120,7 +129,7 @@ function SocialPostCard({ image, onUpvote }) {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ emoji }),
-        }
+        },
       );
 
       if (!response.ok) throw new Error("Failed to react");
@@ -140,6 +149,8 @@ function SocialPostCard({ image, onUpvote }) {
 
   // Mobile long-press support
   const handleTouchStart = (e) => {
+    const token = getToken();
+
     if (!token || !reviewId) return;
 
     const timer = setTimeout(() => {
@@ -184,7 +195,7 @@ function SocialPostCard({ image, onUpvote }) {
           fill={i <= ratingValue ? "#ff7622" : "none"}
           stroke={i <= ratingValue ? "#ff7622" : "#ddd"}
           strokeWidth={2}
-        />
+        />,
       );
     }
 
