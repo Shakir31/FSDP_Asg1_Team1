@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import RecommendationsSection from "./RecommendationsSection";
 import "../Home.css";
 
 function Home() {
@@ -58,6 +59,12 @@ function Home() {
           alt="satay cooking"
           className="hero-image"
         />
+      </section>
+
+      {/* ✨ RECOMMENDATIONS SECTION - ADDED HERE ✨ */}
+      {/* This appears first so users see personalized suggestions immediately */}
+      <section className="recommendations-container">
+        <RecommendationsSection limit={6} showTitle={true} />
       </section>
 
       {/* Popular Stalls Section */}

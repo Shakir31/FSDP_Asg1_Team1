@@ -25,6 +25,8 @@ import ForbiddenPage from "./components/ForbiddenPage";
 import AdminDashboard from "./components/AdminDashboard";
 import AddStallPage from "./components/AddStallPage";
 import AddUserPage from "./components/AddUserPage";
+import GroupOrderLobby from "./components/GroupOrderLobby";
+import SearchResults from "./components/SearchResults";
 import {
   ProtectedRoute,
   RoleProtectedRoute,
@@ -35,15 +37,20 @@ import {
   CheckoutPage,
   CheckoutSuccess,
 } from "./components/Cartcontext";
+import {
+  GroupOrderProvider
+} from "./components/GroupOrderContext";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { Group } from "lucide-react";
 
 function App() {
   const [count, setCount] = useState(0);
 
   return (
     <CartProvider>
+      <GroupOrderProvider>
       {/* Toast Container - handles all toast notifications */}
       <ToastContainer
         position="top-center"
@@ -95,6 +102,15 @@ function App() {
           />
 
           <Route
+            path="/search-results"
+            element={
+              <ProtectedRoute>
+                <SearchResults />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/cart"
             element={
               <ProtectedRoute>
@@ -111,6 +127,15 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route 
+               path="/group-lobby" 
+               element={
+                 <ProtectedRoute>
+                   <GroupOrderLobby />
+                 </ProtectedRoute>
+               } 
+             />
 
           <Route
             path="/checkout/success"
@@ -215,6 +240,7 @@ function App() {
           }
         />
       </Routes>
+      </GroupOrderProvider>
     </CartProvider>
   );
 }

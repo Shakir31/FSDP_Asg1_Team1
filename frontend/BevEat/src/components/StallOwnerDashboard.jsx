@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "../StallOwnerDashboard.css";
+
+// Helper function to get token from either storage
+function getToken() {
+  return localStorage.getItem("token") || sessionStorage.getItem("token");
+}
 
 function StallOwnerDashboard() {
   const [notifications, setNotifications] = useState([]);
@@ -11,20 +16,47 @@ function StallOwnerDashboard() {
   const [filter, setFilter] = useState("pending");
   const [processingId, setProcessingId] = useState(null);
 
-  const token = localStorage.getItem("token");
+  const navigate = useNavigate();
 
   useEffect(() => {
+    const token = getToken();
+
+    // Check if token exists before making requests
+    if (!token) {
+      toast.error("Please log in to continue");
+      navigate("/login");
+      return;
+    }
+
     fetchNotifications();
     fetchStats();
-  }, []);
+  }, [navigate]);
 
   async function fetchNotifications() {
+    const token = getToken();
+
+    if (!token) {
+      setError("No authentication token found");
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch("http://localhost:3000/notifications", {
         headers: {
           Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
       });
+
+      if (response.status === 403 || response.status === 401) {
+        // Token is invalid or expired
+        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
+        toast.error("Session expired. Please log in again.");
+        navigate("/login");
+        return;
+      }
 
       if (!response.ok) {
         throw new Error("Failed to fetch notifications");
@@ -42,15 +74,25 @@ function StallOwnerDashboard() {
   }
 
   async function fetchStats() {
+    const token = getToken();
+
+    if (!token) return;
+
     try {
       const response = await fetch(
         "http://localhost:3000/notifications/stats",
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
-        }
+        },
       );
+
+      if (response.status === 403 || response.status === 401) {
+        // Token is invalid, already handled in fetchNotifications
+        return;
+      }
 
       if (!response.ok) {
         throw new Error("Failed to fetch stats");
@@ -68,6 +110,13 @@ function StallOwnerDashboard() {
       return;
     }
 
+    const token = getToken();
+    if (!token) {
+      toast.error("Please log in again");
+      navigate("/login");
+      return;
+    }
+
     setProcessingId(notificationId);
     try {
       const response = await fetch(
@@ -76,9 +125,18 @@ function StallOwnerDashboard() {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
-        }
+        },
       );
+
+      if (response.status === 403 || response.status === 401) {
+        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
+        toast.error("Session expired. Please log in again.");
+        navigate("/login");
+        return;
+      }
 
       if (!response.ok) {
         throw new Error("Failed to approve notification");
@@ -100,6 +158,13 @@ function StallOwnerDashboard() {
       return;
     }
 
+    const token = getToken();
+    if (!token) {
+      toast.error("Please log in again");
+      navigate("/login");
+      return;
+    }
+
     setProcessingId(notificationId);
     try {
       const response = await fetch(
@@ -108,9 +173,18 @@ function StallOwnerDashboard() {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
-        }
+        },
       );
+
+      if (response.status === 403 || response.status === 401) {
+        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
+        toast.error("Session expired. Please log in again.");
+        navigate("/login");
+        return;
+      }
 
       if (!response.ok) {
         throw new Error("Failed to dismiss notification");
@@ -130,9 +204,16 @@ function StallOwnerDashboard() {
   async function handleRevert(notificationId) {
     if (
       !window.confirm(
-        "Revert to the original image? This will restore the previous menu item photo."
+        "Revert to the original image? This will restore the previous menu item photo.",
       )
     ) {
+      return;
+    }
+
+    const token = getToken();
+    if (!token) {
+      toast.error("Please log in again");
+      navigate("/login");
       return;
     }
 
@@ -144,9 +225,18 @@ function StallOwnerDashboard() {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
-        }
+        },
       );
+
+      if (response.status === 403 || response.status === 401) {
+        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
+        toast.error("Session expired. Please log in again.");
+        navigate("/login");
+        return;
+      }
 
       if (!response.ok) {
         const data = await response.json();
@@ -165,7 +255,7 @@ function StallOwnerDashboard() {
   }
 
   const filteredNotifications = notifications.filter(
-    (notif) => filter === "all" || notif.status === filter
+    (notif) => filter === "all" || notif.status === filter,
   );
 
   return (

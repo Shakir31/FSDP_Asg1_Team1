@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { Search, ShoppingCart, User, Bell } from "lucide-react";
 import { useCart } from "./Cartcontext";
+import { useGroupOrder } from "./GroupOrderContext";
 import logo from "../assets/logo.png";
 import "../Navbar.css";
+import VisualSearchButton from "./VisualSearchButton";
 
 function Navbar() {
   const { items } = useCart();
+  const { startGroupOrder, joinGroupOrder, session } = useGroupOrder();
+  const navigate = useNavigate();
+
   const cartCount = items.reduce((total, item) => total + (item.qty || 0), 0);
   const [userRole, setUserRole] = useState(null);
 
@@ -22,6 +27,21 @@ function Navbar() {
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("role");
     window.location.href = "/";
+  };
+
+  const handleJoinClick = async () => {
+    const code = prompt("Enter Group Code:");
+    if (code) {
+      const success = await joinGroupOrder(code);
+      if (success) navigate("/group-lobby");
+    }
+  };
+
+  const handleStartClick = async () => {
+    const newSession = await startGroupOrder();
+    if (newSession) {
+      navigate("/group-lobby");
+    }
   };
 
   const isStallOwner = userRole === "stall_owner";
@@ -77,6 +97,52 @@ function Navbar() {
           </Link>
         </div>
       )}
+
+      {/* Group Order Dropdown for regular users */}
+      {!session ? (
+        <>
+          <div className="navbar-item">
+            <button
+              onClick={handleStartClick}
+              className="navbar-link"
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                fontSize: "16px",
+              }}
+            >
+              Start Group
+            </button>
+          </div>
+          <div className="navbar-item">
+            <button
+              onClick={handleJoinClick}
+              className="navbar-link"
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                fontSize: "16px",
+              }}
+            >
+              Join Group
+            </button>
+          </div>
+        </>
+      ) : (
+        <div className="navbar-item">
+          <Link
+            to="/group-lobby"
+            className="navbar-link"
+            style={{ color: "var(--orange)", fontWeight: "bold" }}
+          >
+            Group Lobby ({session.join_code})
+          </Link>
+        </div>
+      )}
+
+      <VisualSearchButton />
 
       {/* Only show Cart for regular users */}
       {isCustomer && (
