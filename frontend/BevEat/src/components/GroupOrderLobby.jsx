@@ -49,6 +49,14 @@ function GroupOrderLobby() {
         },
       );
 
+      if (res.status === 404) {
+        toast.error("Host has finalized the group order. Redirecting...");
+        setSession(null);
+        localStorage.removeItem("activeSession"); // Clean up storage
+        navigate("/");
+        return;
+      }
+
       if (res.status === 403 || res.status === 401) {
         localStorage.removeItem("token");
         sessionStorage.removeItem("token");
@@ -119,6 +127,7 @@ function GroupOrderLobby() {
 
       // Clear local session state since it's closed now
       setSession(null);
+      localStorage.removeItem("activeSession");
 
       // Navigate based on payment method
       if (paymentMethod === "nets") {

@@ -29,6 +29,21 @@ async function getSessionByCode(joinCode) {
   }
 }
 
+async function getSessionById(sessionId) {
+  try {
+    const { data, error } = await supabase
+      .from("group_sessions")
+      .select("*")
+      .eq("sessionid", sessionId)
+      .single();
+    
+    if (error) return null;
+    return data;
+  } catch (err) {
+    throw err;
+  }
+}
+
 async function addItemToGroupCart(sessionId, userId, menuItemId, quantity) {
   try {
     // Check if item exists for this user in this session
@@ -87,6 +102,7 @@ async function closeSession(sessionId) {
 module.exports = {
   createSession,
   getSessionByCode,
+  getSessionById,
   addItemToGroupCart,
   getGroupCartItems,
   closeSession

@@ -10,7 +10,11 @@ function getToken() {
 }
 
 export function GroupOrderProvider({ children }) {
-  const [session, setSession] = useState(null); // { sessionid, join_code, host_userid }
+  // const [session, setSession] = useState(null); // { sessionid, join_code, host_userid }
+  const [session, setSession] = useState(() => {
+    const savedSession = localStorage.getItem("activeSession");
+    return savedSession ? JSON.parse(savedSession) : null;
+  });
 
   const startGroupOrder = async () => {
     const token = getToken();
@@ -40,6 +44,7 @@ export function GroupOrderProvider({ children }) {
       const data = await res.json();
       if (res.ok) {
         setSession(data.session);
+        localStorage.setItem("activeSession", JSON.stringify(data.session));
         toast.success(`Group Order Started! Code: ${data.session.join_code}`);
         return data.session;
       } else {
@@ -82,6 +87,7 @@ export function GroupOrderProvider({ children }) {
       const data = await res.json();
       if (res.ok) {
         setSession(data.session);
+        localStorage.setItem("activeSession", JSON.stringify(data.session));
         toast.success(`Joined Group Order: ${code}`);
         return true;
       } else {
