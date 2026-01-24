@@ -113,3 +113,111 @@
 
 /* small spacing tweaks */
 .mission-meta .btn { min-width:88px; }
+
+/* Mobile friendly adjustments */
+@media (max-width: 768px) {
+  .redeem-container {
+    max-width: calc(100% - 24px);
+    margin: 12px auto;
+    padding: 14px;
+    border-radius: 10px;
+  }
+
+  .redeem-header { font-size: 1.1rem; margin-bottom: 8px; }
+
+  .coins-card {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+  }
+
+  .coins-left { gap:4px; }
+  .coins-label { font-size: 12px; }
+  .coins-value { font-size: 20px; }
+
+  .coins-actions button { padding: 8px 10px; font-size: 0.95rem; }
+
+  .voucher-list { gap: 10px; margin-top: 10px; }
+
+  /* Stack voucher content, make CTA easier to tap */
+  .voucher-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px;
+  }
+  .voucher-left { max-width: 100%; }
+  .voucher-title { font-size: 1rem; }
+  .voucher-desc { font-size: 13px; }
+  .voucher-expiry { font-size: 12px; color: #888; }
+
+  .voucher-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .voucher-cost { font-size: 15px; }
+
+  .btn-orange {
+    width: 140px;
+    padding: 8px 10px;
+    font-size: 0.95rem;
+  }
+
+  /* Missions layout for mobile */
+  .missions-section { margin-top: 12px; }
+  .missions-header h3 { font-size: 1rem; }
+  .missions-reset { font-size: 0.9rem; }
+
+  .mission-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .mission-info { max-width: 100%; }
+  .mission-title { font-size: 0.98rem; }
+  .mission-desc { font-size: 13px; }
+
+  .mission-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .mission-reward { font-size: 14px; }
+
+  .mission-meta .btn {
+    min-width: 120px;
+    width: auto;
+  }
+
+  /* Make buttons easier to tap on very small screens */
+  .btn, .btn-orange, .btn-primary {
+    min-height: 40px;
+    border-radius: 8px;
+  }
+}
+
+/* Extra small screens: full-width CTAs */
+@media (max-width: 420px) {
+  .voucher-meta {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+  .btn-orange {
+    width: 100%;
+  }
+
+  .mission-meta {
+    flex-direction: column-reverse;
+    gap: 6px;
+  }
+  .mission-meta .btn { width: 100%; }
+  .coins-actions { display: flex; justify-content: flex-end; }
+}
