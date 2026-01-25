@@ -62,6 +62,12 @@ function Navbar() {
         </Link>
       </div>
 
+      <div className="navbar-item">
+        <Link to="/map" className="navbar-link">
+          Map
+        </Link>
+      </div>
+
       {/* Show Dashboard and Menu for stall owners */}
       {isStallOwner && (
         <>
