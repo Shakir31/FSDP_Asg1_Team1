@@ -1,8 +1,8 @@
 import React, { useState, useRef } from "react";
 import { toast } from "react-toastify";
-import { FaCamera } from "react-icons/fa"; // Make sure to npm install react-icons
+import { FaCamera } from "react-icons/fa"; 
 import { useNavigate } from "react-router-dom";
-import commonConfigs from "../config"; //
+import commonConfigs from "../config"; 
 
 export default function VisualSearchButton() {
   const [loading, setLoading] = useState(false);
@@ -13,7 +13,6 @@ export default function VisualSearchButton() {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validate size (5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error("Image too large. Max 5MB.");
       return;
@@ -26,7 +25,7 @@ export default function VisualSearchButton() {
     try {
       const res = await fetch(`${commonConfigs.apiUrl}/api/search/visual`, {
         method: "POST",
-        body: formData, // No Content-Type header needed for FormData
+        body: formData,
       });
 
       if (!res.ok) throw new Error("Search failed");
@@ -36,7 +35,6 @@ export default function VisualSearchButton() {
       if (results.length === 0) {
         toast.info("No similar food found.");
       } else {
-        // Navigate to a results page with the data
         navigate("/search-results", { state: { results, image: URL.createObjectURL(file) } });
       }
     } catch (err) {
@@ -44,7 +42,6 @@ export default function VisualSearchButton() {
       toast.error("Visual search failed. Try again.");
     } finally {
       setLoading(false);
-      // Reset input so same file can be selected again
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
@@ -60,7 +57,6 @@ export default function VisualSearchButton() {
       />
       
       <button 
-        className="btn-visual-search"
         onClick={() => fileInputRef.current.click()}
         disabled={loading}
         title="Search by Photo"
@@ -76,7 +72,8 @@ export default function VisualSearchButton() {
         }}
       >
         {loading ? (
-          <span className="spinner-small">⌛</span> 
+          // Simple text spinner to avoid needing extra CSS
+          <span style={{ fontSize: "1.2rem", animation: "spin 1s linear infinite" }}>⌛</span> 
         ) : (
           <FaCamera />
         )}
