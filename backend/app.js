@@ -4,6 +4,9 @@ const dotenv = require("dotenv");
 const express = require("express");
 const cors = require("cors");
 const cron = require("node-cron");
+const cleanupOldSessions = require("./cron/cleanupSessions");
+
+cleanupOldSessions();
 
 dotenv.config();
 

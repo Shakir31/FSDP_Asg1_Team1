@@ -8,5 +8,6 @@ router.post("/join", authenticateToken, groupOrderController.joinSession);
 router.post("/add", authenticateToken, groupOrderController.addToGroupCart);
 router.get("/:sessionId/cart", authenticateToken, groupOrderController.getGroupCart);
 router.post("/finalize", authenticateToken, groupOrderController.finalizeGroupOrder);
+router.post("/cancel", authenticateToken, groupOrderController.cancelSession);
 
 module.exports = router;
