@@ -9,7 +9,7 @@ function HawkerPage() {
   const [filteredStalls, setFilteredStalls] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -23,8 +23,12 @@ function HawkerPage() {
     "Chinese",
     "Malay",
     "Indian",
-    "Peranakan",
-    "Hakka",
+    "Western",
+    "Japanese",
+    "Thai",
+    "Korean",
+    "Vietnamese",
+    "Fusion",
   ];
 
   useEffect(() => {
@@ -219,6 +223,8 @@ function HawkerPage() {
               border: "1px solid #ddd",
               borderRadius: "8px",
               outline: "none",
+              backgroundColor: "#ffffff",
+              color: "#111827",
             }}
           />
         </div>

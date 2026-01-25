@@ -15,6 +15,11 @@ import { toast } from "react-toastify";
 import OrderDetailsModal from "./OrderDetailsModel";
 import "../ProfilePage.css";
 
+// Helper function to get token from either storage
+function getToken() {
+  return localStorage.getItem("token") || sessionStorage.getItem("token");
+}
+
 // Helper component for star ratings
 const StarRating = ({ rating }) => {
   return (
@@ -54,21 +59,33 @@ function ProfilePage() {
   const navigate = useNavigate();
 
   const refreshOrders = async () => {
-    const token =
-      localStorage.getItem("token") || sessionStorage.getItem("token");
+    const token = getToken();
+
+    if (!token) return;
 
     try {
       const ordersResponse = await fetch(
         "http://localhost:3000/orders/history",
         {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
       );
+
+      if (ordersResponse.status === 403 || ordersResponse.status === 401) {
+        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
+        toast.error("Session expired. Please log in again.");
+        navigate("/login");
+        return;
+      }
 
       if (ordersResponse.ok) {
         const ordersData = await ordersResponse.json();
         ordersData.sort(
-          (a, b) => new Date(b.orderdate) - new Date(a.orderdate)
+          (a, b) => new Date(b.orderdate) - new Date(a.orderdate),
         );
         setOrders(ordersData);
       }
@@ -78,10 +95,6 @@ function ProfilePage() {
   };
 
   useEffect(() => {
-    const getToken = () => {
-      return localStorage.getItem("token") || sessionStorage.getItem("token");
-    };
-
     const fetchData = async () => {
       const token = getToken();
 
@@ -98,8 +111,11 @@ function ProfilePage() {
         const profileResponse = await fetch(
           "http://localhost:3000/users/profile",
           {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          },
         );
 
         if (profileResponse.status === 401 || profileResponse.status === 403) {
@@ -117,15 +133,35 @@ function ProfilePage() {
           const [coinsResponse, usersResponse, stallsResponse] =
             await Promise.all([
               fetch("http://localhost:3000/coins/balance", {
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
               }),
               fetch("http://localhost:3000/admin/users", {
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
               }),
               fetch("http://localhost:3000/admin/stalls", {
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
               }),
             ]);
+
+          if (
+            coinsResponse.status === 403 ||
+            coinsResponse.status === 401 ||
+            usersResponse.status === 403 ||
+            usersResponse.status === 401 ||
+            stallsResponse.status === 403 ||
+            stallsResponse.status === 401
+          ) {
+            throw new Error("Session expired");
+          }
 
           if (!coinsResponse.ok) throw new Error("Failed to fetch coins");
 
@@ -143,7 +179,7 @@ function ProfilePage() {
               stallOwners: usersData.filter((u) => u.role === "stall_owner")
                 .length,
               regularUsers: usersData.filter(
-                (u) => u.role === "user" || u.role === "customer"
+                (u) => u.role === "user" || u.role === "customer",
               ).length,
             });
           }
@@ -152,15 +188,35 @@ function ProfilePage() {
           const [coinsResponse, stallsResponse, notifStatsResponse] =
             await Promise.all([
               fetch("http://localhost:3000/coins/balance", {
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
               }),
               fetch("http://localhost:3000/stalls", {
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
               }),
               fetch("http://localhost:3000/notifications/stats", {
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
               }),
             ]);
+
+          if (
+            coinsResponse.status === 403 ||
+            coinsResponse.status === 401 ||
+            stallsResponse.status === 403 ||
+            stallsResponse.status === 401 ||
+            notifStatsResponse.status === 403 ||
+            notifStatsResponse.status === 401
+          ) {
+            throw new Error("Session expired");
+          }
 
           if (!coinsResponse.ok) throw new Error("Failed to fetch coins");
 
@@ -171,7 +227,7 @@ function ProfilePage() {
           if (stallsResponse.ok) {
             const allStalls = await stallsResponse.json();
             const myStalls = allStalls.filter(
-              (stall) => stall.owner_id === profileData.userid
+              (stall) => stall.owner_id === profileData.userid,
             );
             setStalls(myStalls);
           }
@@ -186,15 +242,35 @@ function ProfilePage() {
           const [coinsResponse, reviewsResponse, ordersResponse] =
             await Promise.all([
               fetch("http://localhost:3000/coins/balance", {
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
               }),
               fetch("http://localhost:3000/reviews/user", {
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
               }),
               fetch("http://localhost:3000/orders/history", {
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
               }),
             ]);
+
+          if (
+            coinsResponse.status === 403 ||
+            coinsResponse.status === 401 ||
+            reviewsResponse.status === 403 ||
+            reviewsResponse.status === 401 ||
+            ordersResponse.status === 403 ||
+            ordersResponse.status === 401
+          ) {
+            throw new Error("Session expired");
+          }
 
           if (!coinsResponse.ok) throw new Error("Failed to fetch coins");
           if (!reviewsResponse.ok) throw new Error("Failed to fetch reviews");
@@ -204,13 +280,13 @@ function ProfilePage() {
           const reviewsData = await reviewsResponse.json();
           // Sort reviews by date descending
           reviewsData.sort(
-            (a, b) => new Date(b.createdat) - new Date(a.createdat)
+            (a, b) => new Date(b.createdat) - new Date(a.createdat),
           );
 
           const ordersData = await ordersResponse.json();
           // Sort orders by date descending
           ordersData.sort(
-            (a, b) => new Date(b.orderdate) - new Date(a.orderdate)
+            (a, b) => new Date(b.orderdate) - new Date(a.orderdate),
           );
 
           setCoins(coinsData.coins);
@@ -344,7 +420,7 @@ function ProfilePage() {
             >
               {number}
             </button>
-          )
+          ),
         )}
 
         <button
@@ -371,16 +447,32 @@ function ProfilePage() {
     setSelectedOrder(order);
     setLoadingOrderDetails(true);
 
-    const token =
-      localStorage.getItem("token") || sessionStorage.getItem("token");
+    const token = getToken();
+
+    if (!token) {
+      toast.error("Please log in to view order details");
+      navigate("/login");
+      return;
+    }
 
     try {
       const response = await fetch(
         `http://localhost:3000/orders/${order.orderid}`,
         {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
       );
+
+      if (response.status === 403 || response.status === 401) {
+        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
+        toast.error("Session expired. Please log in again.");
+        navigate("/login");
+        return;
+      }
 
       if (!response.ok) throw new Error("Failed to fetch order details");
 
@@ -603,7 +695,7 @@ function ProfilePage() {
               {renderPagination(
                 currentStallPage,
                 totalStallPages,
-                setCurrentStallPage
+                setCurrentStallPage,
               )}
             </>
           ) : (
@@ -657,7 +749,7 @@ function ProfilePage() {
                       <span className="order-label">Status:</span>
                       <span
                         className={`status-text ${getStatusClass(
-                          order.orderstatus
+                          order.orderstatus,
                         )}`}
                       >
                         {order.orderstatus}
@@ -685,7 +777,7 @@ function ProfilePage() {
             {renderPagination(
               currentOrderPage,
               totalOrderPages,
-              setCurrentOrderPage
+              setCurrentOrderPage,
             )}
           </>
         ) : (
@@ -729,7 +821,7 @@ function ProfilePage() {
             {renderPagination(
               currentReviewPage,
               totalReviewPages,
-              setCurrentReviewPage
+              setCurrentReviewPage,
             )}
           </>
         ) : (

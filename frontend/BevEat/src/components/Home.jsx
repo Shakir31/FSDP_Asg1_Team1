@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "./Cartcontext";
+import RecommendationsSection from "./RecommendationsSection";
 import "../Home.css";
 
 function Home() {
@@ -218,6 +219,12 @@ function Home() {
           </div>
         </section>
       )}
+      
+      {/* ✨ RECOMMENDATIONS SECTION - ADDED HERE ✨ */}
+      {/* This appears first so users see personalized suggestions immediately */}
+      <section className="recommendations-container">
+        <RecommendationsSection limit={6} showTitle={true} />
+      </section>
 
       {/* Popular Stalls Section */}
       <section className="stalls">
