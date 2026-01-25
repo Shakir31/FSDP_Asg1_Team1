@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { Search, ShoppingCart, User, Bell } from "lucide-react";
 import { useCart } from "./Cartcontext";
@@ -48,35 +48,142 @@ function Navbar() {
   const isAdmin = userRole == "admin";
   const isCustomer = userRole == "customer";
 
+  const [logoDropdownOpen, setLogoDropdownOpen] = useState(false);
+  const logoRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (logoRef.current && !logoRef.current.contains(e.target)) {
+        setLogoDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
     <nav className="navbar">
-      <div className="navbar-item">
-        <Link to="/home">
+      <div className="navbar-item logo-container" ref={logoRef}>
+        <button
+          onClick={() => setLogoDropdownOpen((s) => !s)}
+          className="logo-button"
+          style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}
+          aria-haspopup="true"
+          aria-expanded={logoDropdownOpen}
+        >
           <img src={logo} alt="BevEat Logo" className="logo-image" />
-        </Link>
+        </button>
+
+        {logoDropdownOpen && (
+          <div className="logo-dropdown">
+            {/* --- MOBILE ONLY LINKS (Visible only on small screens) --- */}
+            <div className="dropdown-item mobile-only-item">
+              <Link to="/home" className="navbar-link" onClick={() => setLogoDropdownOpen(false)}>
+                Home
+              </Link>
+            </div>
+
+            {isStallOwner && (
+              <>
+                <div className="dropdown-item mobile-only-item">
+                  <Link to="/dashboard" className="navbar-link" onClick={() => setLogoDropdownOpen(false)}>
+                    Dashboard
+                  </Link>
+                </div>
+                <div className="dropdown-item mobile-only-item">
+                  <Link to="/menu-management" className="navbar-link" onClick={() => setLogoDropdownOpen(false)}>
+                    Menu
+                  </Link>
+                </div>
+              </>
+            )}
+
+            {isAdmin && (
+               <div className="dropdown-item mobile-only-item">
+                 <Link to="/admin" className="navbar-link" onClick={() => setLogoDropdownOpen(false)}>
+                   Dashboard
+                 </Link>
+               </div>
+            )}
+            {/* --------------------------------------------------------- */}
+
+            <div className="dropdown-item">
+              <Link to="/map" className="navbar-link" onClick={() => setLogoDropdownOpen(false)}>
+                Map
+              </Link>
+            </div>
+
+            {isCustomer && (
+              <div className="dropdown-item">
+                <Link to="/redeem" className="navbar-link" onClick={() => setLogoDropdownOpen(false)}>
+                  Redeem
+                </Link>
+              </div>
+            )}
+
+            {isCustomer && (
+              <>
+                {!session ? (
+                  <>
+                    <div className="dropdown-item">
+                      <button
+                        onClick={() => {
+                          handleStartClick();
+                          setLogoDropdownOpen(false);
+                        }}
+                        className="navbar-link"
+                        style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px" }}
+                      >
+                        Start Group
+                      </button>
+                    </div>
+                    <div className="dropdown-item">
+                      <button
+                        onClick={async () => {
+                          await handleJoinClick();
+                          setLogoDropdownOpen(false);
+                        }}
+                        className="navbar-link"
+                        style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px" }}
+                      >
+                        Join Group
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="dropdown-item">
+                    <Link
+                      to="/group-lobby"
+                      className="navbar-link"
+                      style={{ color: "var(--orange)", fontWeight: "bold" }}
+                      onClick={() => setLogoDropdownOpen(false)}
+                    >
+                      Group Lobby ({session.join_code})
+                    </Link>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
       </div>
 
-      <div className="navbar-item">
+      {/* --- DESKTOP LINKS (Hidden on mobile) --- */}
+      <div className="navbar-item desktop-only">
         <Link to="/home" className="navbar-link">
           Home
-        </Link>
-      </div>
-
-      <div className="navbar-item">
-        <Link to="/map" className="navbar-link">
-          Map
         </Link>
       </div>
 
       {/* Show Dashboard and Menu for stall owners */}
       {isStallOwner && (
         <>
-          <div className="navbar-item">
+          <div className="navbar-item desktop-only">
             <Link to="/dashboard" className="navbar-link">
               Dashboard
             </Link>
           </div>
-          <div className="navbar-item">
+          <div className="navbar-item desktop-only">
             <Link to="/menu-management" className="navbar-link">
               Menu
             </Link>
@@ -87,66 +194,14 @@ function Navbar() {
       {/* Show Dashboard for admin */}
       {isAdmin && (
         <>
-          <div className="navbar-item">
+          <div className="navbar-item desktop-only">
             <Link to="/admin" className="navbar-link">
               Dashboard
             </Link>
           </div>
         </>
       )}
-
-      {/* Show Redeem for regular users */}
-      {isCustomer && (
-        <div className="navbar-item">
-          <Link to="/redeem" className="navbar-link">
-            Redeem
-          </Link>
-        </div>
-      )}
-
-      {/* Group Order Dropdown for regular users */}
-      {!session ? (
-        <>
-          <div className="navbar-item">
-            <button
-              onClick={handleStartClick}
-              className="navbar-link"
-              style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                fontSize: "16px",
-              }}
-            >
-              Start Group
-            </button>
-          </div>
-          <div className="navbar-item">
-            <button
-              onClick={handleJoinClick}
-              className="navbar-link"
-              style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                fontSize: "16px",
-              }}
-            >
-              Join Group
-            </button>
-          </div>
-        </>
-      ) : (
-        <div className="navbar-item">
-          <Link
-            to="/group-lobby"
-            className="navbar-link"
-            style={{ color: "var(--orange)", fontWeight: "bold" }}
-          >
-            Group Lobby ({session.join_code})
-          </Link>
-        </div>
-      )}
+      {/* -------------------------------------- */}
 
       <VisualSearchButton />
 
