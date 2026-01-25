@@ -184,3 +184,110 @@
   border-bottom-left-radius: 8px;
   border-bottom-right-radius: 8px;
 }
+
+/* Mobile navbar tweaks: reduce logo, increase spacing, hide less-important items */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 8px 12px;
+    gap: 8px;
+    height: 64px;               /* reduce overall navbar height on mobile */
+    align-items: center;
+    justify-content: space-between; /* avoid space-around to prevent stretching */
+  }
+
+  /* ensure logo uses the smaller class used in markup */
+  .logo-image {
+    width: 40px !important;
+    height: 40px !important;
+    object-fit: contain;
+  }
+
+  /* keep any other logo selectors in sync */
+  .navbar .logo img,
+  .logo img {
+    width: 40px !important;
+    height: 40px !important;
+    object-fit: contain;
+  }
+
+  /* slightly smaller brand text */
+  .navbar .brand,
+  .brand {
+    font-size: 1rem;
+    margin-left: 8px;
+    line-height: 1;
+  }
+
+  /* tighten link spacing and make them wrap instead of overflowing */
+  .navbar .nav-links,
+  .nav-links {
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .navbar .nav-links a,
+  .nav-links a {
+    padding: 6px 8px;
+    font-size: 0.95rem;
+  }
+
+  /* hide or compact search/input on small screens to avoid squish */
+  .navbar .search,
+  .search {
+    display: none;
+  }
+
+  /* compact action buttons (cart/profile) spacing */
+  .navbar .actions,
+  .actions {
+    gap: 6px;
+    align-items: center;
+  }
+
+  /* adjust cart badge so it stays within reduced navbar */
+  .cart-badge {
+    top: -4px;
+    right: -6px;
+    height: 16px;
+    width: 16px;
+    font-size: 10px;
+  }
+
+  /* keep profile icon centered and prevent it from stretching navbar */
+  .profile-icon-container {
+    position: relative;
+    height: 40px;
+    min-width: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+  }
+
+  /* position dropdown relative to the reduced navbar and ensure it doesn't overflow */
+  .profile-dropdown {
+    top: calc(100% + 6px);
+    right: 6px;
+    min-width: 140px;
+  }
+
+  .profile-dropdown::before {
+    right: 22px;
+  }
+
+  /* keep dropdown items readable on small screens */
+  .dropdown-item {
+    padding: 10px 14px;
+    font-size: 0.92rem;
+    white-space: nowrap;
+  }
+
+  /* ensure hamburger/menu button (if present) remains visible and tappable */
+  .navbar .menu-btn,
+  .menu-btn {
+    display: inline-flex;
+    padding: 8px;
+    border-radius: 8px;
+  }
+}
