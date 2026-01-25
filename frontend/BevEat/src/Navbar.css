@@ -104,7 +104,6 @@
   align-items: center;
   cursor: pointer;
   justify-content: center;
-  cursor: pointer;
 }
 
 /* 2. The invisible trigger area (optional, for padding) */
@@ -185,109 +184,133 @@
   border-bottom-right-radius: 8px;
 }
 
-/* Mobile navbar tweaks: reduce logo, increase spacing, hide less-important items */
+/* Logo dropdown: match profile dropdown style and open below the logo */
+.logo-container {
+  position: relative;
+}
+
+.logo-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #ffffff;
+  min-width: 220px; /* increased so background always covers text */
+  box-sizing: border-box;
+  padding: 6px 0; /* small vertical padding so items don't touch edges */
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+}
+
+/* clear wrapper padding so inner controls determine size */
+.logo-dropdown .dropdown-item {
+  padding: 0;
+}
+
+/* make inner anchors/buttons truly full-width and include padding in width */
+.logo-dropdown .dropdown-item > a,
+.logo-dropdown .dropdown-item > .navbar-link,
+.logo-dropdown .dropdown-item > button {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 20px;
+  text-align: left;
+  background: none;
+  border: none;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+/* Ensure dropdown items match profile dropdown appearance */
+.logo-dropdown .dropdown-item {
+  padding: 12px 20px;
+  text-decoration: none;
+  color: #333;
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s, background-color 0.2s;
+}
+
+.logo-dropdown .dropdown-item:hover {
+  background-color: #fff0e6;
+  color: #ff7622;
+}
+
+
+/* =========================================
+   MOBILE RESPONSIVENESS & UTILITIES
+   ========================================= */
+
+/* UTILITY: Hide elements by default if they are mobile-only */
+.mobile-only-item {
+  display: none;
+}
+
+/* MOBILE MEDIA QUERY */
 @media (max-width: 768px) {
   .navbar {
-    padding: 8px 12px;
-    gap: 8px;
-    height: 64px;               /* reduce overall navbar height on mobile */
-    align-items: center;
-    justify-content: space-between; /* avoid space-around to prevent stretching */
+    height: 70px; /* Reduce navbar height */
+    padding: 0 15px;
+    justify-content: space-between; /* Spread items out */
+    gap: 5px;
   }
 
-  /* ensure logo uses the smaller class used in markup */
+  /* 1. HIDE Desktop Text Links */
+  .desktop-only {
+    display: none !important;
+  }
+
+  /* 2. SHOW Mobile Links inside Dropdown */
+  .logo-dropdown .mobile-only-item {
+    display: block;
+  }
+
+  /* 3. Adjust Logo Size */
   .logo-image {
-    width: 40px !important;
-    height: 40px !important;
+    width: 50px !important;
+    height: 50px !important;
     object-fit: contain;
   }
-
-  /* keep any other logo selectors in sync */
-  .navbar .logo img,
-  .logo img {
-    width: 40px !important;
-    height: 40px !important;
-    object-fit: contain;
+  
+  /* 4. Adjust Icon Spacing */
+  .navbar-item {
+    margin: 0 2px;
   }
-
-  /* slightly smaller brand text */
-  .navbar .brand,
-  .brand {
-    font-size: 1rem;
-    margin-left: 8px;
-    line-height: 1;
+  
+  /* 5. Fix Logo Dropdown Positioning */
+  .logo-dropdown {
+    top: 60px;
+    left: 10px;
+    right: auto;
+    width: 200px;
+    transform: none;
+    min-width: unset;
   }
-
-  /* tighten link spacing and make them wrap instead of overflowing */
-  .navbar .nav-links,
-  .nav-links {
-    gap: 6px;
-    flex-wrap: wrap;
-    align-items: center;
-  }
-
-  .navbar .nav-links a,
-  .nav-links a {
-    padding: 6px 8px;
-    font-size: 0.95rem;
-  }
-
-  /* hide or compact search/input on small screens to avoid squish */
-  .navbar .search,
-  .search {
+  
+  /* Remove the triangle pointer on mobile */
+  .logo-dropdown::before {
     display: none;
   }
 
-  /* compact action buttons (cart/profile) spacing */
-  .navbar .actions,
-  .actions {
-    gap: 6px;
-    align-items: center;
-  }
-
-  /* adjust cart badge so it stays within reduced navbar */
-  .cart-badge {
-    top: -4px;
-    right: -6px;
-    height: 16px;
-    width: 16px;
-    font-size: 10px;
-  }
-
-  /* keep profile icon centered and prevent it from stretching navbar */
-  .profile-icon-container {
-    position: relative;
-    height: 40px;
-    min-width: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 6px;
-  }
-
-  /* position dropdown relative to the reduced navbar and ensure it doesn't overflow */
+  /* Adjust Profile Dropdown Positioning */
   .profile-dropdown {
-    top: calc(100% + 6px);
-    right: 6px;
+    top: calc(100% + 5px);
+    right: 0;
     min-width: 140px;
   }
-
-  .profile-dropdown::before {
-    right: 22px;
-  }
-
-  /* keep dropdown items readable on small screens */
-  .dropdown-item {
-    padding: 10px 14px;
-    font-size: 0.92rem;
-    white-space: nowrap;
-  }
-
-  /* ensure hamburger/menu button (if present) remains visible and tappable */
-  .navbar .menu-btn,
-  .menu-btn {
-    display: inline-flex;
-    padding: 8px;
-    border-radius: 8px;
+  
+  .cart-badge {
+    top: -2px;
+    right: -5px;
   }
 }
