@@ -53,7 +53,7 @@ function Home() {
     }
 
     async function fetchRecentOrders() {
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token");      
       if (!token) {
         setOrdersLoading(false);
         return;
@@ -107,7 +107,7 @@ function Home() {
   }, []);
 
   const handleOrderAgain = async (orderId) => {
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     if (!token) {
       navigate("/login");
       return;
