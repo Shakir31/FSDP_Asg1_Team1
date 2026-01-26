@@ -1,121 +1,218 @@
 /* src/HawkerPage.css */
 
-/* Banner Section */
-.hawker-banner {
+/* Hero Section */
+.hawker-hero-wrapper {
+  padding: 1.5rem;
+  background-color: #f4f4f5;
+}
+
+.hawker-page-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.hawker-page-content {
+  flex: 1;
+  background-color: #f4f4f5;
+  padding: 1.5rem;
+}
+
+.hawker-hero-section {
+  height: 331px;
+  background-color: #d1d5db;
+  background-size: cover;
+  background-position: center;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
   position: relative;
-  width: 100%;
-  height: 35vh;
-  overflow: hidden;
-  margin-top: 0;
-  margin-bottom: 0;
-  padding: 0; 
 }
 
-.banner-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.banner-overlay {
+.hawker-hero-section::before {
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.45);
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 8px;
 }
 
-.banner-content {
-  position: absolute;
-  bottom: 20px;
-  left: 50px;
-  color: white;
-  z-index: 2;
+.hawker-hero-content {
+  position: relative;
+  padding: 1.5rem;
+  z-index: 1;
+  color: #ffffff;
 }
 
-.banner-content h1 {
-  font-size: 2rem;
-  margin-bottom: 0.3rem;
-  font-weight: 600;
+.hawker-hero-title {
+  font-size: 2.8rem;
+  font-weight: bold;
+  margin: 0 0 0.5rem 0;
 }
 
-.banner-content p {
-  font-size: 1rem;
-  margin-bottom: 0.8rem;
-  opacity: 0.9;
+.hawker-hero-description {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  font-weight: 300;
 }
 
-.filter-btn {
-  background-color: #ff7b00;
-  border: none;
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
+.hawker-hero-info {
+  font-size: 1.1rem;
   font-weight: 500;
+  margin: 0.25rem 0;
+}
+
+.back-button {
+  background-color: rgba(255, 255, 255, 0.9);
+  color: #121223;
+  border: none;
+  border-radius: 20px;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.9rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: all 0.2s;
+  margin-bottom: 1rem;
 }
 
-.filter-btn:hover {
-  background-color: #e66a00;
-}
-
-.arrow {
-  font-size: 0.8rem;
+.back-button:hover {
+  background-color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 /* Main Content Sections */
-.hawkers {
-  padding: 30px 40px;
+.hawkers,
+.stalls-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.stalls-container h2 {
+  font-size: 2.5rem;
+  color: #121223;
+  margin-bottom: 1.5rem;
 }
 
 /* Hawker Grid System */
-.hawker-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* Made responsive */
-  justify-content: center;
-  gap: 20px;
+.hawker-grid,
+.stalls-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  justify-content: space-evenly;
 }
 
 .hawker-card-link {
   text-decoration: none;
   color: inherit;
-  display: block; /* Ensures the link wraps the card properly */
+  display: block;
 }
 
-.hawker-card {
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+.hawker-card,
+.stall-card {
+  width: 324px;
+  height: 314px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
   overflow: hidden;
-  transition: 0.3s;
-  height: 100%; /* Ensures cards in the same row are same height */
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.2s;
 }
 
-.hawker-card:hover {
-  transform: translateY(-5px);
+.hawker-card:hover,
+.stall-card:hover {
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
 }
 
-.hawker-card img {
-  width: 100%;
-  height: 220px;
+.hawker-card img,
+.stall-card img {
+  width: 324px;
+  height: 191px;
   object-fit: cover;
 }
 
-.hawker-card h3 {
-  font-size: 1rem;
-  margin: 10px;
-  color: #333;
+.hawker-card h3,
+.stall-card h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #121223;
+  margin: 1rem 1rem 0.25rem 1rem;
 }
 
-.hawker-card p {
-  margin: 0 10px 10px;
-  font-size: 0.85rem;
-  color: #555;
+.hawker-card p,
+.stall-card p {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0 1rem 0.5rem 1rem;
+}
+
+.stall-card .stall-category {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #ff7622;
+  margin: auto 1rem 1rem 1rem;
+  text-align: right;
+}
+
+.stall-card-content {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 .distance {
-  color: #ff7b00;
+  color: #ff7622;
   font-weight: 500;
+}
+
+/* Search and Filter Styles */
+.search-filter-section {
+  background-color: #ffffff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Pagination Styles */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+  padding: 1rem 0;
+}
+
+.pagination button {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  background-color: #ffffff;
+  color: #121223;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pagination button:hover:not(:disabled) {
+  background-color: #ff7622;
+  color: #ffffff;
+  border-color: #ff7622;
+}
+
+.pagination button.active {
+  background-color: #ff7622;
+  color: #ffffff;
+  border-color: #ff7622;
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
