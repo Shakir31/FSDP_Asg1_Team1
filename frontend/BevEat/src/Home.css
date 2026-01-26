@@ -140,6 +140,7 @@
   background: linear-gradient(135deg, #f8fafc 0%, #fff5f0 100%);
   border-radius: 12px;
   margin: 20px 40px;
+  max-width: 100%;       /* 1. Allows it to grow beyond 1200px */
 }
 
 .order-again-grid {
@@ -433,4 +434,5 @@
   .section-header a {
     padding: 6px 8px;
   }
+}
 }
