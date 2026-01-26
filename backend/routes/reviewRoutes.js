@@ -24,4 +24,16 @@ router.get(
 router.get("/stall/:stallId", reviewController.getReviewsByStall);
 router.get("/user", authenticateToken, reviewController.getReviewsByUser);
 
+router.get(
+  "/moderation/queue", 
+  authenticateToken, 
+  reviewController.getModerationQueue
+);
+
+router.post(
+  "/moderation/:reviewId", 
+  authenticateToken, 
+  reviewController.handleModeration
+);
+
 module.exports = router;

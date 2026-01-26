@@ -1,6 +1,6 @@
 const supabase = require("../supabaseClient");
 
-async function createReview(menuItemId, userId, rating, reviewText, imageId) {
+async function createReview(menuItemId, userId, rating, reviewText, imageId, isFlagged = false) {
   try {
     const { data, error } = await supabase
       .from("reviews")
@@ -11,6 +11,7 @@ async function createReview(menuItemId, userId, rating, reviewText, imageId) {
           rating: rating,
           reviewtext: reviewText,
           imageid: imageId,
+          is_flagged: isFlagged,
         },
       ])
       .select()
@@ -178,9 +179,72 @@ async function getReviewsByUser(userId) {
   }
 }
 
+async function getFlaggedReviewsByOwner(ownerId) {
+  try {
+    // We need to join reviews -> menuitems -> stalls -> filter by owner_id
+    // Supabase nested query syntax:
+    const { data, error } = await supabase
+      .from("reviews")
+      .select(`
+        reviewid,
+        rating,
+        reviewtext,
+        createdat,
+        is_flagged,
+        menuitems!inner (
+          name,
+          stallid,
+          stalls!inner (
+            stallname,
+            owner_id
+          )
+        ),
+        users (
+          name,
+          email
+        )
+      `)
+      .eq("menuitems.stalls.owner_id", ownerId) // Filter by owner
+      .eq("is_flagged", true)                  // Only flagged reviews
+      .order("createdat", { ascending: false });
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    throw error;
+  }
+}
+
+// 3. NEW: Moderate Review (Delete or Unflag)
+async function moderateReview(reviewId, action) {
+  try {
+    if (action === "delete") {
+      const { error } = await supabase
+        .from("reviews")
+        .delete()
+        .eq("reviewid", reviewId);
+      if (error) throw error;
+      return { message: "Review deleted" };
+    } 
+    
+    if (action === "keep") {
+      const { error } = await supabase
+        .from("reviews")
+        .update({ is_flagged: false }) // Remove flag
+        .eq("reviewid", reviewId);
+      if (error) throw error;
+      return { message: "Review unflagged" };
+    }
+  } catch (error) {
+    throw error;
+  }
+}
+
 module.exports = {
   createReview,
   getReviewsByMenuItem,
   getReviewsByStall,
   getReviewsByUser,
+  getFlaggedReviewsByOwner,
+  moderateReview,
 };
