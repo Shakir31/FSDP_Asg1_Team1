@@ -113,13 +113,13 @@ function Navbar() {
               </Link>
             </div>
 
-            {isCustomer && (
+            {/* {isCustomer && (
               <div className="dropdown-item">
                 <Link to="/redeem" className="navbar-link" onClick={() => setLogoDropdownOpen(false)}>
                   Redeem
                 </Link>
               </div>
-            )}
+            )} */}
 
             {isCustomer && (
               <>
@@ -174,6 +174,14 @@ function Navbar() {
           Home
         </Link>
       </div>
+
+      {isCustomer && (
+        <div className="navbar-item desktop-only">
+          <Link to="/redeem" className="navbar-link">
+            Redeem
+          </Link>
+        </div>
+      )}
 
       {/* Show Dashboard and Menu for stall owners */}
       {isStallOwner && (
