@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState, useRef } from "react";
 import { GoogleMap, Marker, useLoadScript } from "@react-google-maps/api";
 import "../HawkerMap.css";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
+import { useNavigate } from "react-router-dom";
 
 const defaultCenter = { lat: 1.3521, lng: 103.8198 }; // Singapore
 
@@ -22,6 +23,8 @@ export default function HawkerMap() {
   const [googleDetails, setGoogleDetails] = useState(null);
   const [placesError, setPlacesError] = useState("");
   const [placesLoading, setPlacesLoading] = useState(false);
+
+  const navigate = useNavigate();
 
 // Cache by hawker id so repeated clicks don’t spam the API
   const placesCacheRef = useRef(new Map()); 
@@ -128,9 +131,17 @@ export default function HawkerMap() {
   if (!isLoaded) return <div>Loading Google Maps…</div>;
 
   // shared content (used by both desktop & mobile UI)
-  const DetailsContent = ({ h }) => (
+  const DetailsContent = ({ h, onBrowseStalls }) => (
     <div className="hawker-details">
       <div className="hawker-info-title">{h.name}</div>
+
+      <button
+      type="button"
+      className="hawker-browse-stalls-btn"
+      onClick={onBrowseStalls}
+    >
+      Browse stalls
+    </button>
 
       {h.photo_url ? (
         <div className="hawker-img-frame">
@@ -417,7 +428,7 @@ export default function HawkerMap() {
                 </button>
 
                 <div className="hawker-sidepanel-content">
-                  <DetailsContent h={selected} />
+                  <DetailsContent h={selected} onBrowseStalls={() => navigate(`/hawker-centres/${selected.id}`)} />
                 </div>
               </>
             )}
@@ -429,7 +440,7 @@ export default function HawkerMap() {
           <div className="hawker-sheet-backdrop" onClick={() => setSelected(null)} role="button" tabIndex={-1}>
             <div className="hawker-sheet" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
               <button className="hawker-sheet-close" onClick={() => setSelected(null)}>✕</button>
-              <DetailsContent h={selected} />
+              <DetailsContent h={selected} onBrowseStalls={() => navigate(`/hawker-centres/${selected.id}`)}/>
             </div>
           </div>
         )}
