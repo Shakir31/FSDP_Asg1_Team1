@@ -27,6 +27,7 @@ import AddStallPage from "./components/AddStallPage";
 import AddUserPage from "./components/AddUserPage";
 import GroupOrderLobby from "./components/GroupOrderLobby";
 import SearchResults from "./components/SearchResults";
+import HawkerMap from "./components/HawkerMap";
 import {
   ProtectedRoute,
   RoleProtectedRoute,
@@ -77,6 +78,7 @@ function App() {
           {/* Public browsing routes */}
           <Route path="/stalls" element={<StallsBrowse />} />
           <Route path="/hawker-centres" element={<HawkerCentresBrowse />} />
+          <Route path="/map" element={<HawkerMap />} />
           <Route path="/hawker-centres/:id" element={<HawkerPage />} />
           <Route path="/stalls/:id" element={<StallPage />} />
           <Route path="/stalls/:id/photos" element={<StallPhotos />} />

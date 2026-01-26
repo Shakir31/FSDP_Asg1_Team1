@@ -1,6 +1,14 @@
 const reviewModel = require("../models/reviewModel");
 const coinModel = require("../models/coinModel");
 
+// Profanity Filter
+const BAD_WORDS = ["fuck", "shit", "bitch", "asshole", "bastard", "fucking"];
+
+function containsProfanity(text) {
+  const lowerText = text.toLowerCase();
+  return BAD_WORDS.some((word) => lowerText.includes(word));
+}
+
 async function createReview(req, res) {
   try {
     const userId = parseInt(req.user.userId, 10);
@@ -11,20 +19,29 @@ async function createReview(req, res) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
+    const isFlagged = containsProfanity(reviewText);
+
     const newReview = await reviewModel.createReview(
       menuItemId,
       userId,
       rating,
       reviewText,
-      imageId
+      imageId,
+      isFlagged
     );
-    await coinModel.addCoins(userId, coinAmount);
-    await coinModel.insertCoinTransaction(
-      userId,
-      coinAmount,
-      "Review submission reward"
-    );
-    res.status(201).json({ message: "Review created", review: newReview });
+
+    if (!isFlagged) {
+      await coinModel.addCoins(userId, coinAmount);
+      await coinModel.insertCoinTransaction(
+        userId,
+        coinAmount,
+        "Review submission reward"
+      );
+    }
+    res.status(201).json({ 
+      message: isFlagged ? "Review submitted for moderation." : "Review created", 
+      review: newReview 
+    });
   } catch (error) {
     console.error("Create review error", error);
     res.status(500).json({ error: "Error creating review" });
@@ -77,9 +94,39 @@ async function getReviewsByUser(req, res) {
   }
 }
 
+async function getModerationQueue(req, res) {
+  try {
+    const userId = parseInt(req.user.userId, 10); // This is the Stall Owner
+    const reviews = await reviewModel.getFlaggedReviewsByOwner(userId);
+    res.json(reviews);
+  } catch (error) {
+    console.error("Get moderation queue error", error);
+    res.status(500).json({ error: "Error fetching flagged reviews" });
+  }
+}
+
+async function handleModeration(req, res) {
+  try {
+    const { reviewId } = req.params;
+    const { action } = req.body; // 'delete' or 'keep'
+
+    if (!["delete", "keep"].includes(action)) {
+      return res.status(400).json({ error: "Invalid action" });
+    }
+
+    await reviewModel.moderateReview(reviewId, action);
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Moderation error", error);
+    res.status(500).json({ error: "Error moderating review" });
+  }
+}
+
 module.exports = {
   createReview,
   getReviewsByMenuItem,
   getReviewsByStall,
   getReviewsByUser,
+  getModerationQueue,
+  handleModeration,
 };
