@@ -4,6 +4,11 @@ import { toast } from "react-toastify";
 import SocialPostCard from "./SocialPostCard";
 import "../StallPhotos.css";
 
+// Helper function to get token from either storage
+function getToken() {
+  return localStorage.getItem("token") || sessionStorage.getItem("token");
+}
+
 function StallPhotos() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -13,7 +18,8 @@ function StallPhotos() {
   const [error, setError] = useState(null);
 
   async function handleUpvote(imageId, currentlyUpvoted) {
-    const token = localStorage.getItem("token");
+    const token = getToken();
+
     if (!token) {
       toast.warning("You must be logged in to upvote images.");
       return;
@@ -28,6 +34,15 @@ function StallPhotos() {
         },
         body: JSON.stringify({ imageId }),
       });
+
+      if (res.status === 403 || res.status === 401) {
+        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
+        toast.error("Session expired. Please log in again.");
+        navigate("/login");
+        return;
+      }
+
       const data = await res.json();
 
       if (res.ok) {
@@ -42,8 +57,8 @@ function StallPhotos() {
                     ? img.upvote_count + 1
                     : img.upvote_count - 1,
                 }
-              : img
-          )
+              : img,
+          ),
         );
       } else {
         toast.error(data.error || "Action failed.");
@@ -57,7 +72,7 @@ function StallPhotos() {
     async function fetchStallImages() {
       try {
         setLoading(true);
-        const token = localStorage.getItem("token");
+        const token = getToken();
 
         const headers = {
           "Content-Type": "application/json",

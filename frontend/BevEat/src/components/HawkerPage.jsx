@@ -9,16 +9,26 @@ function HawkerPage() {
   const [filteredStalls, setFilteredStalls] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Search & Filter State
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const categories = [
     "All",
     "Chinese",
     "Malay",
     "Indian",
-    "Peranakan",
-    "Hakka",
+    "Western",
+    "Japanese",
+    "Thai",
+    "Korean",
+    "Vietnamese",
+    "Fusion",
   ];
 
   useEffect(() => {
@@ -55,11 +65,8 @@ function HawkerPage() {
     fetchHawkerCentreAndStalls();
   }, [id]);
 
+  // Filter Logic
   useEffect(() => {
-    filterStalls();
-  }, [searchTerm, selectedCategory, stalls]);
-
-  const filterStalls = () => {
     let filtered = [...stalls];
 
     // Filter by category
@@ -80,10 +87,45 @@ function HawkerPage() {
     }
 
     setFilteredStalls(filtered);
-  };
+    setCurrentPage(1); // Reset to page 1 on filter
+  }, [searchTerm, selectedCategory, stalls]);
+
+  // Pagination Logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentStalls = filteredStalls.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredStalls.length / itemsPerPage);
 
   const handleCategoryClick = (category) => {
     setSelectedCategory(category);
+  };
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  const getPageNumbers = () => {
+    const pageNumbers = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pageNumbers.push(i);
+    } else {
+      if (currentPage <= 4) {
+        for (let i = 1; i <= 5; i++) pageNumbers.push(i);
+        pageNumbers.push("...");
+        pageNumbers.push(totalPages);
+      } else if (currentPage >= totalPages - 3) {
+        pageNumbers.push(1);
+        pageNumbers.push("...");
+        for (let i = totalPages - 4; i <= totalPages; i++) pageNumbers.push(i);
+      } else {
+        pageNumbers.push(1);
+        pageNumbers.push("...");
+        pageNumbers.push(currentPage - 1);
+        pageNumbers.push(currentPage);
+        pageNumbers.push(currentPage + 1);
+        pageNumbers.push("...");
+        pageNumbers.push(totalPages);
+      }
+    }
+    return pageNumbers;
   };
 
   if (loading) {
@@ -181,6 +223,8 @@ function HawkerPage() {
               border: "1px solid #ddd",
               borderRadius: "8px",
               outline: "none",
+              backgroundColor: "#ffffff",
+              color: "#111827",
             }}
           />
         </div>
@@ -209,7 +253,7 @@ function HawkerPage() {
         )}
 
         <div className="card-grid">
-          {filteredStalls.map((stall) => (
+          {currentStalls.map((stall) => (
             <Link
               to={`/stalls/${stall.stallid}`}
               className="card-link"
@@ -244,6 +288,79 @@ function HawkerPage() {
             </Link>
           ))}
         </div>
+
+        {/* Pagination Controls */}
+        {!loading && !error && filteredStalls.length > itemsPerPage && (
+          <div
+            className="pagination"
+            style={{
+              marginTop: "20px",
+              display: "flex",
+              justifyContent: "center",
+              gap: "8px",
+            }}
+          >
+            <button
+              onClick={() => paginate(currentPage - 1)}
+              disabled={currentPage === 1}
+              style={{
+                padding: "8px 12px",
+                cursor: currentPage === 1 ? "not-allowed" : "pointer",
+                border: "1px solid #ddd",
+                borderRadius: "4px",
+                backgroundColor: "#fff",
+                color: "black",
+              }}
+            >
+              Prev
+            </button>
+
+            {getPageNumbers().map((number, index) =>
+              number === "..." ? (
+                <span
+                  key={`ellipsis-${index}`}
+                  style={{
+                    padding: "8px 12px",
+                    alignSelf: "center",
+                  }}
+                >
+                  ...
+                </span>
+              ) : (
+                <button
+                  key={number}
+                  onClick={() => paginate(number)}
+                  style={{
+                    padding: "8px 12px",
+                    cursor: "pointer",
+                    backgroundColor:
+                      currentPage === number ? "#007bff" : "#fff",
+                    color: currentPage === number ? "white" : "black",
+                    border: "1px solid #ddd",
+                    borderRadius: "4px",
+                  }}
+                >
+                  {number}
+                </button>
+              )
+            )}
+
+            <button
+              onClick={() => paginate(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              style={{
+                padding: "8px 12px",
+                cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+                border: "1px solid #ddd",
+                borderRadius: "4px",
+                backgroundColor: "#fff",
+                color: "black",
+              }}
+            >
+              Next
+            </button>
+          </div>
+        )}
       </section>
     </div>
   );

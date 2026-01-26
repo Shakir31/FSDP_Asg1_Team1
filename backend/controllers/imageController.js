@@ -1,0 +1,200 @@
+const imageModel = require("../models/imageModel");
+const axios = require("axios");
+const cloudinary = require("cloudinary").v2;
+const multer = require("multer");
+
+const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME;
+const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY;
+const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET;
+
+const AI_MICROSERVICE_URL =
+  process.env.AI_MICROSERVICE_URL || "http://localhost:5000/verify-food";
+
+cloudinary.config({
+  cloud_name: CLOUDINARY_CLOUD_NAME,
+  api_key: CLOUDINARY_API_KEY,
+  api_secret: CLOUDINARY_API_SECRET,
+});
+
+const upload = multer({
+  limits: { fileSize: 10 * 1024 * 1024 }, // max 10MB
+  fileFilter: (req, file, cb) => {
+    if (!file.mimetype.startsWith("image/")) {
+      return cb(new Error("Only image files are allowed"));
+    }
+    cb(null, true);
+  },
+}).single("imageFile");
+
+// Convert transformation string to Cloudinary effects array
+function parseTransformationString(transformationStr) {
+  if (!transformationStr) return [];
+
+  // transformationStr format: "e_brightness:10/e_contrast:15/e_saturation:30"
+  const effects = transformationStr.split("/");
+  const transformations = [];
+
+  effects.forEach((effect) => {
+    if (effect.startsWith("e_")) {
+      const [type, value] = effect.substring(2).split(":");
+      transformations.push({ effect: `${type}:${value}` });
+    }
+  });
+
+  return transformations;
+}
+
+// New: call AI microservice with imageUrl, return JSON { isFood, confidence }
+async function aiFoodImageVerification(imageUrl) {
+  try {
+    const response = await axios.post(AI_MICROSERVICE_URL, { imageUrl });
+    return response.data; // expected: { isFood: boolean, confidence: number }
+  } catch (error) {
+    console.error("AI microservice call error:", error.message || error);
+    return { isFood: false, confidence: 0 };
+  }
+}
+
+async function uploadImage(req, res) {
+  upload(req, res, async (uploadErr) => {
+    if (uploadErr) {
+      console.error("Upload error", uploadErr);
+      return res.status(400).json({ error: uploadErr.message });
+    }
+
+    try {
+      const uploaderId = parseInt(req.user.userId, 10);
+      if (isNaN(uploaderId)) {
+        return res.status(400).json({ error: "Invalid userId from token" });
+      }
+
+      let menuItemId;
+      let imageUrl;
+      const cloudinaryTransformation = req.body.cloudinaryTransformation || "";
+      const imageIdToReplace = req.body.imageIdToReplace;
+
+      if (req.file) {
+        // Build upload options with optional transformation
+        const uploadOptions = {
+          folder: "food_app_images",
+        };
+
+        // If transformation is provided, parse and add it to upload
+        if (cloudinaryTransformation) {
+          const transformations = parseTransformationString(
+            cloudinaryTransformation
+          );
+          if (transformations.length > 0) {
+            uploadOptions.transformation = transformations;
+          }
+        }
+
+        // Upload local file buffer to Cloudinary
+        const uploadResult = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            uploadOptions,
+            (error, result) => {
+              if (error) return reject(error);
+              resolve(result);
+            }
+          );
+          const streamifier = require("streamifier");
+          streamifier.createReadStream(req.file.buffer).pipe(stream);
+        });
+
+        imageUrl = uploadResult.secure_url;
+        menuItemId = req.body.menuItemId;
+
+        // If this is a replacement (filter applied), skip AI verification
+        if (imageIdToReplace) {
+          // Update existing image in database
+          const updatedImage = await imageModel.updateImageUrl(
+            imageIdToReplace,
+            imageUrl
+          );
+          return res.status(200).json({
+            message: "Image updated with filter",
+            image: updatedImage,
+          });
+        }
+
+        // Verify food image via your AI microservice (only for new uploads)
+        const { isFood } = await aiFoodImageVerification(imageUrl);
+        if (!isFood) {
+          return res
+            .status(400)
+            .json({ error: "Image failed food verification" });
+        }
+
+        const newImage = await imageModel.insertImage(
+          menuItemId,
+          uploaderId,
+          imageUrl
+        );
+        return res
+          .status(201)
+          .json({ message: "Image uploaded", image: newImage });
+      } else if (req.body.imageUrl && req.body.menuItemId) {
+        imageUrl = req.body.imageUrl;
+        menuItemId = req.body.menuItemId;
+
+        // Verify food image via your AI microservice
+        const { isFood } = await aiFoodImageVerification(imageUrl);
+        if (!isFood) {
+          return res
+            .status(400)
+            .json({ error: "Image failed food verification" });
+        }
+
+        const newImage = await imageModel.insertImage(
+          menuItemId,
+          uploaderId,
+          imageUrl
+        );
+        return res
+          .status(201)
+          .json({ message: "Image uploaded", image: newImage });
+      } else {
+        return res
+          .status(400)
+          .json({ error: "Missing image file or imageUrl" });
+      }
+    } catch (error) {
+      console.error("Upload image error", error);
+      return res.status(500).json({ error: "Error uploading image" });
+    }
+  });
+}
+
+async function upvoteImage(req, res) {
+  try {
+    const userId = parseInt(req.user.userId, 10);
+    if (isNaN(userId)) {
+      return res.status(400).json({ error: "Invalid userId from token" });
+    }
+    const { imageId } = req.body;
+
+    const result = await imageModel.voteImage(userId, imageId);
+
+    res.status(200).json({
+      message: result.message,
+      upvoted: result.upvoted,
+    });
+  } catch (error) {
+    console.error("Upvote image error", error);
+    res.status(400).json({ error: error.message });
+  }
+}
+
+async function getReviewId(req, res) {
+  try {
+    const { imageId } = req.params;
+    const reviewId = await imageModel.getReviewIdFromImageId(imageId);
+    res.json({ reviewid: reviewId });
+  } catch (error) {
+    console.error("Get reviewId error:", error);
+    res.status(500).json({ error: "Error getting reviewId" });
+  }
+}
+
+module.exports = { uploadImage, upvoteImage, getReviewId };

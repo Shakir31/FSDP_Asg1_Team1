@@ -15,6 +15,11 @@ import { toast } from "react-toastify";
 import OrderDetailsModal from "./OrderDetailsModel";
 import "../ProfilePage.css";
 
+// Helper function to get token from either storage
+function getToken() {
+  return localStorage.getItem("token") || sessionStorage.getItem("token");
+}
+
 // Helper component for star ratings
 const StarRating = ({ rating }) => {
   return (
@@ -45,13 +50,51 @@ function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Pagination State
+  const [currentOrderPage, setCurrentOrderPage] = useState(1);
+  const [currentReviewPage, setCurrentReviewPage] = useState(1);
+  const [currentStallPage, setCurrentStallPage] = useState(1);
+  const itemsPerPage = 6;
+
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const getToken = () => {
-      return localStorage.getItem("token") || sessionStorage.getItem("token");
-    };
+  const refreshOrders = async () => {
+    const token = getToken();
 
+    if (!token) return;
+
+    try {
+      const ordersResponse = await fetch(
+        "http://localhost:3000/orders/history",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      if (ordersResponse.status === 403 || ordersResponse.status === 401) {
+        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
+        toast.error("Session expired. Please log in again.");
+        navigate("/login");
+        return;
+      }
+
+      if (ordersResponse.ok) {
+        const ordersData = await ordersResponse.json();
+        ordersData.sort(
+          (a, b) => new Date(b.orderdate) - new Date(a.orderdate),
+        );
+        setOrders(ordersData);
+      }
+    } catch (error) {
+      console.error("Error refreshing orders:", error);
+    }
+  };
+
+  useEffect(() => {
     const fetchData = async () => {
       const token = getToken();
 
@@ -68,8 +111,11 @@ function ProfilePage() {
         const profileResponse = await fetch(
           "http://localhost:3000/users/profile",
           {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          },
         );
 
         if (profileResponse.status === 401 || profileResponse.status === 403) {
@@ -87,15 +133,35 @@ function ProfilePage() {
           const [coinsResponse, usersResponse, stallsResponse] =
             await Promise.all([
               fetch("http://localhost:3000/coins/balance", {
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
               }),
               fetch("http://localhost:3000/admin/users", {
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
               }),
               fetch("http://localhost:3000/admin/stalls", {
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
               }),
             ]);
+
+          if (
+            coinsResponse.status === 403 ||
+            coinsResponse.status === 401 ||
+            usersResponse.status === 403 ||
+            usersResponse.status === 401 ||
+            stallsResponse.status === 403 ||
+            stallsResponse.status === 401
+          ) {
+            throw new Error("Session expired");
+          }
 
           if (!coinsResponse.ok) throw new Error("Failed to fetch coins");
 
@@ -113,7 +179,7 @@ function ProfilePage() {
               stallOwners: usersData.filter((u) => u.role === "stall_owner")
                 .length,
               regularUsers: usersData.filter(
-                (u) => u.role === "user" || u.role === "customer"
+                (u) => u.role === "user" || u.role === "customer",
               ).length,
             });
           }
@@ -122,15 +188,35 @@ function ProfilePage() {
           const [coinsResponse, stallsResponse, notifStatsResponse] =
             await Promise.all([
               fetch("http://localhost:3000/coins/balance", {
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
               }),
               fetch("http://localhost:3000/stalls", {
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
               }),
               fetch("http://localhost:3000/notifications/stats", {
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
               }),
             ]);
+
+          if (
+            coinsResponse.status === 403 ||
+            coinsResponse.status === 401 ||
+            stallsResponse.status === 403 ||
+            stallsResponse.status === 401 ||
+            notifStatsResponse.status === 403 ||
+            notifStatsResponse.status === 401
+          ) {
+            throw new Error("Session expired");
+          }
 
           if (!coinsResponse.ok) throw new Error("Failed to fetch coins");
 
@@ -141,7 +227,7 @@ function ProfilePage() {
           if (stallsResponse.ok) {
             const allStalls = await stallsResponse.json();
             const myStalls = allStalls.filter(
-              (stall) => stall.owner_id === profileData.userid
+              (stall) => stall.owner_id === profileData.userid,
             );
             setStalls(myStalls);
           }
@@ -156,15 +242,35 @@ function ProfilePage() {
           const [coinsResponse, reviewsResponse, ordersResponse] =
             await Promise.all([
               fetch("http://localhost:3000/coins/balance", {
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
               }),
               fetch("http://localhost:3000/reviews/user", {
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
               }),
               fetch("http://localhost:3000/orders/history", {
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
               }),
             ]);
+
+          if (
+            coinsResponse.status === 403 ||
+            coinsResponse.status === 401 ||
+            reviewsResponse.status === 403 ||
+            reviewsResponse.status === 401 ||
+            ordersResponse.status === 403 ||
+            ordersResponse.status === 401
+          ) {
+            throw new Error("Session expired");
+          }
 
           if (!coinsResponse.ok) throw new Error("Failed to fetch coins");
           if (!reviewsResponse.ok) throw new Error("Failed to fetch reviews");
@@ -172,7 +278,16 @@ function ProfilePage() {
 
           const coinsData = await coinsResponse.json();
           const reviewsData = await reviewsResponse.json();
+          // Sort reviews by date descending
+          reviewsData.sort(
+            (a, b) => new Date(b.createdat) - new Date(a.createdat),
+          );
+
           const ordersData = await ordersResponse.json();
+          // Sort orders by date descending
+          ordersData.sort(
+            (a, b) => new Date(b.orderdate) - new Date(a.orderdate),
+          );
 
           setCoins(coinsData.coins);
           setReviews(reviewsData);
@@ -200,21 +315,164 @@ function ProfilePage() {
     fetchData();
   }, [navigate]);
 
+  // --- Pagination Logic ---
+
+  // 1. Orders
+  const indexOfLastOrder = currentOrderPage * itemsPerPage;
+  const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
+  const currentOrders = orders.slice(indexOfFirstOrder, indexOfLastOrder);
+  const totalOrderPages = Math.ceil(orders.length / itemsPerPage);
+
+  // 2. Reviews
+  const indexOfLastReview = currentReviewPage * itemsPerPage;
+  const indexOfFirstReview = indexOfLastReview - itemsPerPage;
+  const currentReviews = reviews.slice(indexOfFirstReview, indexOfLastReview);
+  const totalReviewPages = Math.ceil(reviews.length / itemsPerPage);
+
+  // 3. Stalls (for owners)
+  const indexOfLastStall = currentStallPage * itemsPerPage;
+  const indexOfFirstStall = indexOfLastStall - itemsPerPage;
+  const currentStalls = stalls.slice(indexOfFirstStall, indexOfLastStall);
+  const totalStallPages = Math.ceil(stalls.length / itemsPerPage);
+
+  // Reusable Pagination Helper
+  const getPageNumbers = (currentPage, totalPages) => {
+    const pageNumbers = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pageNumbers.push(i);
+    } else {
+      if (currentPage <= 4) {
+        for (let i = 1; i <= 5; i++) pageNumbers.push(i);
+        pageNumbers.push("...");
+        pageNumbers.push(totalPages);
+      } else if (currentPage >= totalPages - 3) {
+        pageNumbers.push(1);
+        pageNumbers.push("...");
+        for (let i = totalPages - 4; i <= totalPages; i++) pageNumbers.push(i);
+      } else {
+        pageNumbers.push(1);
+        pageNumbers.push("...");
+        pageNumbers.push(currentPage - 1);
+        pageNumbers.push(currentPage);
+        pageNumbers.push(currentPage + 1);
+        pageNumbers.push("...");
+        pageNumbers.push(totalPages);
+      }
+    }
+    return pageNumbers;
+  };
+
+  // Reusable Render Pagination Controls
+  const renderPagination = (currentPage, totalPages, paginate) => {
+    if (totalPages <= 1) return null;
+
+    return (
+      <div
+        className="pagination"
+        style={{
+          marginTop: "20px",
+          display: "flex",
+          justifyContent: "center",
+          gap: "8px",
+        }}
+      >
+        <button
+          onClick={() => paginate(currentPage - 1)}
+          disabled={currentPage === 1}
+          style={{
+            padding: "6px 10px",
+            cursor: currentPage === 1 ? "not-allowed" : "pointer",
+            border: "1px solid #ddd",
+            borderRadius: "4px",
+            backgroundColor: "#fff",
+            fontSize: "0.9rem",
+            color: "black",
+          }}
+        >
+          Prev
+        </button>
+
+        {getPageNumbers(currentPage, totalPages).map((number, index) =>
+          number === "..." ? (
+            <span
+              key={`ellipsis-${index}`}
+              style={{
+                padding: "6px 10px",
+                alignSelf: "center",
+                fontSize: "0.9rem",
+              }}
+            >
+              ...
+            </span>
+          ) : (
+            <button
+              key={number}
+              onClick={() => paginate(number)}
+              style={{
+                padding: "6px 10px",
+                cursor: "pointer",
+                backgroundColor: currentPage === number ? "#ff7622" : "#fff",
+                color: currentPage === number ? "white" : "black",
+                border: "1px solid #ddd",
+                borderRadius: "4px",
+                fontSize: "0.9rem",
+              }}
+            >
+              {number}
+            </button>
+          ),
+        )}
+
+        <button
+          onClick={() => paginate(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          style={{
+            padding: "6px 10px",
+            cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+            border: "1px solid #ddd",
+            borderRadius: "4px",
+            backgroundColor: "#fff",
+            fontSize: "0.9rem",
+            color: "black",
+          }}
+        >
+          Next
+        </button>
+      </div>
+    );
+  };
+
   // Open order details modal
   const openOrderDetails = async (order) => {
     setSelectedOrder(order);
     setLoadingOrderDetails(true);
 
-    const token =
-      localStorage.getItem("token") || sessionStorage.getItem("token");
+    const token = getToken();
+
+    if (!token) {
+      toast.error("Please log in to view order details");
+      navigate("/login");
+      return;
+    }
 
     try {
       const response = await fetch(
         `http://localhost:3000/orders/${order.orderid}`,
         {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
       );
+
+      if (response.status === 403 || response.status === 401) {
+        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
+        toast.error("Session expired. Please log in again.");
+        navigate("/login");
+        return;
+      }
 
       if (!response.ok) throw new Error("Failed to fetch order details");
 
@@ -410,26 +668,36 @@ function ProfilePage() {
           </div>
 
           {stalls.length > 0 ? (
-            <div className="review-list">
-              {stalls.map((stall) => (
-                <div key={stall.stallid} className="review-card">
-                  <div className="review-card-header">
-                    <span className="review-item-name">{stall.stallname}</span>
-                    <span className="review-date">{stall.category}</span>
+            <>
+              <div className="review-list">
+                {currentStalls.map((stall) => (
+                  <div key={stall.stallid} className="review-card">
+                    <div className="review-card-header">
+                      <span className="review-item-name">
+                        {stall.stallname}
+                      </span>
+                      <span className="review-date">{stall.category}</span>
+                    </div>
+                    <div className="review-card-body">
+                      <p className="review-text">{stall.description}</p>
+                      <button
+                        className="btn btn-orange"
+                        style={{ marginTop: "12px" }}
+                        onClick={() => navigate(`/stalls/${stall.stallid}`)}
+                      >
+                        View Stall
+                      </button>
+                    </div>
                   </div>
-                  <div className="review-card-body">
-                    <p className="review-text">{stall.description}</p>
-                    <button
-                      className="btn btn-orange"
-                      style={{ marginTop: "12px" }}
-                      onClick={() => navigate(`/stalls/${stall.stallid}`)}
-                    >
-                      View Stall
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+              {/* Pagination for Stalls */}
+              {renderPagination(
+                currentStallPage,
+                totalStallPages,
+                setCurrentStallPage,
+              )}
+            </>
           ) : (
             <p className="empty-message">No stalls assigned yet.</p>
           )}
@@ -460,48 +728,58 @@ function ProfilePage() {
         </div>
 
         {orders.length > 0 ? (
-          <div className="review-list">
-            {orders.map((order) => (
-              <div
-                key={order.orderid}
-                className="review-card order-card-clickable"
-                onClick={() => openOrderDetails(order)}
-              >
-                <div className="review-card-header">
-                  <span className="review-item-name">
-                    Order #{order.orderid}
-                  </span>
-                  <span className="review-date">
-                    {new Date(order.orderdate).toLocaleDateString()}
-                  </span>
-                </div>
-                <div className="review-card-body">
-                  <div className="order-row">
-                    <span className="order-label">Status:</span>
-                    <span
-                      className={`status-text ${getStatusClass(
-                        order.orderstatus
-                      )}`}
-                    >
-                      {order.orderstatus}
+          <>
+            <div className="review-list">
+              {currentOrders.map((order) => (
+                <div
+                  key={order.orderid}
+                  className="review-card order-card-clickable"
+                  onClick={() => openOrderDetails(order)}
+                >
+                  <div className="review-card-header">
+                    <span className="review-item-name">
+                      Order #{order.orderid}
+                    </span>
+                    <span className="review-date">
+                      {new Date(order.orderdate).toLocaleDateString()}
                     </span>
                   </div>
+                  <div className="review-card-body">
+                    <div className="order-row">
+                      <span className="order-label">Status:</span>
+                      <span
+                        className={`status-text ${getStatusClass(
+                          order.orderstatus,
+                        )}`}
+                      >
+                        {order.orderstatus}
+                      </span>
+                    </div>
 
-                  <div className="order-row">
-                    <span className="order-label">Total:</span>
-                    <span className="order-total-price">
-                      ${order.totalamount.toFixed(2)}
-                    </span>
-                  </div>
+                    <div className="order-row">
+                      <span className="order-label">Total:</span>
+                      <span className="order-total-price">
+                        ${order.totalamount.toFixed(2)}
+                      </span>
+                    </div>
 
-                  <div className="order-row payment-row">
-                    <span className="order-label">Payment:</span>
-                    <span className="payment-text">{order.paymentstatus}</span>
+                    <div className="order-row payment-row">
+                      <span className="order-label">Payment:</span>
+                      <span className="payment-text">
+                        {order.paymentstatus}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+            {/* Pagination for Orders */}
+            {renderPagination(
+              currentOrderPage,
+              totalOrderPages,
+              setCurrentOrderPage,
+            )}
+          </>
         ) : (
           <p className="empty-message">No orders yet.</p>
         )}
@@ -513,31 +791,39 @@ function ProfilePage() {
           <h3 className="profile-section-title">My Reviews</h3>
         </div>
         {reviews.length > 0 ? (
-          <div className="review-list">
-            {reviews.map((review) => (
-              <div key={review.reviewid} className="review-card">
-                <div className="review-card-header">
-                  <span className="review-item-name">
-                    {review.menuitemname}
-                  </span>
-                  <span className="review-date">
-                    {new Date(review.createdat).toLocaleDateString()}
-                  </span>
+          <>
+            <div className="review-list">
+              {currentReviews.map((review) => (
+                <div key={review.reviewid} className="review-card">
+                  <div className="review-card-header">
+                    <span className="review-item-name">
+                      {review.menuitemname}
+                    </span>
+                    <span className="review-date">
+                      {new Date(review.createdat).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="review-card-body">
+                    <StarRating rating={review.rating} />
+                    <p className="review-text">{review.reviewtext}</p>
+                    {review.imageurl && (
+                      <img
+                        src={review.imageurl}
+                        alt="User review"
+                        className="review-card-image"
+                      />
+                    )}
+                  </div>
                 </div>
-                <div className="review-card-body">
-                  <StarRating rating={review.rating} />
-                  <p className="review-text">{review.reviewtext}</p>
-                  {review.imageurl && (
-                    <img
-                      src={review.imageurl}
-                      alt="User review"
-                      className="review-card-image"
-                    />
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+            {/* Pagination for Reviews */}
+            {renderPagination(
+              currentReviewPage,
+              totalReviewPages,
+              setCurrentReviewPage,
+            )}
+          </>
         ) : (
           <p className="empty-message">No reviews made</p>
         )}
@@ -550,6 +836,7 @@ function ProfilePage() {
           orderDetails={orderDetails}
           loading={loadingOrderDetails}
           onClose={closeOrderDetails}
+          onOrderUpdated={refreshOrders}
         />
       )}
     </div>

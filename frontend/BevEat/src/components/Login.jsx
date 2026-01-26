@@ -25,18 +25,21 @@ function Login() {
         if (rememberMe) {
           localStorage.setItem("token", data.token);
           localStorage.setItem("role", data.role);
+          localStorage.setItem("userId", data.userId);
         } else {
-          localStorage.setItem("token", data.token);
-          localStorage.setItem("role", data.role);
+          localStorage.removeItem("token");
+          localStorage.removeItem("role");
+          localStorage.removeItem("userId");
           sessionStorage.setItem("token", data.token);
           sessionStorage.setItem("role", data.role);
+          sessionStorage.setItem("userId", data.userId);
         }
 
         toast.success("Login successful! Welcome back!");
 
         // Role-based redirect
         if (data.role === "admin" || data.role === "Admin") {
-          window.location.href = "/admin";
+          navigate("/admin");
         } else if (data.role === "stall_owner") {
           navigate("/dashboard");
         } else {
