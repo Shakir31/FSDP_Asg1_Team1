@@ -15,4 +15,5 @@ module.exports = {
   recommendationRoutes: require("./recommendationRoutes"),
   groupOrderRoutes: require("./groupOrderRoutes"),
   searchRoutes: require("./searchRoutes"),
+  missionRoutes: require("./missionRoutes"),
 };
