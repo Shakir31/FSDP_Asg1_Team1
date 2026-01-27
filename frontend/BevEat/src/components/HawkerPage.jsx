@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
+import "../HawkerPage.css";
 import "../Home.css";
+import hero from "../assets/hero.png";
 
 function HawkerPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [hawkerCentre, setHawkerCentre] = useState(null);
   const [stalls, setStalls] = useState([]);
   const [filteredStalls, setFilteredStalls] = useState([]);
@@ -150,58 +153,45 @@ function HawkerPage() {
 
   return (
     <div className="home-page">
-      {/* Hawker Centre Hero Section */}
-      {hawkerCentre && (
-        <section className="hero">
-          <img
-            src={
-              hawkerCentre.photo_url ||
-              "https://res.cloudinary.com/dv9rwydip/image/upload/v1763507632/Screenshot_2025-11-19_071248_gejxjk.png"
-            }
-            alt={hawkerCentre.name}
-            className="hero-image"
-            onError={(e) => {
-              e.target.src =
-                "https://res.cloudinary.com/dv9rwydip/image/upload/v1763507632/Screenshot_2025-11-19_071248_gejxjk.png";
-            }}
-          />
-        </section>
-      )}
-
-      {/* Hawker Centre Details */}
-      {hawkerCentre && (
-        <section className="stalls">
-          <h1 style={{ fontSize: "2rem", marginBottom: "10px", color: "#333" }}>
-            {hawkerCentre.name}
-          </h1>
-          <p style={{ fontSize: "1rem", color: "#666", marginBottom: "10px" }}>
-            📍 {hawkerCentre.address}
-            {hawkerCentre.postal_code && `, ${hawkerCentre.postal_code}`}
-          </p>
-          {hawkerCentre.no_of_cooked_food_stalls && (
-            <p
-              style={{
-                fontSize: "0.9rem",
-                color: "#ff7622",
-                marginBottom: "20px",
-              }}
+      {/* Hero wrapper to constrain width */}
+      <div className="hawker-hero-wrapper">
+        {/* Hawker Centre Hero Section */}
+        <div
+          className="hawker-hero-section"
+          style={{
+            backgroundImage: `url(${
+              hawkerCentre?.photo_url || hero
+            })`,
+          }}
+        >
+        {hawkerCentre && (
+          <div className="hawker-hero-content">
+            <button
+              onClick={() => navigate("/home")}
+              className="back-button"
+              style={{ background: "white" }}
             >
-              🏪 {hawkerCentre.no_of_cooked_food_stalls} cooked food stalls
+              &larr; Back to Home
+            </button>
+            <h1 className="hawker-hero-title">{hawkerCentre.name}</h1>
+            <p className="hawker-hero-info">
+              <strong>Location:</strong> {hawkerCentre.address}
+              {hawkerCentre.postal_code && `, ${hawkerCentre.postal_code}`}
             </p>
-          )}
-          {hawkerCentre.status && (
-            <p
-              style={{
-                fontSize: "0.9rem",
-                color: "#666",
-                marginBottom: "20px",
-              }}
-            >
-              Status: {hawkerCentre.status}
-            </p>
-          )}
-        </section>
-      )}
+            {hawkerCentre.no_of_cooked_food_stalls && (
+              <p className="hawker-hero-info">
+                <strong>Stalls:</strong> {hawkerCentre.no_of_cooked_food_stalls} cooked food stalls
+              </p>
+            )}
+            {hawkerCentre.status && (
+              <p className="hawker-hero-info">
+                <strong>Status:</strong> {hawkerCentre.status}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
 
       {/* Stalls Section */}
       <section className="stalls">

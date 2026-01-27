@@ -8,6 +8,7 @@ import hero from "../assets/hero.png";
 function StallPage() {
   const [stall, setStall] = useState(null);
   const [menuItems, setMenuItems] = useState([]);
+  const [hawkerCentre, setHawkerCentre] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { id } = useParams();
@@ -24,6 +25,17 @@ function StallPage() {
         }
         const stallData = await stallResponse.json();
         setStall(stallData);
+
+        // Fetch hawker centre data if hawker_centre_id exists
+        if (stallData.hawker_centre_id) {
+          const hawkerResponse = await fetch(
+            `http://localhost:3000/hawker-centres/${stallData.hawker_centre_id}`
+          );
+          if (hawkerResponse.ok) {
+            const hawkerData = await hawkerResponse.json();
+            setHawkerCentre(hawkerData);
+          }
+        }
 
         const menuResponse = await fetch(
           `http://localhost:3000/stalls/${id}/menu`
@@ -102,7 +114,7 @@ function StallPage() {
               <h1 className="hero-title">{stall.stallname}</h1>
               <p className="hero-description">{stall.description}</p>
               <p className="hero-info">
-                <strong>Location:</strong> {stall.hawker_centre}
+                <strong>Location:</strong> {hawkerCentre?.address || stall.address || "Location not available"}
               </p>
               <p className="hero-info">
                 <strong>Category:</strong> {stall.category}
