@@ -98,10 +98,23 @@ async function finalizeGroupOrder(req, res) {
   }
 }
 
+async function cancelSession(req, res) {
+  try {
+    const { sessionId } = req.body;
+    // Reuse existing model method to set is_active = false
+    await groupOrderModel.closeSession(sessionId);
+    res.json({ message: "Session closed successfully" });
+  } catch (error) {
+    console.error("Cancel session error:", error);
+    res.status(500).json({ error: "Failed to close session" });
+  }
+}
+
 module.exports = {
   startSession,
   joinSession,
   addToGroupCart,
   getGroupCart,
-  finalizeGroupOrder
+  finalizeGroupOrder,
+  cancelSession,
 };

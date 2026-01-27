@@ -4,6 +4,9 @@ const dotenv = require("dotenv");
 const express = require("express");
 const cors = require("cors");
 const cron = require("node-cron");
+const cleanupOldSessions = require("./cron/cleanupSessions");
+
+cleanupOldSessions();
 
 dotenv.config();
 
@@ -33,6 +36,7 @@ const {
   recommendationRoutes,
   groupOrderRoutes,
   searchRoutes,
+  missionRoutes,
 } = require("./routes");
 
 // Cron job - Run daily at 2am
@@ -57,7 +61,7 @@ app.use("/reviews", reactionRoutes);
 app.use("/recommendations", recommendationRoutes);
 app.use("/group-order", groupOrderRoutes);
 app.use("/api/search", searchRoutes);
-
+app.use("/missions", missionRoutes);
 // Start server
 app.listen(port, () => {
   console.log(`Server running on port ${port}...`);

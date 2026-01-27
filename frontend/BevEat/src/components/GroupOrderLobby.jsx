@@ -4,12 +4,12 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "../Cart.css";
 
-// Helper function to get token from either storage
+// Helper function to get token
 function getToken() {
   return localStorage.getItem("token") || sessionStorage.getItem("token");
 }
 
-// Helper function to get userId from either storage
+// Helper function to get userId
 function getUserId() {
   return localStorage.getItem("userId") || sessionStorage.getItem("userId");
 }
@@ -31,7 +31,6 @@ function GroupOrderLobby() {
 
   const fetchGroupCart = async () => {
     const token = getToken();
-
     if (!token) {
       toast.error("Please log in to continue");
       navigate("/login");
@@ -46,14 +45,14 @@ function GroupOrderLobby() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        },
+        }
       );
 
       if (res.status === 404) {
-        toast.error("Host has finalized the group order. Redirecting...");
+        toast.error("Host has finalized the group order or closed the lobby.");
         setSession(null);
-        localStorage.removeItem("activeSession"); // Clean up storage
-        navigate("/");
+        localStorage.removeItem("activeSession");
+        navigate("/home");
         return;
       }
 
@@ -74,17 +73,45 @@ function GroupOrderLobby() {
 
   const subtotal = items.reduce(
     (sum, item) => sum + item.menuitems.price * item.quantity,
-    0,
+    0
   );
+
+  const handleCloseLobby = async () => {
+    if (!window.confirm("Are you sure you want to close this lobby? The group will be disbanded.")) {
+      return;
+    }
+
+    const token = getToken();
+    try {
+      const res = await fetch("http://localhost:3000/group-order/cancel", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ sessionId: session.sessionid }),
+      });
+
+      if (res.ok) {
+        toast.info("Lobby closed.");
+        setSession(null);
+        localStorage.removeItem("activeSession");
+        navigate("/home");
+      } else {
+        toast.error("Failed to close lobby");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Error closing lobby");
+    }
+  };
 
   const currentUserId = getUserId();
   const isHost = session?.host_userid == currentUserId;
 
   const handleCheckout = async () => {
     if (items.length === 0) return;
-
     const token = getToken();
-
     if (!token) {
       toast.error("Please log in to continue");
       navigate("/login");
@@ -92,7 +119,6 @@ function GroupOrderLobby() {
     }
 
     setLoading(true);
-
     try {
       const response = await fetch(
         "http://localhost:3000/group-order/finalize",
@@ -106,7 +132,7 @@ function GroupOrderLobby() {
             sessionId: session.sessionid,
             totalAmount: subtotal,
           }),
-        },
+        }
       );
 
       if (response.status === 403 || response.status === 401) {
@@ -118,18 +144,14 @@ function GroupOrderLobby() {
       }
 
       const data = await response.json();
-
       if (!response.ok) {
         throw new Error(data.error || "Checkout failed");
       }
 
       toast.success("Group Order Finalized!");
-
-      // Clear local session state since it's closed now
       setSession(null);
       localStorage.removeItem("activeSession");
 
-      // Navigate based on payment method
       if (paymentMethod === "nets") {
         navigate("/nets-qr", { state: { totalAmount: subtotal, order: data } });
       } else {
@@ -179,9 +201,7 @@ function GroupOrderLobby() {
                 items.map((it, idx) => (
                   <div key={idx} className="cart-item">
                     <img
-                      src={
-                        it.menuitems.mainimageurl || "https://placehold.co/100"
-                      }
+                      src={it.menuitems.mainimageurl || "https://placehold.co/100"}
                       alt={it.menuitems.name}
                       style={{
                         width: 60,
@@ -192,11 +212,8 @@ function GroupOrderLobby() {
                     />
                     <div className="cart-item-left" style={{ marginLeft: 15 }}>
                       <div className="cart-item-title">{it.menuitems.name}</div>
-                      <div
-                        style={{ fontSize: "0.85em", color: "var(--muted)" }}
-                      >
-                        Added by:{" "}
-                        <strong>{it.users?.name || "User " + it.userid}</strong>
+                      <div style={{ fontSize: "0.85em", color: "var(--muted)" }}>
+                        Added by: <strong>{it.users?.name || "User " + it.userid}</strong>
                       </div>
                       <div style={{ fontWeight: "bold", marginTop: 4 }}>
                         x {it.quantity}
@@ -219,7 +236,6 @@ function GroupOrderLobby() {
               Payment Method
             </h3>
 
-            {/* Payment Selection (Only Host can select, but visible to all) */}
             <div style={{ marginBottom: 15 }}>
               <label className="pay-row">
                 <input
@@ -266,14 +282,33 @@ function GroupOrderLobby() {
               </div>
 
               {isHost ? (
-                <button
-                  className="btn btn-orange"
-                  onClick={handleCheckout}
-                  disabled={items.length === 0 || loading}
-                  style={{ width: "100%" }}
-                >
-                  {loading ? "Processing..." : "Finalize & Pay"}
-                </button>
+                // --- FIX: Wrapped buttons in a div ---
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px", width: "100%" }}>
+                  <button
+                    className="btn btn-orange"
+                    onClick={handleCheckout}
+                    disabled={items.length === 0 || loading}
+                    style={{ width: "100%", justifyContent: "center"}}
+                  >
+                    {loading ? "Processing..." : "Finalize & Pay"}
+                  </button>
+
+                  <button 
+                    onClick={handleCloseLobby}
+                    style={{
+                      width: "100%",
+                      padding: "10px",
+                      background: "white",
+                      border: "1px solid #dc3545",
+                      color: "#dc3545",
+                      borderRadius: "8px",
+                      fontWeight: "bold",
+                      cursor: "pointer"
+                    }}
+                  >
+                    Close Lobby
+                  </button>
+                </div>
               ) : (
                 <div
                   style={{
