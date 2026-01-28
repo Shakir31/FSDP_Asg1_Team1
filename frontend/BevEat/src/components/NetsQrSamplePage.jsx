@@ -269,7 +269,6 @@ class NetsQrSampleLayout extends Component {
       networkCode,
       instruction,
       errorMsg,
-      lastResponse,
       isLoading,
       amount,
     } = this.state;
@@ -421,24 +420,6 @@ class NetsQrSampleLayout extends Component {
             </div>
           )}
         </div>
-
-        {/* Debug Output */}
-        {lastResponse && (
-          <pre
-            style={{
-              textAlign: "left",
-              maxWidth: 720,
-              margin: "12px auto",
-              padding: 8,
-              background: "#f9fafb",
-              borderRadius: 6,
-              overflowX: "auto",
-              fontSize: 12,
-            }}
-          >
-            {JSON.stringify(lastResponse, null, 2)}
-          </pre>
-        )}
       </div>
     );
   }

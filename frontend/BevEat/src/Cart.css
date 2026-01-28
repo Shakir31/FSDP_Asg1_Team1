@@ -282,3 +282,120 @@
     order: 1;
   }
 }
+
+/* =========================================
+   CHECKOUT RECEIPT STYLES
+   ========================================= */
+
+.checkout-container {
+  display: flex;
+  justify-content: center;
+  align-items: center; /* Vertically center */
+  min-height: 80vh;    /* Take up most of the screen height */
+  background-color: #f9f9f9;
+  padding: 20px;
+}
+
+.receipt-card {
+  background: #ffffff;
+  width: 100%;
+  max-width: 400px;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  text-align: center;
+  animation: slideUp 0.5s ease-out;
+}
+
+/* Header with gradient */
+.receipt-header {
+  background: linear-gradient(135deg, #ff7622 0%, #ff9d5c 100%);
+  color: white;
+  padding: 40px 20px;
+  position: relative;
+}
+
+.receipt-icon {
+  background: rgba(255, 255, 255, 0.2);
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 15px;
+  font-size: 32px;
+}
+
+.receipt-header h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 800;
+}
+
+.receipt-header p {
+  margin: 8px 0 0;
+  opacity: 0.95;
+  font-size: 1rem;
+}
+
+/* Body Content */
+.receipt-body {
+  padding: 30px;
+}
+
+.queue-box {
+  background: #fff8f3; /* Light orange tint */
+  border: 2px dashed #ff7622;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 25px;
+}
+
+.queue-label {
+  color: #ff7622;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.85rem;
+}
+
+.queue-number {
+  font-size: 3rem;
+  font-weight: 900;
+  color: #121223;
+  margin: 5px 0;
+  line-height: 1;
+}
+
+.order-id {
+  color: #9ca3af;
+  font-size: 0.9rem;
+}
+
+/* Button */
+.btn-home {
+  background-color: #121223;
+  color: white;
+  border: none;
+  padding: 16px;
+  width: 100%;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-home:active {
+  transform: scale(0.98);
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
