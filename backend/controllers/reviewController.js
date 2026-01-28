@@ -1,12 +1,28 @@
 const reviewModel = require("../models/reviewModel");
 const coinModel = require("../models/coinModel");
+const axios = require("axios");
+const Filter = require("bad-words");
+const filter = new Filter();
 
 // Profanity Filter
-const BAD_WORDS = ["fuck", "shit", "bitch", "asshole", "bastard", "fucking"];
+// const BAD_WORDS = ["fuck", "shit", "bitch", "asshole", "bastard", "fucking"];
 
-function containsProfanity(text) {
-  const lowerText = text.toLowerCase();
-  return BAD_WORDS.some((word) => lowerText.includes(word));
+// function containsProfanity(text) {
+//   const lowerText = text.toLowerCase();
+//   return BAD_WORDS.some((word) => lowerText.includes(word));
+// }
+
+// Helper function to call the AI Service
+async function checkTextWithAI(text) {
+  try {
+    const response = await axios.post("http://localhost:5000/moderate-text", {
+      text: text
+    });
+    return response.data.isFlagged;
+  } catch (error) {
+    console.error("AI Moderation Service Error:", error.message);
+    return false; 
+  }
 }
 
 async function createReview(req, res) {
@@ -19,17 +35,31 @@ async function createReview(req, res) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    const isFlagged = containsProfanity(reviewText);
+    // CENSORSHIP: Clean the text immediately
+    const cleanedText = filter.clean(reviewText);
+    
+    // Check if the library found anything (if cleaned != original, it found words)
+    const libraryFoundProfanity = cleanedText !== reviewText;
+
+    // AI CHECK: Check the intent
+    console.log("🤖 Analyzing review with AI...");
+    const aiFlagged = await checkTextWithAI(reviewText);
+    console.log(`AI Verdict: ${aiFlagged ? "Flagged 🚩" : "Safe ✅"}`);
+
+    // COMBINE LOGIC: 
+    // Flag it if EITHER the Library found words OR the AI thinks it's toxic
+    const isFlagged = libraryFoundProfanity || aiFlagged;
 
     const newReview = await reviewModel.createReview(
       menuItemId,
       userId,
       rating,
-      reviewText,
+      cleanedText, // <--- SAVE THE CENSORED TEXT TO DB
       imageId,
       isFlagged
     );
 
+    // Only reward coins if NO flags were raised
     if (!isFlagged) {
       await coinModel.addCoins(userId, coinAmount);
       await coinModel.insertCoinTransaction(
@@ -38,8 +68,9 @@ async function createReview(req, res) {
         "Review submission reward"
       );
     }
+
     res.status(201).json({ 
-      message: isFlagged ? "Review submitted for moderation." : "Review created", 
+      message: isFlagged ? "Review submitted but flagged for moderation." : "Review created", 
       review: newReview 
     });
   } catch (error) {
