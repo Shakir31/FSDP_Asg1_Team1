@@ -14,16 +14,139 @@
   z-index: 1000;
 }
 
-.navbar-item {
+/* LEFT SECTION: Logo + Menu */
+.navbar-left-section {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 15px;
+  position: relative; 
+}
+
+/* Menu Button Styles */
+.menu-trigger-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  color: #121223;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  border-radius: 8px;
+}
+
+.menu-trigger-btn:hover {
+  background-color: #f5f5f5;
+  color: #ff7622;
+}
+
+/* Logo Styles */
+.logo-link {
+  display: flex;
+  align-items: center;
 }
 
 .logo-image {
   width: 100px;
   height: 98px;
   object-fit: cover;
+}
+
+/* Dropdown Container */
+.menu-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* The Dropdown Menu Itself */
+.nav-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 10px;
+  background-color: #ffffff;
+  min-width: 220px;
+  padding: 8px 0;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Invisible Bridge for Hover Stability */
+.nav-dropdown-menu::before {
+  content: '';
+  position: absolute;
+  top: -15px; 
+  left: 0;
+  width: 100%;
+  height: 15px;
+  background: transparent;
+}
+
+/* Small arrow pointing up */
+.nav-dropdown-menu::after {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 18px; 
+  width: 12px;
+  height: 12px;
+  background-color: #ffffff;
+  border-top: 1px solid #e2e8f0;
+  border-left: 1px solid #e2e8f0;
+  transform: rotate(45deg);
+}
+
+/* === DROPDOWN ITEM FIXES === */
+
+/* 1. Remove padding from the container */
+.nav-dropdown-menu .dropdown-item {
+  padding: 0;
+  display: block;
+}
+
+/* 2. Add padding to the link so it fills the space */
+.nav-dropdown-menu .navbar-link {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 20px;
+  text-decoration: none;
+  color: #333;
+  font-size: 1rem;
+  font-weight: 500;
+  text-align: left;
+  transition: all 0.2s;
+}
+
+/* 3. Apply hover to the link */
+.nav-dropdown-menu .navbar-link:hover {
+  background-color: #fff0e6;
+  color: #ff7622;
+}
+
+/* Button links (Start/Join Group) */
+.btn-link {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.active-group-link {
+  color: #ff7622 !important;
+  font-weight: 700 !important;
+}
+
+/* EXISTING STYLES */
+.navbar-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .navbar-link {
@@ -38,30 +161,6 @@
   color: #ff7622;
 }
 
-.search-container {
-  position: relative;
-}
-
-.search-container input {
-  height: 40px;
-  width: 250px;
-  padding: 0 1rem 0 3.5rem;
-  border: 1px solid #ccc;
-  border-radius: 20px;
-  font-size: 14px;
-}
-
-.search-container .search-button {
-  position: absolute;
-  left: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  border: none;
-  background: none;
-  cursor: pointer;
-  color: #999;
-}
-
 .icon-link {
   color: #121223;
   transition: color 0.2s;
@@ -74,15 +173,13 @@
 .cart-wrapper {
   position: relative;
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .cart-badge {
   position: absolute;
-  top: -5px;    /* Adjusts vertical position */
-  right: -8px;  /* Adjusts horizontal position */
-  background-color: #ff7622; /* Your brand orange color */
+  top: -5px;
+  right: -8px;
+  background-color: #ff7622;
   color: white;
   font-size: 11px;
   font-weight: bold;
@@ -92,31 +189,24 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid #ffffff; /* Adds a small white border for contrast */
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border: 2px solid #ffffff;
 }
 
-/* 1. Container for the icon and menu */
+/* Profile Dropdown Styles */
 .profile-icon-container {
   position: relative;
-  height: auto; /* Ensures it doesn't stretch the full navbar height */
+  height: auto;
   display: flex;
   align-items: center;
   cursor: pointer;
   justify-content: center;
 }
 
-/* 2. The invisible trigger area (optional, for padding) */
-.profile-trigger {
-  padding: 10px 0; /* Adds a little hit area without stretching */
-}
-
-/* 3. The Dropdown Menu Box */
 .profile-dropdown {
-  display: none; /* Hidden by default */
+  display: none;
   position: absolute;
-  top: 100%; /* Pushes it below the icon */
-  right: -10px; /* Aligns it nicely with the icon */
+  top: 100%;
+  right: -10px;
   background-color: #ffffff;
   min-width: 150px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
@@ -124,33 +214,35 @@
   border: 1px solid #e2e8f0;
   z-index: 1100;
   flex-direction: column;
-  
-  /* CRITICAL: Allows the arrow to stick out the top */
-  overflow: visible; 
+  overflow: visible;
 }
 
-/* 4. The "Arrow" / Triangle Icon */
 .profile-dropdown::before {
   content: '';
   position: absolute;
-  top: -6px; /* Moves it up to bridge the gap */
-  right: 18px; /* Aligns with the user icon center */
+  top: -10px;
+  width: 100%;
+  height: 10px;
+  background: transparent;
+}
+
+.profile-dropdown::after {
+  content: '';
+  position: absolute;
+  top: -6px;
+  right: 18px;
   width: 12px;
   height: 12px;
   background-color: #ffffff;
-  
-  /* Create the triangle shape using borders */
   border-top: 1px solid #e2e8f0;
   border-left: 1px solid #e2e8f0;
   transform: rotate(45deg);
 }
 
-/* 5. Show dropdown on hover */
 .profile-icon-container:hover .profile-dropdown {
   display: flex;
 }
 
-/* 6. Menu Item Styles */
 .dropdown-item {
   padding: 12px 20px;
   text-decoration: none;
@@ -161,7 +253,6 @@
   background: none;
   border: none;
   cursor: pointer;
-  transition: color 0.2s, background-color 0.2s;
 }
 
 .dropdown-item:hover {
@@ -169,148 +260,55 @@
   color: #ff7622;
 }
 
-/* Optional: Add a separator line above Logout if desired */
 .logout-btn {
   border-top: 1px solid #f0f0f0;
 }
 
-/* Fix rounding for first and last items so they match the box */
-.dropdown-item:first-child {
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
-}
-.dropdown-item:last-child {
-  border-bottom-left-radius: 8px;
-  border-bottom-right-radius: 8px;
-}
-
-/* Logo dropdown: match profile dropdown style and open below the logo */
-.logo-container {
-  position: relative;
-}
-
-.logo-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: #ffffff;
-  min-width: 220px; /* increased so background always covers text */
-  box-sizing: border-box;
-  padding: 6px 0; /* small vertical padding so items don't touch edges */
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  z-index: 1100;
-  display: flex;
-  flex-direction: column;
-  overflow: visible;
-}
-
-/* clear wrapper padding so inner controls determine size */
-.logo-dropdown .dropdown-item {
-  padding: 0;
-}
-
-/* make inner anchors/buttons truly full-width and include padding in width */
-.logo-dropdown .dropdown-item > a,
-.logo-dropdown .dropdown-item > .navbar-link,
-.logo-dropdown .dropdown-item > button {
-  display: block;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 12px 20px;
-  text-align: left;
-  background: none;
-  border: none;
-  font-size: 1.05rem;
-  font-weight: 600;
-}
-
-/* Ensure dropdown items match profile dropdown appearance */
-.logo-dropdown .dropdown-item {
-  padding: 12px 20px;
-  text-decoration: none;
-  color: #333;
-  font-size: 0.95rem;
-  font-weight: 500;
-  text-align: left;
-  background: none;
-  border: none;
-  cursor: pointer;
-  transition: color 0.2s, background-color 0.2s;
-}
-
-.logo-dropdown .dropdown-item:hover {
-  background-color: #fff0e6;
-  color: #ff7622;
-}
-
-
-/* =========================================
-   MOBILE RESPONSIVENESS & UTILITIES
-   ========================================= */
-
-/* UTILITY: Hide elements by default if they are mobile-only */
+/* MOBILE RESPONSIVENESS */
 .mobile-only-item {
   display: none;
 }
 
-/* MOBILE MEDIA QUERY */
 @media (max-width: 768px) {
   .navbar {
-    height: 70px; /* Reduce navbar height */
+    height: 70px;
     padding: 0 15px;
-    justify-content: space-between; /* Spread items out */
+    justify-content: space-between;
     gap: 5px;
   }
 
-  /* 1. HIDE Desktop Text Links */
+  .navbar-left-section {
+    gap: 10px; 
+  }
+
   .desktop-only {
     display: none !important;
   }
 
-  /* 2. SHOW Mobile Links inside Dropdown */
-  .logo-dropdown .mobile-only-item {
+  .mobile-only-item {
     display: block;
   }
 
-  /* 3. Adjust Logo Size */
   .logo-image {
     width: 50px !important;
     height: 50px !important;
     object-fit: contain;
   }
-  
-  /* 4. Adjust Icon Spacing */
-  .navbar-item {
-    margin: 0 2px;
-  }
-  
-  /* 5. Fix Logo Dropdown Positioning */
-  .logo-dropdown {
-    top: 60px;
-    left: 10px;
-    right: auto;
+
+  .nav-dropdown-menu {
+    top: 50px;
+    left: -60px;
     width: 200px;
-    transform: none;
-    min-width: unset;
+    margin-top: 0;
   }
-  
-  /* Remove the triangle pointer on mobile */
-  .logo-dropdown::before {
+
+  .nav-dropdown-menu::after,
+  .nav-dropdown-menu::before {
     display: none;
   }
 
-  /* Adjust Profile Dropdown Positioning */
   .profile-dropdown {
     top: calc(100% + 5px);
     right: 0;
-    min-width: 140px;
-  }
-  
-  .cart-badge {
-    top: -2px;
-    right: -5px;
   }
 }
