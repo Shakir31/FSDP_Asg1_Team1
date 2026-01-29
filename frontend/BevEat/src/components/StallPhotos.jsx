@@ -17,6 +17,10 @@ function StallPhotos() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6; // Photos take more space, so 6 is a good number
+
   async function handleUpvote(imageId, currentlyUpvoted) {
     const token = getToken();
 
@@ -46,7 +50,6 @@ function StallPhotos() {
       const data = await res.json();
 
       if (res.ok) {
-        // Update the local state to reflect the upvote toggle
         setImages((prevImages) =>
           prevImages.map((img) =>
             img.imageid === imageId
@@ -72,13 +75,13 @@ function StallPhotos() {
     async function fetchStallImages() {
       try {
         setLoading(true);
+        setCurrentPage(1); // Reset page on stall change
         const token = getToken();
 
         const headers = {
           "Content-Type": "application/json",
         };
 
-        // Add auth token if available
         if (token) {
           headers.Authorization = `Bearer ${token}`;
         }
@@ -107,6 +110,14 @@ function StallPhotos() {
     fetchStallImages();
   }, [id]);
 
+  // Pagination Logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentImages = images.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(images.length / itemsPerPage);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
   let content;
   if (loading) {
     content = <p className="loading-text">Loading photos...</p>;
@@ -120,15 +131,44 @@ function StallPhotos() {
     );
   } else {
     content = (
-      <div className="social-feed">
-        {images.map((image) => (
-          <SocialPostCard
-            key={image.imageid}
-            image={image}
-            onUpvote={handleUpvote}
-          />
-        ))}
-      </div>
+      <>
+        <div className="social-feed">
+          {currentImages.map((image) => (
+            <SocialPostCard
+              key={image.imageid}
+              image={image}
+              onUpvote={handleUpvote}
+            />
+          ))}
+        </div>
+
+        {/* Pagination Controls */}
+        {images.length > itemsPerPage && (
+          <div className="pagination" style={{marginTop: '20px', display: 'flex', justifyContent: 'center', gap: '8px'}}>
+            <button
+              onClick={() => paginate(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              Prev
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i + 1}
+                onClick={() => paginate(i + 1)}
+                className={currentPage === i + 1 ? "active" : ""}
+              >
+                {i + 1}
+              </button>
+            ))}
+            <button
+              onClick={() => paginate(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </button>
+          </div>
+        )}
+      </>
     );
   }
 
