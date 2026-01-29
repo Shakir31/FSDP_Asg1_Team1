@@ -238,6 +238,41 @@ function Navbar() {
         </div>
       )}
 
+      {/* Add Group Lobby/Start/Join for desktop customers */}
+      {isCustomer && (
+        <>
+          {!session ? (
+            <>
+              <div className="navbar-item desktop-only">
+                <button
+                  onClick={handleStartClick}
+                  className="navbar-link btn-link"
+                >
+                  Start Group
+                </button>
+              </div>
+              <div className="navbar-item desktop-only">
+                <button
+                  onClick={handleJoinClick}
+                  className="navbar-link btn-link"
+                >
+                  Join Group
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="navbar-item desktop-only">
+              <Link
+                to="/group-lobby"
+                className="navbar-link active-group-link"
+              >
+                Group Lobby ({session.join_code})
+              </Link>
+            </div>
+          )}
+        </>
+      )}
+
       <VisualSearchButton />
 
       {isCustomer && (
@@ -265,5 +300,7 @@ function Navbar() {
     </nav>
   );
 }
+
+
 
 export default Navbar;

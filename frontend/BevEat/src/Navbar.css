@@ -264,6 +264,30 @@
   border-top: 1px solid #f0f0f0;
 }
 
+.back-to-top {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 50px;
+  height: 50px;
+  background-color: #ff7622; /* Matches your theme orange */
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s, opacity 0.2s;
+  z-index: 999;
+  border: none;
+}
+
+.back-to-top:hover {
+  transform: translateY(-5px);
+  background-color: #e66915;
+}
+
 /* MOBILE RESPONSIVENESS */
 .mobile-only-item {
   display: none;

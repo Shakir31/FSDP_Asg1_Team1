@@ -114,7 +114,8 @@
 .hawker-card,
 .stall-card {
   width: 324px;
-  height: 314px;
+  height: 100%;
+  min-height: 314px;
   background-color: #ffffff;
   border-radius: 8px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
@@ -215,4 +216,58 @@
 .pagination button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .hawker-page-content {
+    padding: 1rem;
+  }
+
+  /* Adjust Hero Section */
+  .hawker-hero-section {
+    height: auto;
+    min-height: 200px;
+    padding-bottom: 2rem;
+  }
+
+  .hawker-hero-title {
+    font-size: 2rem;
+    line-height: 1.2;
+  }
+
+  .hawker-hero-description {
+    font-size: 1rem;
+  }
+
+  /* Adjust Grid Layout */
+  .hawker-grid,
+  .stalls-grid {
+    display: grid;
+    grid-template-columns: 1fr; /* Single column on mobile */
+    gap: 1.5rem;
+  }
+
+  /* Make Cards Fluid */
+  .hawker-card,
+  .stall-card {
+    width: 100%;
+    height: auto; /* Allow height to adjust content */
+    max-width: none;
+  }
+
+  .hawker-card img,
+  .stall-card img {
+    width: 100%;
+    height: 200px; /* Fixed height for consistency */
+  }
+
+  /* Adjust Pagination */
+  .pagination {
+    flex-wrap: wrap;
+  }
+  
+  .pagination button {
+    font-size: 0.9rem;
+    padding: 0.4rem 0.8rem;
+  }
 }
