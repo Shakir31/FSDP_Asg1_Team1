@@ -29,7 +29,7 @@ function StallPage() {
         // Fetch hawker centre data if hawker_centre_id exists
         if (stallData.hawker_centre_id) {
           const hawkerResponse = await fetch(
-            `http://localhost:3000/hawker-centres/${stallData.hawker_centre_id}`
+            `http://localhost:3000/hawker-centres/${stallData.hawker_centre_id}`,
           );
           if (hawkerResponse.ok) {
             const hawkerData = await hawkerResponse.json();
@@ -38,7 +38,7 @@ function StallPage() {
         }
 
         const menuResponse = await fetch(
-          `http://localhost:3000/stalls/${id}/menu`
+          `http://localhost:3000/stalls/${id}/menu`,
         );
         if (!menuResponse.ok) {
           throw new Error("Menu items not found");
@@ -108,13 +108,20 @@ function StallPage() {
           {error && <p className="hero-error">Error: {error}</p>}
           {stall && (
             <div className="hero-content">
-              <button onClick={() => navigate(`/home`)} className="back-button" style={{background: "white"}}>
+              <button
+                onClick={() => navigate(`/home`)}
+                className="back-button"
+                style={{ background: "white" }}
+              >
                 &larr; Back to Home
               </button>
               <h1 className="hero-title">{stall.stallname}</h1>
               <p className="hero-description">{stall.description}</p>
               <p className="hero-info">
-                <strong>Location:</strong> {hawkerCentre?.address || stall.address || "Location not available"}
+                <strong>Location:</strong>{" "}
+                {hawkerCentre?.address ||
+                  stall.address ||
+                  "Location not available"}
               </p>
               <p className="hero-info">
                 <strong>Category:</strong> {stall.category}
@@ -127,7 +134,6 @@ function StallPage() {
         </div>
 
         <div className="menu-container">
-          <h2 className="menu-title">Menu</h2>
           <div className="menu-items-container">{menuContent}</div>
         </div>
       </main>

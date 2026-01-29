@@ -63,23 +63,21 @@ function Navbar() {
 
   return (
     <nav className="navbar">
-      
       {/* LEFT SECTION: Logo + Menu Icon */}
       <div className="navbar-left-section">
-        
         {/* 1. Main Logo */}
         <Link to="/home" className="logo-link">
           <img src={logo} alt="BevEat Logo" className="logo-image" />
         </Link>
 
         {/* 2. Navigation Menu */}
-        <div 
-          className="menu-container" 
+        <div
+          className="menu-container"
           ref={menuRef}
           onMouseEnter={() => setDropdownOpen(true)}
           onMouseLeave={() => setDropdownOpen(false)}
         >
-          <button 
+          <button
             className="menu-trigger-btn"
             onClick={() => setDropdownOpen(!dropdownOpen)}
             aria-label="Toggle Menu"
@@ -91,32 +89,68 @@ function Navbar() {
             <div className="nav-dropdown-menu">
               {/* Mobile Only Links */}
               <div className="dropdown-item mobile-only-item">
-                <Link to="/home" className="navbar-link" onClick={() => setDropdownOpen(false)}>Home</Link>
+                <Link
+                  to="/home"
+                  className="navbar-link"
+                  onClick={() => setDropdownOpen(false)}
+                >
+                  Home
+                </Link>
               </div>
               {isStallOwner && (
                 <>
                   <div className="dropdown-item mobile-only-item">
-                    <Link to="/dashboard" className="navbar-link" onClick={() => setDropdownOpen(false)}>Dashboard</Link>
+                    <Link
+                      to="/dashboard"
+                      className="navbar-link"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      Dashboard
+                    </Link>
                   </div>
                   <div className="dropdown-item mobile-only-item">
-                    <Link to="/menu-management" className="navbar-link" onClick={() => setDropdownOpen(false)}>Menu</Link>
+                    <Link
+                      to="/menu-management"
+                      className="navbar-link"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      Menu
+                    </Link>
                   </div>
                 </>
               )}
               {isAdmin && (
-                 <div className="dropdown-item mobile-only-item">
-                   <Link to="/admin" className="navbar-link" onClick={() => setDropdownOpen(false)}>Dashboard</Link>
-                 </div>
+                <div className="dropdown-item mobile-only-item">
+                  <Link
+                    to="/admin"
+                    className="navbar-link"
+                    onClick={() => setDropdownOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
+                </div>
               )}
 
               {/* General Links */}
               <div className="dropdown-item">
-                <Link to="/map" className="navbar-link" onClick={() => setDropdownOpen(false)}>Map</Link>
+                <Link
+                  to="/map"
+                  className="navbar-link"
+                  onClick={() => setDropdownOpen(false)}
+                >
+                  Map
+                </Link>
               </div>
 
               {isCustomer && (
                 <div className="dropdown-item">
-                  <Link to="/redeem" className="navbar-link" onClick={() => setDropdownOpen(false)}>Redeem</Link>
+                  <Link
+                    to="/redeem"
+                    className="navbar-link"
+                    onClick={() => setDropdownOpen(false)}
+                  >
+                    Redeem
+                  </Link>
                 </div>
               )}
 
@@ -125,19 +159,35 @@ function Navbar() {
                   {!session ? (
                     <>
                       <div className="dropdown-item">
-                        <button onClick={() => { handleStartClick(); setDropdownOpen(false); }} className="navbar-link btn-link">
+                        <button
+                          onClick={() => {
+                            handleStartClick();
+                            setDropdownOpen(false);
+                          }}
+                          className="navbar-link btn-link"
+                        >
                           Start Group
                         </button>
                       </div>
                       <div className="dropdown-item">
-                        <button onClick={async () => { await handleJoinClick(); setDropdownOpen(false); }} className="navbar-link btn-link">
+                        <button
+                          onClick={async () => {
+                            await handleJoinClick();
+                            setDropdownOpen(false);
+                          }}
+                          className="navbar-link btn-link"
+                        >
                           Join Group
                         </button>
                       </div>
                     </>
                   ) : (
                     <div className="dropdown-item">
-                      <Link to="/group-lobby" className="navbar-link active-group-link" onClick={() => setDropdownOpen(false)}>
+                      <Link
+                        to="/group-lobby"
+                        className="navbar-link active-group-link"
+                        onClick={() => setDropdownOpen(false)}
+                      >
                         Group Lobby ({session.join_code})
                       </Link>
                     </div>
@@ -151,23 +201,40 @@ function Navbar() {
 
       {/* CENTER/RIGHT SECTION: Desktop Links */}
       <div className="navbar-item desktop-only">
-        <Link to="/home" className="navbar-link">Home</Link>
+        <Link to="/home" className="navbar-link">
+          Home
+        </Link>
       </div>
 
       {isStallOwner && (
         <>
           <div className="navbar-item desktop-only">
-            <Link to="/dashboard" className="navbar-link">Dashboard</Link>
+            <Link to="/dashboard" className="navbar-link">
+              Dashboard
+            </Link>
           </div>
           <div className="navbar-item desktop-only">
-            <Link to="/menu-management" className="navbar-link">Menu</Link>
+            <Link to="/menu-management" className="navbar-link">
+              Menu
+            </Link>
           </div>
         </>
       )}
 
       {isAdmin && (
         <div className="navbar-item desktop-only">
-          <Link to="/admin" className="navbar-link">Dashboard</Link>
+          <Link to="/admin" className="navbar-link">
+            Dashboard
+          </Link>
+        </div>
+      )}
+
+      {/* Add Redeem link for desktop customers */}
+      {isCustomer && (
+        <div className="navbar-item desktop-only">
+          <Link to="/redeem" className="navbar-link">
+            Redeem
+          </Link>
         </div>
       )}
 
@@ -187,8 +254,12 @@ function Navbar() {
           <User size={28} />
         </div>
         <div className="profile-dropdown">
-          <Link to="/profile" className="dropdown-item">Profile</Link>
-          <button onClick={handleLogout} className="dropdown-item logout-btn">Logout</button>
+          <Link to="/profile" className="dropdown-item">
+            Profile
+          </Link>
+          <button onClick={handleLogout} className="dropdown-item logout-btn">
+            Logout
+          </button>
         </div>
       </div>
     </nav>
