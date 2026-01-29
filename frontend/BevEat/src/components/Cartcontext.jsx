@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import RecommendationsSection from "./RecommendationsSection";
 import "../Cart.css";
+import { Banknote, Home } from "lucide-react";
 
 export const CartContext = createContext(null);
 
@@ -473,27 +474,58 @@ export function CartPage() {
 
 export function CheckoutPage() {
   const location = useLocation();
+  const navigate = useNavigate();
   const order = location?.state?.order || null;
 
-  if (order) {
+  if (!order) {
     return (
-      <div style={{ padding: 24 }}>
-        <h2 style={{ color: "var(--orange)" }}>Order Placed</h2>
-        <p>
-          Your order (ID: {order.orderId || "—"}) has been placed. Please pay
-          when you receive the food.
-        </p>
-        <p style={{ color: "var(--muted)" }}>
-          We will notify you when the order is being prepared.
-        </p>
+      <div className="checkout-container">
+        <div className="receipt-card">
+          <div className="receipt-body">
+            <h2>No Order Found</h2>
+            <button onClick={() => navigate("/home")} className="btn-home">
+              Return Home
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: 24 }}>
-      <h2 style={{ color: "var(--orange)" }}>Checkout</h2>
-      <p>No order information available.</p>
+    <div className="checkout-container">
+      <div className="receipt-card">
+        
+        {/* Header Section */}
+        <div className="receipt-header">
+          <div className="receipt-icon">
+            <Banknote size={36} color="white" />
+          </div>
+          <h2>Order Placed!</h2>
+          <p>Please pay cash at the counter</p>
+        </div>
+
+        {/* Body Section */}
+        <div className="receipt-body">
+          
+          {/* Queue Number Box */}
+          <div className="queue-box">
+            <div className="queue-label">Queue Number</div>
+            <div className="queue-number">{order.queueNumber || "00"}</div>
+            <div className="order-id">Order ID: #{order.orderId}</div>
+          </div>
+
+          <p style={{ color: "#6b7280", marginBottom: "30px", lineHeight: "1.5" }}>
+            Show this screen to the stall owner when making payment. We will notify you when your food is ready!
+          </p>
+
+          <button onClick={() => navigate("/home")} className="btn-home">
+            <Home size={20} />
+            Back to Home
+          </button>
+        </div>
+
+      </div>
     </div>
   );
 }
