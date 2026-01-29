@@ -16,6 +16,10 @@ function Product() {
   const [reviewsLoading, setReviewsLoading] = useState(true);
   const [reviewsError, setReviewsError] = useState(null);
 
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const reviewsPerPage = 5; // Adjust this number as needed
+
   const navigate = useNavigate();
   const { addItem } = useCart();
   const { session, addItemToGroup } = useGroupOrder();
@@ -40,7 +44,6 @@ function Product() {
       const data = await res.json();
 
       if (res.ok) {
-        // Update the local state to reflect the upvote toggle
         setReviews((prevReviews) =>
           prevReviews.map((review) =>
             review.imageid === imageId
@@ -69,6 +72,7 @@ function Product() {
         setReviewsLoading(true);
         setError(null);
         setReviewsError(null);
+        setCurrentPage(1); // Reset to first page when item changes
 
         const token =
           localStorage.getItem("token") || sessionStorage.getItem("token");
@@ -81,7 +85,6 @@ function Product() {
           headers.Authorization = `Bearer ${token}`;
         }
 
-        // Fetch menu item data
         const itemResponse = await fetch(
           `http://localhost:3000/menu-item/${itemId}`
         );
@@ -91,7 +94,6 @@ function Product() {
         const itemData = await itemResponse.json();
         setItem(itemData);
 
-        // Fetch reviews for the menu item
         const reviewsResponse = await fetch(
           `http://localhost:3000/reviews/menuitem/${itemId}`,
           { headers }
@@ -143,6 +145,14 @@ function Product() {
     });
   };
 
+  // Pagination Logic
+  const indexOfLastReview = currentPage * reviewsPerPage;
+  const indexOfFirstReview = indexOfLastReview - reviewsPerPage;
+  const currentReviews = reviews.slice(indexOfFirstReview, indexOfLastReview);
+  const totalPages = Math.ceil(reviews.length / reviewsPerPage);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
   if (loading) {
     return (
       <div className="product-wrapper">
@@ -183,15 +193,44 @@ function Product() {
     );
   } else {
     reviewsContent = (
-      <div className="social-feed">
-        {reviews.map((review) => (
-          <SocialPostCard
-            key={review.reviewid}
-            image={review}
-            onUpvote={handleUpvote}
-          />
-        ))}
-      </div>
+      <>
+        <div className="social-feed">
+          {currentReviews.map((review) => (
+            <SocialPostCard
+              key={review.reviewid}
+              image={review}
+              onUpvote={handleUpvote}
+            />
+          ))}
+        </div>
+        
+        {/* Pagination Controls */}
+        {reviews.length > reviewsPerPage && (
+          <div className="pagination" style={{marginTop: '20px', display: 'flex', justifyContent: 'center', gap: '8px'}}>
+            <button
+              onClick={() => paginate(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              Prev
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i + 1}
+                onClick={() => paginate(i + 1)}
+                className={currentPage === i + 1 ? "active" : ""}
+              >
+                {i + 1}
+              </button>
+            ))}
+            <button
+              onClick={() => paginate(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </button>
+          </div>
+        )}
+      </>
     );
   }
 
@@ -200,9 +239,6 @@ function Product() {
       <div className="product-content-main">
         <div className="product-layout">
           <div className="back-button-container">
-            {/* <button onClick={() => navigate(-1)} className="back-button">
-              &larr; Back to Stall
-            </button> */}
             <button onClick={() => navigate(`/stalls/${item.stallid}`)} className="back-button">
               &larr; Back to Stall
             </button>
