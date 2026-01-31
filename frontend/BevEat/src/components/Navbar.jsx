@@ -262,10 +262,7 @@ function Navbar() {
             </>
           ) : (
             <div className="navbar-item desktop-only">
-              <Link
-                to="/group-lobby"
-                className="navbar-link active-group-link"
-              >
+              <Link to="/group-lobby" className="navbar-link active-group-link">
                 Group Lobby ({session.join_code})
               </Link>
             </div>
@@ -273,7 +270,15 @@ function Navbar() {
         </>
       )}
 
-      <VisualSearchButton />
+      {isCustomer && (
+        <div className="navbar-item desktop-only">
+          <Link to="/map" className="navbar-link">
+            Map
+          </Link>
+        </div>
+      )}
+
+      {isCustomer && <VisualSearchButton />}
 
       {isCustomer && (
         <div className="navbar-item">
@@ -300,7 +305,5 @@ function Navbar() {
     </nav>
   );
 }
-
-
 
 export default Navbar;
