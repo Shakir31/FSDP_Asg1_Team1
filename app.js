@@ -1,0 +1,331 @@
+const path = require("path");
+const sql = require("mssql");
+const dotenv = require("dotenv");
+const express = require("express");
+const cors = require("cors");
+
+dotenv.config();
+
+const authController = require("./controllers/userController");
+const stallController = require("./controllers/stallController");
+const hawkerController = require("./controllers/hawkerController");
+const orderController = require("./controllers/orderController");
+const imageController = require("./controllers/imageController");
+const coinController = require("./controllers/coinController");
+const voucherController = require("./controllers/voucherController");
+const reviewController = require("./controllers/reviewController");
+const notificationController = require("./controllers/notificationController");
+const menuManagementController = require("./controllers/menuManagementController");
+
+const { validateReview } = require("./middlewares/reviewValidation");
+const { validateMenuItem } = require("./middlewares/menuItemValidation");
+const { validateImageUpload } = require("./middlewares/imageValidation");
+
+const {
+  authenticateToken,
+  optionalAuth,
+  authorizeRoles,
+} = require("./middlewares/authMiddleware");
+const app = express();
+const port = process.env.PORT || 3000;
+
+//middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+const cron = require("node-cron");
+
+// Run daily at 2am
+cron.schedule("0 2 * * *", () => {
+  require("./detectPopularPhotos");
+});
+
+//auth endpoints
+app.post("/register", authController.registerUser);
+app.post("/login", authController.loginUser);
+app.get("/users/profile", authenticateToken, authController.getUserProfile);
+
+//admin: users list
+app.get(
+  "/admin/users",
+  authenticateToken,
+  authorizeRoles("admin"),
+  authController.listUsers
+);
+app.get(
+  "/admin/users/:id",
+  authenticateToken,
+  authorizeRoles("admin"),
+  authController.getUser
+);
+app.put(
+  "/admin/users/:id",
+  authenticateToken,
+  authorizeRoles("admin"),
+  authController.updateUser
+);
+app.delete(
+  "/admin/users/:id",
+  authenticateToken,
+  authorizeRoles("admin"),
+  authController.deleteUser
+);
+
+//admin: stalls list
+app.get(
+  "/admin/stalls",
+  authenticateToken,
+  authorizeRoles("admin"),
+  stallController.getAllStalls
+);
+app.get(
+  "/admin/stalls/:id",
+  authenticateToken,
+  authorizeRoles("admin"),
+  stallController.getStallById
+);
+
+app.put(
+  "/admin/stalls/:id",
+  authenticateToken,
+  authorizeRoles("admin"),
+  stallController.updateStall
+);
+
+// DELETE STALL
+app.delete(
+  "/admin/stalls/:id",
+  authenticateToken,
+  authorizeRoles("admin"),
+  stallController.deleteStall
+);
+
+app.post(
+  "/stalls/upload-image",
+  authenticateToken,
+  authorizeRoles("admin"),
+  stallController.uploadStallImage
+);
+
+// app.put("/admin/stalls/:id", authenticateToken, authorizeRoles("admin"), (req, res) => {
+//   res.status(501).json({ error: 'Not implemented' });
+// });
+// app.delete("/admin/stalls/:id", authenticateToken, authorizeRoles("admin"), (req, res) => {
+//   res.status(501).json({ error: 'Not implemented' });
+// });
+
+//stall endpoints
+app.get("/stalls", stallController.getAllStalls);
+app.get("/stalls/category", stallController.getStallsByCategory);
+app.get("/stalls/hawker-centre", stallController.getStallsByHawkerCentre);
+app.get("/stalls/:id/photos", optionalAuth, stallController.getStallImages);
+app.get("/stalls/:id", stallController.getStallById);
+app.get("/menu-item/:itemId", stallController.getMenuItemById);
+app.post(
+  "/stalls",
+  authenticateToken,
+  authorizeRoles("admin"),
+  stallController.createStall
+);
+app.get("/stalls/:stallId/menu", stallController.getMenuByStall);
+app.post(
+  "/menuitems",
+  validateMenuItem,
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  stallController.createMenuItem
+);
+app.put(
+  "/menuitems/photo",
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  stallController.updateMenuItemPhoto
+);
+
+//hawker endpoints
+app.get("/hawker-centres", hawkerController.getAllHawkerCentres);
+app.get("/hawker-centres/search", hawkerController.searchHawkerCentres);
+app.get("/hawker-centres/status", hawkerController.getHawkerCentresByStatus);
+app.get("/hawker-centres/:id", hawkerController.getHawkerCentreById);
+app.get(
+  "/hawker-centres/:id/stalls",
+  hawkerController.getStallsByHawkerCentreId
+);
+
+//order endpoints
+app.post(
+  "/orders",
+  authenticateToken,
+  authorizeRoles("customer"),
+  orderController.placeOrder
+);
+app.get(
+  "/orders/history",
+  authenticateToken,
+  authorizeRoles("customer"),
+  orderController.getOrderHistory
+);
+app.put(
+  "/orders/payment",
+  authenticateToken,
+  orderController.updatePaymentStatus
+);
+
+// Add this to your order routes section
+app.get("/orders/:orderId", authenticateToken, orderController.getOrderDetails);
+
+//image upload and voting
+app.post(
+  "/images/upload",
+  authenticateToken,
+  validateImageUpload,
+  imageController.uploadImage
+);
+app.post("/images/upvote", authenticateToken, imageController.upvoteImage);
+
+//coin gamification endpoints
+app.get("/coins/balance", authenticateToken, coinController.getUserCoins);
+app.post(
+  "/coins/award-photo",
+  authenticateToken,
+  coinController.awardPhotoUploadCoins
+);
+
+//voucher
+app.get("/vouchers", voucherController.getAllVouchers);
+app.post(
+  "/vouchers/redeem",
+  authenticateToken,
+  authorizeRoles("customer"),
+  voucherController.redeemVoucher
+);
+app.get(
+  "/vouchers/user",
+  authenticateToken,
+  authorizeRoles("customer"),
+  voucherController.getUserVouchers
+);
+
+app.post(
+  "/vouchers/use",
+  authenticateToken,
+  authorizeRoles("customer"),
+  voucherController.useVoucher
+);
+
+//review
+app.post(
+  "/reviews",
+  validateReview,
+  authenticateToken,
+  authorizeRoles("customer"),
+  reviewController.createReview
+);
+app.get(
+  "/reviews/menuitem/:menuItemId",
+  optionalAuth,
+  reviewController.getReviewsByMenuItem
+);
+app.get("/reviews/stall/:stallId", reviewController.getReviewsByStall);
+app.get("/reviews/user", authenticateToken, reviewController.getReviewsByUser);
+
+// app.get("/vouchers/available", voucherController.getAvailableVouchers);
+// app.post("/vouchers/redeem", authenticateToken, voucherController.redeemVoucher);
+
+// app.get("/coins/balance", authenticateToken, coinController.getBalance);
+// app.post("/coins/award-photo", authenticateToken, coinController.awardForPhoto);
+
+// // image upload route (ensure validateImageUpload matches frontend)
+// app.post("/images/upload", authenticateToken, validateImageUpload, imageController.uploadImage);
+
+app.get(
+  "/notifications",
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  notificationController.getMyNotifications
+);
+
+app.get(
+  "/notifications/stats",
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  notificationController.getNotificationStats
+);
+
+app.get(
+  "/notifications/:id",
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  notificationController.getNotificationById
+);
+
+app.post(
+  "/notifications/:id/approve",
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  notificationController.approveNotification
+);
+
+app.post(
+  "/notifications/:id/dismiss",
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  notificationController.dismissNotification
+);
+
+app.post(
+  "/notifications/:id/revert",
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  notificationController.revertNotification
+);
+
+//menu management(for stall owners)
+app.get(
+  "/menu-management/my-stalls",
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  menuManagementController.getMyStalls
+);
+
+app.post(
+  "/menu-management/menuitems",
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  menuManagementController.createMenuItem
+);
+
+app.put(
+  "/menu-management/menuitems/:menuItemId",
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  menuManagementController.updateMenuItem
+);
+
+app.delete(
+  "/menu-management/menuitems/:menuItemId",
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  menuManagementController.deleteMenuItem
+);
+
+app.post(
+  "/menu-management/upload-image",
+  authenticateToken,
+  authorizeRoles("stall_owner"),
+  menuManagementController.uploadMenuItemImage
+);
+
+//start server
+app.listen(port, () => {
+  console.log(`Server running on port ${port}...`);
+});
+
+//graceful shutdown
+process.on("SIGINT", async () => {
+  console.log("Server shutting down gracefully");
+  await sql.close();
+  console.log("Database connections closed");
+  process.exit(0);
+});
