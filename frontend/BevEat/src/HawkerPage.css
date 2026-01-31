@@ -111,8 +111,8 @@
   display: block;
 }
 
-.hawker-card,
-.stall-card {
+.hawker-grid .hawker-card,
+.stalls-grid .stall-card {
   width: 324px;
   height: 100%;
   min-height: 314px;
@@ -125,28 +125,28 @@
   transition: box-shadow 0.2s;
 }
 
-.hawker-card:hover,
-.stall-card:hover {
+.hawker-grid .hawker-card:hover,
+.stalls-grid .stall-card:hover {
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
 }
 
-.hawker-card img,
-.stall-card img {
+.hawker-grid .hawker-card img,
+.stalls-grid .stall-card img {
   width: 324px;
   height: 191px;
   object-fit: cover;
 }
 
-.hawker-card h3,
-.stall-card h3 {
+.hawker-grid .hawker-card h3,
+.stalls-grid .stall-card h3 {
   font-size: 1.2rem;
   font-weight: 600;
   color: #121223;
   margin: 1rem 1rem 0.25rem 1rem;
 }
 
-.hawker-card p,
-.stall-card p {
+.hawker-grid .hawker-card p,
+.stalls-grid .stall-card p {
   font-size: 0.9rem;
   color: #666;
   margin: 0 1rem 0.5rem 1rem;
