@@ -27,10 +27,6 @@
   margin: 0 auto;
 }
 
-.hawker-card {
-  position: relative;
-}
-
 .hawker-distance {
   position: absolute;
   bottom: 12px;
@@ -39,7 +35,6 @@
   font-size: 12.5px;
   font-weight: 600;
   opacity: 0.85;
-
   background: rgba(0, 0, 0, 0.05);
   padding: 4px 8px;
   border-radius: 999px;
@@ -69,8 +64,9 @@
   }
 }
 
+.hawker-card,
 .stall-card {
-  position: relative; /* needed because .hawker-distance is absolute */
+  position: relative;
 }
 
 .stall-footer {
@@ -373,145 +369,145 @@
   font-size: 0.95rem;
   min-width: 70px;
   text-align: right;
-  /* Recommendations Container */
+}
+/* Recommendations Container */
+.recommendations-container {
+  padding: 3rem 1rem;
+  background: linear-gradient(135deg, #fff5f0 0%, #ffffff 100%);
+  border-top: 1px solid #ffe4d6;
+  border-bottom: 1px solid #ffe4d6;
+}
+
+/* Adjust section spacing to accommodate recommendations */
+.stalls,
+.hawker {
+  padding: 3rem 1rem;
+}
+
+/* Ensure consistent spacing between sections */
+.home-page section {
+  margin-bottom: 2rem;
+}
+
+.home-page section:last-child {
+  margin-bottom: 0;
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
   .recommendations-container {
-    padding: 3rem 1rem;
-    background: linear-gradient(135deg, #fff5f0 0%, #ffffff 100%);
-    border-top: 1px solid #ffe4d6;
-    border-bottom: 1px solid #ffe4d6;
+    padding: 2rem 0.5rem;
   }
 
-  /* Adjust section spacing to accommodate recommendations */
   .stalls,
   .hawker {
-    padding: 3rem 1rem;
+    padding: 2rem 0.5rem;
   }
+}
 
-  /* Ensure consistent spacing between sections */
-  .home-page section {
-    margin-bottom: 2rem;
-  }
-
-  .home-page section:last-child {
+/* Mobile-friendly tweaks (only apply under 768px, desktop unchanged) */
+@media (max-width: 768px) {
+  /* tighten spacing between hero and recommendations on mobile */
+  .hero {
     margin-bottom: 0;
+    padding-bottom: 0;
+    height: auto;
   }
 
-  /* Mobile optimizations */
-  @media (max-width: 640px) {
-    .recommendations-container {
-      padding: 2rem 0.5rem;
-    }
-
-    .stalls,
-    .hawker {
-      padding: 2rem 0.5rem;
-    }
+  .hero-image {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 8px;
+    display: block;
+    margin-bottom: 6px;
   }
 
-  /* Mobile-friendly tweaks (only apply under 768px, desktop unchanged) */
-  @media (max-width: 768px) {
-    /* tighten spacing between hero and recommendations on mobile */
-    .hero {
-      margin-bottom: 0;
-      padding-bottom: 0;
-      height: auto;
-    }
+  .recommendations-container {
+    margin-top: 0;
+    padding-top: 8px;
+    padding-bottom: 12px;
+  }
 
-    .hero-image {
-      width: 100%;
-      height: 150px;
-      object-fit: cover;
-      border-radius: 8px;
-      display: block;
-      margin-bottom: 6px;
-    }
+  .home-page {
+    padding: 10px;
+  }
 
-    .recommendations-container {
-      margin-top: 0;
-      padding-top: 8px;
-      padding-bottom: 12px;
-    }
+  .hero {
+    padding: 0;
+  }
 
-    .home-page {
-      padding: 10px;
-    }
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
 
-    .hero {
-      padding: 0;
-    }
+  .section-header h2 {
+    font-size: 1.05rem;
+    margin: 0;
+  }
 
-    .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
+  .see-all {
+    font-size: 0.9rem;
+    white-space: nowrap;
+  }
 
-    .section-header h2 {
-      font-size: 1.05rem;
-      margin: 0;
-    }
+  .card-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin: 6px 0;
+  }
 
-    .see-all {
-      font-size: 0.9rem;
-      white-space: nowrap;
-    }
+  .card-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+  }
 
-    .card-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 10px;
-      margin: 6px 0;
-    }
+  .card {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 8px;
+    border-radius: 8px;
+    background: transparent;
+    box-shadow: none;
+  }
 
-    .card-link {
-      display: block;
-      text-decoration: none;
-      color: inherit;
-    }
+  .card img {
+    width: 90px;
+    height: 68px;
+    object-fit: cover;
+    border-radius: 6px;
+    flex: 0 0 90px;
+  }
 
-    .card {
-      display: flex;
-      gap: 10px;
-      align-items: flex-start;
-      padding: 8px;
-      border-radius: 8px;
-      background: transparent;
-      box-shadow: none;
-    }
+  .card h3 {
+    font-size: 1rem;
+    margin: 0 0 4px 0;
+  }
 
-    .card img {
-      width: 90px;
-      height: 68px;
-      object-fit: cover;
-      border-radius: 6px;
-      flex: 0 0 90px;
-    }
+  .card p {
+    font-size: 0.84rem;
+    color: #666;
+    margin: 0;
+  }
 
-    .card h3 {
-      font-size: 1rem;
-      margin: 0 0 4px 0;
-    }
+  /* Make recommendation lists horizontally scrollable if needed */
+  .recommendations-container .recommendations,
+  .recommendations-container .card-grid {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 
-    .card p {
-      font-size: 0.84rem;
-      color: #666;
-      margin: 0;
-    }
-
-    /* Make recommendation lists horizontally scrollable if needed */
-    .recommendations-container .recommendations,
-    .recommendations-container .card-grid {
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    /* Improve tappable targets */
-    .see-all,
-    .card-link,
-    .section-header a {
-      padding: 6px 8px;
-    }
+  /* Improve tappable targets */
+  .see-all,
+  .card-link,
+  .section-header a {
+    padding: 6px 8px;
   }
 }
